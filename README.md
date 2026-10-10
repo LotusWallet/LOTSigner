@@ -39,7 +39,7 @@ packages/     源码（core / parsers / risk / transport / web / cli）
 
 | 文档 | 说明 |
 |---|---|
-| [`doc/2026-10-10_Lotus-Signer_论证会V1_主持人裁决与决议.md`](doc/2026-10-10_Lotus-Signer_论证会V1_主持人裁决与决议.md) | **第一轮专家论证会裁决与决议**（立项依据，必读） |
+| [`doc/2026-10-10_Lotus-Signer_论证会V1_主持人裁决与决议.md`](doc/2026-10-10_Lotus-Signer_论证会V1_主持人裁决与决议.md) | **第一轮专家论证会裁决与决议（V2 修订稿）**（立项依据，必读） |
 | [`doc/discuss-chatgpt-v1.md`](doc/discuss-chatgpt-v1.md) | 顾问 A 论证稿 V1（产品战略与市场） |
 | [`doc/workbuddy-expert1-V1.md`](doc/workbuddy-expert1-V1.md) | 顾问 B 背景材料与开放议题 |
 
