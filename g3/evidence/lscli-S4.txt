@@ -1,0 +1,41 @@
+==================================================
+ Lotus Signer · entrusted-signature review
+==================================================
+txid      2464c4c91c6c467d23fdace809e8d7eda3719d95ce30490b3fd008511d0f321d
+version   2     nLockTime 0
+        0: no timelock; the transaction may be mined immediately
+
+── Transaction facts ─────────────────────────────
+Inputs
+  in[0] 0ea91ff9c8c179b130cef6a9762d14ca81ec0b7111afb5fedeffdd9831ae64e8:0   seq=0xfffffffe   Type P2SH
+        Amount 1500000 sat [verified]
+              ↳ This amount was read out of the previous transaction attached to the PSBT (non_witness_utxo). Its structure checks out; existence on chain is not confirmed offline.
+Outputs
+  out[0]      1200000 sat   bc1qp8sv9wkt0sx7rtl7cah44d3jhu0mk7xqzkyueg
+  out[1]       290000 sat   351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg
+                                   ─────────────
+  Total output     1490000 sat
+  Fee      10000 sat [parsed_unverified]
+              ↳ Fee = total inputs − total outputs. Input amounts come from fields attached to the PSBT and were not verified against the chain.
+  sighash   0x01 [verified]
+              ↳ SIGHASH_ALL: the signature covers every input and every output.
+
+── Context ───────────────────────────
+  · This is a PSBT awaiting signatures: 1 input(s), 2 output(s), 1490000 sat in total outputs.
+  · nLockTime = 0 (0: no timelock; the transaction may be mined immediately)
+  · A PSBT is only a draft awaiting signatures: the values in it come from fields supplied by whoever handed it over. Without going online to check the previous transactions, this tool cannot guarantee they match the chain.
+  · No existing signature — you would probably be the first signer.
+
+── Risk notices ─────────────────────────────
+  No known rule triggered this time. This does NOT mean "safe" — it only means nothing known was triggered.
+
+── What this tool does NOT tell you ─────────────────
+  × This tool does not judge the transaction "safe" or "dangerous".
+  × This tool does not know who the counterparty is and cannot judge whether a recipient is trustworthy.
+  × This tool does not go online, so it cannot confirm that the previous transactions exist or remain unspent.
+  × This tool never touches private keys and cannot judge whether you are entitled to sign this transaction.
+  × This tool offers no price, tax, or compliance advice.
+
+==================================================
+ This is an evidence-based review. It is not a recommendation for anyone to sign or not to sign.
+==================================================

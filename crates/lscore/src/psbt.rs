@@ -41,11 +41,35 @@ pub const OUT_PROPRIETARY: u64 = 0x0f;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PsbtError {
     BadMagic,
-    Truncated,
+    /// 报文在某个 map 内部意外终止。带定位：哪个 map、期望字节处的偏移。
+    /// 宪法第 5 条：报错必须点名出问题的位置，不得只给一句笼统的"解析失败"。
+    Truncated { map: String, offset: usize },
+    /// 嵌入的 unsigned tx 本身解析失败
     Tx(TxError),
     /// 出现了 PSBTv2 结构。MVP 明确不支持，且**不允许**推测性解析。
     UnsupportedVersion { key_type: u64 },
-    KeyCountMismatch { expected: usize, found: usize },
+    /// 最后一个期望的 map 读完仍有残余字节
+    TrailingBytes { total: usize },
+}
+
+impl PsbtError {
+    /// 按语言产出一条点名问题的错误句子。所有句子出自 i18n 文案表。
+    pub fn message(&self, lang: crate::i18n::Lang) -> String {
+        use crate::i18n::t;
+        match self {
+            PsbtError::BadMagic => t(lang, "err_bad_magic", &[]),
+            PsbtError::Truncated { map, offset } => {
+                t(lang, "err_truncated", &[map, &offset.to_string()])
+            }
+            PsbtError::Tx(e) => t(lang, "err_tx_in_global", &[&e.message(lang)]),
+            PsbtError::UnsupportedVersion { key_type } => {
+                t(lang, "err_unsupported_version", &[&format!("{:x}", key_type)])
+            }
+            PsbtError::TrailingBytes { total } => {
+                t(lang, "err_keycount", &[&total.to_string()])
+            }
+        }
+    }
 }
 
 impl From<TxError> for PsbtError {
@@ -100,12 +124,16 @@ impl Psbt {
     }
 }
 
-/// 读取一个 map：连续键值序列以 0x00 终止
-fn read_map(b: &[u8], mut i: usize) -> Result<(Vec<Pair>, usize), PsbtError> {
+/// 读取一个 map：连续键值序列以 0x00 终止。
+/// `label` 用于错误定位（"global" / "input[0]" / "output[1]"）。
+fn read_map(b: &[u8], mut i: usize, label: &str) -> Result<(Vec<Pair>, usize), PsbtError> {
     let mut pairs = Vec::new();
     loop {
         if i >= b.len() {
-            return Err(PsbtError::Truncated);
+            return Err(PsbtError::Truncated {
+                map: label.to_string(),
+                offset: i,
+            });
         }
         let (key_len, n) = read_varint(b, i)?;
         i += n;
@@ -117,7 +145,10 @@ fn read_map(b: &[u8], mut i: usize) -> Result<(Vec<Pair>, usize), PsbtError> {
         i += kn;
         let data_len = key_len as usize - kn;
         if i + data_len > b.len() {
-            return Err(PsbtError::Truncated);
+            return Err(PsbtError::Truncated {
+                map: label.to_string(),
+                offset: i,
+            });
         }
         let key_data = b[i..i + data_len].to_vec();
         i += data_len;
@@ -125,7 +156,10 @@ fn read_map(b: &[u8], mut i: usize) -> Result<(Vec<Pair>, usize), PsbtError> {
         let (value_len, vn) = read_varint(b, i)?;
         i += vn;
         if i + value_len as usize > b.len() {
-            return Err(PsbtError::Truncated);
+            return Err(PsbtError::Truncated {
+                map: label.to_string(),
+                offset: i,
+            });
         }
         let value = b[i..i + value_len as usize].to_vec();
         i += value_len as usize;
@@ -144,7 +178,7 @@ pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
     }
     let mut i = PSBT_MAGIC.len();
 
-    let (global_pairs, next) = read_map(b, i)?;
+    let (global_pairs, next) = read_map(b, i, "global")?;
     i = next;
 
     // PSBTv2 检测：没有 GLOBAL_UNSIGNED_TX，却有 v2 专有键
@@ -161,16 +195,17 @@ pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
                 key_type: p.key_type,
             });
         }
-        return Err(PsbtError::Truncated);
+        return Err(PsbtError::Truncated {
+            map: "global".to_string(),
+            offset: i,
+        });
     }
 
     let unsigned_tx = unsigned_tx_raw.clone().expect("checked above");
-    let (_utx, consumed) = {
+    {
         use crate::tx::parse_unsigned_tx;
-        let utx = parse_unsigned_tx(&unsigned_tx)?;
-        (utx, unsigned_tx.len())
-    };
-    let _ = consumed;
+        parse_unsigned_tx(&unsigned_tx)?;
+    }
 
     let n_in = {
         use crate::tx::parse_unsigned_tx;
@@ -182,24 +217,23 @@ pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
     };
 
     let mut inputs = Vec::with_capacity(n_in);
-    for _ in 0..n_in {
-        let (pairs, next) = read_map(b, i)?;
+    for idx in 0..n_in {
+        let label = format!("input[{}]", idx);
+        let (pairs, next) = read_map(b, i, &label)?;
         i = next;
         inputs.push(PsbtInput { pairs });
     }
 
     let mut outputs = Vec::with_capacity(n_out);
-    for _ in 0..n_out {
-        let (pairs, next) = read_map(b, i)?;
+    for idx in 0..n_out {
+        let label = format!("output[{}]", idx);
+        let (pairs, next) = read_map(b, i, &label)?;
         i = next;
         outputs.push(PsbtOutput { pairs });
     }
 
     if i != b.len() {
-        return Err(PsbtError::KeyCountMismatch {
-            expected: n_in + n_out,
-            found: inputs.len() + outputs.len(),
-        });
+        return Err(PsbtError::TrailingBytes { total: b.len() });
     }
 
     Ok(Psbt {

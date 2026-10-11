@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "name": "B3/1 offline review renders 4 layers",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B3/2 export byte-identical to input",
+      "ok": true,
+      "detail": "sha256=3b79a6192e89a1cb…"
+    },
+    {
+      "name": "B3/3 export filename ends with .psbt",
+      "ok": true,
+      "detail": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc.psbt"
+    },
+    {
+      "name": "B3/4 re-import exported file reviews again",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B3/5 txid stable across round-trip",
+      "ok": true,
+      "detail": "100df7d5af345144…"
+    },
+    {
+      "name": "B2/6 malformed input names the offending map",
+      "ok": true,
+      "detail": "Review failed: PSBT parse failed: the message ends abruptly inside the output[1] map: a by"
+    },
+    {
+      "name": "B4/7 zero console errors (offline chain)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "i18n/8 zh renders kernel texts",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "responsive/9 no horizontal overflow @375px",
+      "ok": true,
+      "detail": "overflow=0px"
+    },
+    {
+      "name": "B4/10 zero console errors (zh)",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "B4/11 zero external requests",
+      "ok": true,
+      "detail": "6 local: /index.html, /lswasm.wasm, /demo/S1.psbt"
+    }
+  ],
+  "requests": [
+    "http://127.0.0.1:4180/index.html",
+    "http://127.0.0.1:4180/lswasm.wasm",
+    "http://127.0.0.1:4180/demo/S1.psbt"
+  ],
+  "external": []
+}

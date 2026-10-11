@@ -1,0 +1,253 @@
+{
+  "generated": "2026-10-11T22:27:10.391Z",
+  "rows": [
+    {
+      "fixture": "S1",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "0020bd3d29be575e4966b6bddd59eab54593cb9cfad449982e6279752d984756691f"
+        ],
+        "input_0": {
+          "witness_utxo_value": 1500000,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "input_amount_state": "parsed_unverified",
+        "input_amount": 1500000,
+        "fee_state": "parsed_unverified",
+        "fee": 10000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount": true,
+        "input_amount_state=parsed_unverified": true,
+        "sighash=0x1": true,
+        "fee=inputs-outputs": true
+      }
+    },
+    {
+      "fixture": "S2a",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "0020bd3d29be575e4966b6bddd59eab54593cb9cfad449982e6279752d984756691f"
+        ],
+        "input_0": {
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "input_amount_state": null,
+        "input_amount": null,
+        "fee_state": null,
+        "fee": null,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "sighash=0x1": true
+      }
+    },
+    {
+      "fixture": "S2b",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "0020bd3d29be575e4966b6bddd59eab54593cb9cfad449982e6279752d984756691f"
+        ],
+        "input_0": {
+          "witness_utxo_value": 1500000,
+          "unknown_keys": 1,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "input_amount_state": "parsed_unverified",
+        "input_amount": 1500000,
+        "fee_state": "parsed_unverified",
+        "fee": 10000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount": true,
+        "input_amount_state=parsed_unverified": true,
+        "sighash=0x1": true,
+        "fee=inputs-outputs": true
+      }
+    },
+    {
+      "fixture": "S3",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "0020bd3d29be575e4966b6bddd59eab54593cb9cfad449982e6279752d984756691f"
+        ],
+        "input_0": {
+          "witness_utxo_value": 1500000,
+          "partial_sigs": 1,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "input_amount_state": "parsed_unverified",
+        "input_amount": 1500000,
+        "fee_state": "parsed_unverified",
+        "fee": 10000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount": true,
+        "input_amount_state=parsed_unverified": true,
+        "partial_sig_count": true,
+        "sighash=0x1": true,
+        "fee=inputs-outputs": true
+      }
+    },
+    {
+      "fixture": "S4",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "2464c4c91c6c467d23fdace809e8d7eda3719d95ce30490b3fd008511d0f321d",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "a9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987"
+        ],
+        "input_0": {
+          "non_witness_value": 1500000,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "2464c4c91c6c467d23fdace809e8d7eda3719d95ce30490b3fd008511d0f321d",
+        "input_amount_state": "verified",
+        "input_amount": 1500000,
+        "fee_state": "parsed_unverified",
+        "fee": 10000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount(non_witness)": true,
+        "input_amount_state=verified": true,
+        "sighash=0x1": true
+      }
+    },
+    {
+      "fixture": "S5",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "0020bd3d29be575e4966b6bddd59eab54593cb9cfad449982e6279752d984756691f"
+        ],
+        "input_0": {
+          "witness_utxo_value": 500000,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
+        "input_amount_state": "parsed_unverified",
+        "input_amount": 500000,
+        "fee_state": null,
+        "fee": null,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount": true,
+        "input_amount_state=parsed_unverified": true,
+        "sighash=0x1": true
+      }
+    },
+    {
+      "fixture": "S6",
+      "bitcoinjs": {
+        "error": "Format Error: Unexpected End of PSBT"
+      },
+      "lscore": {
+        "parses": false,
+        "txid": null,
+        "input_amount_state": null,
+        "input_amount": null,
+        "fee_state": null,
+        "fee": null,
+        "error": "Review failed: PSBT parse failed: the message ends abruptly inside the output[1] map: a byte was expected at offset 348 — the PSBT is truncated or corrupt"
+      },
+      "agreement": true
+    }
+  ],
+  "disputes": [
+    {
+      "fixture": "S6",
+      "topic": "rejection",
+      "note": "双方都必须拒绝。bitcoinjs 抛异常；lscore 报错并点名 output[1] map 与字节偏移——我方满足 B2（报错点名位置），不构成语义分歧。"
+    }
+  ]
+}

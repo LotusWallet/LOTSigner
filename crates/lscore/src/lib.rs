@@ -49,12 +49,12 @@ pub fn review_psbt_bytes(raw: &[u8]) -> Result<Review, ReviewError> {
 
 pub fn review_psbt_bytes_lang(raw: &[u8], lang: Lang) -> Result<Review, ReviewError> {
     let psbt = psbt::parse_psbt(raw)
-        .map_err(|e| ReviewError::Parse(t(lang, "err_parse", &[&format!("{:?}", e)])))?;
+        .map_err(|e| ReviewError::Parse(e.message(lang)))?;
     let raw_tx = psbt.unsigned_tx_raw.as_ref().ok_or_else(|| {
         ReviewError::Parse(t(lang, "err_no_global_tx", &[]))
     })?;
     let utx = parse_unsigned_tx(raw_tx)
-        .map_err(|e| ReviewError::Parse(t(lang, "err_parse", &[&format!("{:?}", e)])))?;
+        .map_err(|e| ReviewError::Parse(e.message(lang)))?;
     Ok(build_review(&psbt, &utx, lang))
 }
 
@@ -315,7 +315,7 @@ fn reverse_hex(b: &[u8; 32]) -> String {
 /// 从前序交易报文中取出第 vout 个输出的金额
 fn parse_prev_output_value(prev_tx: &[u8], vout: u32, lang: Lang) -> Result<u64, String> {
     let prev = parse_unsigned_tx(prev_tx)
-        .map_err(|e| t(lang, "err_prev_parse", &[&format!("{:?}", e)]))?;
+        .map_err(|e| t(lang, "err_prev_parse", &[&e.message(lang)]))?;
     if vout as usize >= prev.outputs.len() {
         return Err(t(lang, "err_prev_out_range", &[&vout.to_string()]));
     }

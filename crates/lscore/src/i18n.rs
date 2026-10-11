@@ -44,6 +44,8 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::En, "input_placeholder") => "…or paste base64 PSBT text directly here",
         (Lang::En, "btn_review") => "Review",
         (Lang::En, "btn_demo") => "Load sample",
+        (Lang::En, "btn_export") => "Export PSBT (unmodified)",
+        (Lang::En, "hint_export_done") => "Exported byte-identically. Signing happens in your own signer — this tool never touches keys.",
         (Lang::En, "hint_ready") => "Core ready",
         (Lang::En, "hint_wasm_fail") => "Core load failed: {0}",
         (Lang::En, "hint_demo_fail") => "Sample failed to load",
@@ -77,7 +79,7 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::En, "err_core_fail") => "Core call failed: {0}",
 
         // ---------------- CLI ----------------
-        (Lang::En, "cli_usage") => "Usage: lscli [--lang en|zh] <PSBT file>",
+        (Lang::En, "cli_usage") => "Usage: lscli [--lang en|zh] [--export <file>] <PSBT file>",
         (Lang::En, "cli_example") => "Example: lscli ../../g3/fixtures/S1.psbt",
         (Lang::En, "cli_read_fail") => "Cannot read file: {0} — {1}",
         (Lang::En, "cli_banner") => "Lotus Signer · entrusted-signature review",
@@ -85,6 +87,8 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::En, "cli_outputs") => "Outputs",
         (Lang::En, "cli_total") => "Total output",
         (Lang::En, "cli_sig_note") => "{0} existing signature(s) (not cryptographically verified)",
+        (Lang::En, "cli_export_done") => "Exported an UNMODIFIED copy of the input to {0} (byte-identical; sha256 {1}). Signing happens in your own signer — this tool never touches keys.",
+        (Lang::En, "cli_export_fail") => "Cannot write {0}: {1}",
         (Lang::En, "r_trigger") => "Trigger:",
         (Lang::En, "r_evidence") => "Evidence:",
 
@@ -97,6 +101,18 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::En, "check_witness_len") => "witness_utxo is shorter than 8 bytes",
         (Lang::En, "check_out_exceed_in") => "outputs exceed inputs in total value; the amounts in this transaction do not add up",
         (Lang::En, "check_sighash_len") => "sighash_type field is not 4 bytes long",
+
+        // 容器级错误：必须点名出问题的位置（宪法第 5 条）
+        (Lang::En, "err_bad_magic") => "not a PSBT: the first bytes do not match the PSBT magic \"psbt\\xff\"",
+        (Lang::En, "err_truncated") => "the message ends abruptly inside the {0} map: a byte was expected at offset {1} — the PSBT is truncated or corrupt",
+        (Lang::En, "err_tx_in_global") => "the embedded unsigned transaction is invalid: {0}",
+        (Lang::En, "err_unsupported_version") => "PSBTv2 field (key type 0x{0}) present; this tool supports PSBT v0 only and will not guess at v2 semantics",
+        (Lang::En, "err_keycount") => "{0} trailing byte(s) remain after the last expected map — the declared input/output count does not match the message",
+        (Lang::En, "err_tx_truncated") => "the transaction bytes end prematurely",
+        (Lang::En, "err_tx_trailing") => "the unsigned transaction has trailing byte(s) (consumed {0} of {1})",
+        (Lang::En, "err_tx_scriptsig") => "input {0} carries a non-empty scriptSig; BIP-174 requires empty scriptSigs in the unsigned transaction",
+        (Lang::En, "err_tx_incount") => "declared input count exceeds the sanity limit (10000)",
+        (Lang::En, "err_tx_outcount") => "declared output count exceeds the sanity limit (10000)",
 
         // ---------------- 内核：字段 note ----------------
         (Lang::En, "note_amount_witness") => "This amount comes from the witness_utxo field attached to the PSBT. This tool does not go online, so it cannot confirm it matches the chain.",
@@ -166,6 +182,8 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::ZhCn, "input_placeholder") => "……也可以直接把 base64 文本粘贴到这里",
         (Lang::ZhCn, "btn_review") => "审阅",
         (Lang::ZhCn, "btn_demo") => "载入示例",
+        (Lang::ZhCn, "btn_export") => "导出 PSBT（未修改）",
+        (Lang::ZhCn, "hint_export_done") => "已按字节一致导出。签名由你自己的签名器完成——本工具不接触密钥。",
         (Lang::ZhCn, "hint_ready") => "内核就绪",
         (Lang::ZhCn, "hint_wasm_fail") => "内核加载失败：{0}",
         (Lang::ZhCn, "hint_demo_fail") => "示例加载失败",
@@ -198,7 +216,7 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::ZhCn, "err_review_fail") => "审阅失败：{0}",
         (Lang::ZhCn, "err_core_fail") => "调用内核出错：{0}",
 
-        (Lang::ZhCn, "cli_usage") => "用法：lscli [--lang en|zh] <PSBT 文件>",
+        (Lang::ZhCn, "cli_usage") => "用法：lscli [--lang en|zh] [--export <文件>] <PSBT 文件>",
         (Lang::ZhCn, "cli_example") => "示例：lscli ../../g3/fixtures/S1.psbt",
         (Lang::ZhCn, "cli_read_fail") => "读取失败：{0} —— {1}",
         (Lang::ZhCn, "cli_banner") => "Lotus Signer · 受托签名审阅",
@@ -206,6 +224,8 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::ZhCn, "cli_outputs") => "输出",
         (Lang::ZhCn, "cli_total") => "输出合计",
         (Lang::ZhCn, "cli_sig_note") => "既有签名 {0} 个（未验签）",
+        (Lang::ZhCn, "cli_export_done") => "已把输入**未经修改**地导出到 {0}（字节一致；sha256 {1}）。签名由你自己的签名器完成——本工具不接触密钥。",
+        (Lang::ZhCn, "cli_export_fail") => "无法写入 {0}：{1}",
         (Lang::ZhCn, "r_trigger") => "触发原因：",
         (Lang::ZhCn, "r_evidence") => "依据：",
 
@@ -217,6 +237,18 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         (Lang::ZhCn, "check_witness_len") => "witness_utxo 长度不足 8 字节",
         (Lang::ZhCn, "check_out_exceed_in") => "输出合计超过输入合计，这笔交易在数额上不成立",
         (Lang::ZhCn, "check_sighash_len") => "sighash_type 字段长度不为 4 字节",
+
+        // 容器级错误：必须点名出问题的位置（宪法第 5 条）
+        (Lang::ZhCn, "err_bad_magic") => "不是 PSBT：开头字节与 PSBT 魔数 \"psbt\\xff\" 不匹配",
+        (Lang::ZhCn, "err_truncated") => "报文在 {0} map 内部意外终止：偏移 {1} 处应有字节——PSBT 被截断或损坏",
+        (Lang::ZhCn, "err_tx_in_global") => "内嵌的未签名交易无效：{0}",
+        (Lang::ZhCn, "err_unsupported_version") => "检出 PSBTv2 字段（键类型 0x{0}）；本工具仅支持 PSBT v0，不对 v2 语义作推测",
+        (Lang::ZhCn, "err_keycount") => "最后一个期望的 map 读完仍有 {0} 个残余字节——声明的输入/输出数与报文不符",
+        (Lang::ZhCn, "err_tx_truncated") => "交易字节提前结束",
+        (Lang::ZhCn, "err_tx_trailing") => "未签名交易存在残余字节（消费 {0} / 共 {1}）",
+        (Lang::ZhCn, "err_tx_scriptsig") => "input[{0}] 带非空 scriptSig；BIP-174 要求未签名交易的 scriptSig 为空",
+        (Lang::ZhCn, "err_tx_incount") => "声明的输入数超出合理上限（10000）",
+        (Lang::ZhCn, "err_tx_outcount") => "声明的输出数超出合理上限（10000）",
 
         (Lang::ZhCn, "note_amount_witness") => "该金额来自 PSBT 随附的 witness_utxo 字段；本工具不联网，无法核实它是否与链上前序交易一致",
         (Lang::ZhCn, "note_amount_nw") => "该金额读自 PSBT 随附的前序交易（non_witness_utxo）；结构校验通过，但离线状态无法确认其在链上存在",

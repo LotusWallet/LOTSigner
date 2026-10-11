@@ -149,7 +149,11 @@ fn convert_bits(data: &[u8], from: u32, to: u32, pad: bool) -> Option<Vec<u8>> {
 fn bech32_encode(hrp: &str, data: &[u8], const_val: u32) -> String {
     let mut values = hrp_expand(hrp);
     values.extend(data);
+    // BIP-173：校验和 = 对「数据 + 6 个零」求 polymod 再 XOR 常数。
+    // 漏掉追加 6 个零会产生错误校验和（BIP-173 官方向量曾抓出此 bug）。
+    values.extend([0u8; 6]);
     let pm = polymod(&values) ^ const_val;
+    values.truncate(values.len() - 6);
     let mut checksum = Vec::new();
     for i in 0..6 {
         checksum.push(((pm >> (5 * (5 - i))) & 31) as u8);
@@ -227,11 +231,16 @@ mod tests {
 
     #[test]
     fn p2wsh_address_is_stable() {
-        let spk: Vec<u8> = hex_to_bytes("0020bd3d29be575e4966b6bddd59eab54593cb9cfad4");
+        // P2WSH scriptPubKey = 0x0020 + 32 字节，共 34 字节
+        let spk: Vec<u8> = hex_to_bytes(
+            "0020bd3d29be575e4966b6bddd59eab54593cb9cfad4000000000000000000000000",
+        );
+        assert_eq!(spk.len(), 34);
         let a1 = script_to_address(&spk, true).unwrap();
         let a2 = script_to_address(&spk, true).unwrap();
         assert_eq!(a1, a2);
         assert!(a1.starts_with("bc1q"));
+        assert_eq!(a1.len(), 62); // P2WSH bech32 地址固定长度
     }
 
     fn hex_to_bytes(s: &str) -> Vec<u8> {

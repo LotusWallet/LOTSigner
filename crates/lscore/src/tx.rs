@@ -12,6 +12,26 @@ pub enum TxError {
     OutputCountUnreasonable,
 }
 
+impl TxError {
+    /// 按语言产出点名问题的错误句子（i18n 文案表）。
+    pub fn message(&self, lang: crate::i18n::Lang) -> String {
+        use crate::i18n::t;
+        match self {
+            TxError::Truncated => t(lang, "err_tx_truncated", &[]),
+            TxError::TrailingBytes { consumed, total } => t(
+                lang,
+                "err_tx_trailing",
+                &[&consumed.to_string(), &total.to_string()],
+            ),
+            TxError::ScriptSigNotEmpty { index } => {
+                t(lang, "err_tx_scriptsig", &[&index.to_string()])
+            }
+            TxError::InputCountUnreasonable => t(lang, "err_tx_incount", &[]),
+            TxError::OutputCountUnreasonable => t(lang, "err_tx_outcount", &[]),
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 pub struct TxIn {
     pub prev_txid: [u8; 32],

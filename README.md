@@ -26,17 +26,22 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 
 | Item | Value |
 |---|---|
-| Current stage | **First working draft exists** — Rust core + CLI + offline web page all run end-to-end (see Quick start below). G3 verdict: conditional pass (①⑤ disproven by live test, ②④ hold at evidence grade A, ③ not yet tested) |
+| Current stage | **Beta-ready working draft** — Rust core + CLI + offline web page run end-to-end; BETA-READINESS Track-1 checklist items A/B/D are evidenced (see that file). G3 verdict: conditional pass (①⑤ disproven by live test, ②④ hold at evidence grade A, ③ not yet tested) |
 | Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
-| Execution | G3 done except item ③ (export of a partially-signed PSBT); G1 next; G2 awaits hardware |
+| Execution | G3 done except item ③ (export of a partially-signed PSBT from Caravan); G1 next; G2 awaits hardware |
 | Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
 | Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
 | Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
 | Nature of the project | **Technical-credibility asset + strategic option**; not measured by revenue KPI |
 
+> **⚠️ No officially signed artifact exists yet.** The beta is offered as **source + one-command
+> build** only (BETA-READINESS Track 1 / §5-C3). Anything you download outside a `git clone` +
+> `./build.sh` of this repository is not from this project. Official signed artifacts follow
+> Track 2 (T0 + signing-key three requirements) and do not exist today.
+
 ## Quick start (working draft)
 
-Zero third-party crates — the build never touches crates.io.
+Full instructions, toolchain versions and manual equivalents: **[`BUILD.md`](BUILD.md)**.
 
 ```bash
 git clone https://github.com/LotusWallet/LOTSigner
@@ -47,11 +52,15 @@ cd LOTSigner
 ```
 
 Or use the CLI directly: `./target/release/lscli g3/fixtures/S1.psbt`
+(`--export out.psbt` hands an **unmodified** copy back after review; signing happens in your own signer).
 
-**Verified behaviour** (automated browser test, evidence in `g3/evidence/web-verify.json`):
-the page issues exactly **3 requests, all local** (`index.html`, `lswasm.wasm`, the demo fixture) —
-**zero external requests**, four review layers rendered, five-state badges present, the
-"what this tool does NOT tell you" layer always shows 5 items.
+**Read [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) before trusting any output.**
+
+**Verified behaviour** (automated browser test, evidence in `g3/evidence/web2-verify.json`):
+with every non-local request route-blocked, the full chain works offline —
+**review → export → re-import → review**, the export is byte-identical to the input
+(sha256-checked), malformed input produces an error naming the offending map and byte offset,
+and the whole session issues **only 3 local requests, zero external requests**.
 
 **Internationalisation**: the default language is English; the UI offers an English/中文 switch
 (the initial language follows the browser locale). Every user-facing sentence — including risk
@@ -106,11 +115,16 @@ with the LotusWallet main product (before P3) · token narrative
 ## Repository Layout
 
 ```
-g3/                 P1-0 gate G3: pre-registration, fixtures, tools, evidence
-packages/           source (core / parsers / risk / transport / web / cli)
+crates/lscore/      Rust core — the single authoritative implementation (parsing / five states / i18n)
+crates/lscli/       CLI front end (no parsing logic)
+crates/lswasm/      wasm export layer (no parsing logic) → web/
+web/                offline single-page UI (zero external requests)
+g3/                 P1-0 gate G3: pre-registration, fixtures, tools, evidence, T4 report
 ANNOUNCEMENTS.md    outbound announcement queue (published manually)
 PROGRESS.md         progress board (single entry point)
 BETA-READINESS.md   the frozen checklist that decides when we may open the repo
+BUILD.md            one-command build from a clean clone
+KNOWN-LIMITATIONS.md what this beta does NOT do — read before trusting output
 ```
 
 > **The deliberation documents are not in this repository.** Drafts and verdicts from the four review
@@ -124,8 +138,12 @@ BETA-READINESS.md   the frozen checklist that decides when we may open the repo
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | Progress board (single entry point) |
 | [`BETA-READINESS.md`](BETA-READINESS.md) | **Frozen checklist: when we are allowed to open the repo** |
+| [`BUILD.md`](BUILD.md) | One-command build from a clean clone (BETA-READINESS A1) |
+| [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **What this beta does NOT do — read before trusting output (A2)** |
 | [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) | Outbound announcement queue |
 | [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 pre-registration (frozen; must not change after testing) |
+| [`g3/G3-判定表-实跑结果.md`](g3/G3-判定表-实跑结果.md) | G3 live-test verdict table |
+| [`g3/T4-异源对照报告.md`](g3/T4-异源对照报告.md) | Independent cross-check vs bitcoinjs-lib, disagreements adjudicated (B5) |
 | [`g3/G3-实测记录-阶段1.md`](g3/G3-实测记录-阶段1.md) | G3 phase-1 test log (including environment pitfalls) |
 | [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT fixtures and dual-verification results |
 

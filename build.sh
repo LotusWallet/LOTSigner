@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
-# Lotus Signer · 一键构建（宪法 G-I 路径 A 的落地物）
-# 前置：rustup（stable）与 Rust 1.85+。零第三方 crate，无需访问 crates.io。
+# Lotus Signer · 一键构建（宪法 G-I 路径 A 的落地物 / BETA-READINESS A1）
+# 前置：rustup（stable）。零第三方 crate，无需访问 crates.io。
 set -euo pipefail
 cd "$(dirname "$0")"
 
 export CARGO_NET_OFFLINE=true
+# D1：把 commit 哈希注入产物，--version 可溯源
+export LS_COMMIT="$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 
 echo "== 1/3 构建 CLI（lscli）=="
 cargo build --release --offline -p lscli

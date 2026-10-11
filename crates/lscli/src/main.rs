@@ -11,6 +11,12 @@ use lscore::i18n::{t, Lang};
 use lscore::review_psbt_base64_lang;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// 构建时由 build.sh 注入 `LS_COMMIT=$(git rev-parse --short HEAD)`。
+/// BETA-READINESS D1：任何产物都能映射回一个 commit。
+const GIT_HASH: &str = match option_env!("LS_COMMIT") {
+    Some(h) => h,
+    None => "unknown (built without build.sh)",
+};
 
 fn main() -> ExitCode {
     let args: Vec<String> = env::args().collect();
@@ -20,12 +26,13 @@ fn main() -> ExitCode {
         return ExitCode::SUCCESS;
     }
     if args.iter().any(|a| a == "--version" || a == "-V") {
-        println!("lscli {}", VERSION);
+        println!("lscli {} ({})", VERSION, GIT_HASH);
         return ExitCode::SUCCESS;
     }
 
-    // --lang en|zh（默认 en，国际化默认语言）
+    // --lang en|zh（默认 en，国际化默认语言）；--export <file> 导出未修改的 PSBT
     let mut lang = Lang::En;
+    let mut export_path: Option<String> = None;
     let mut positional: Vec<String> = Vec::new();
     let mut it = args.iter().skip(1);
     while let Some(a) = it.next() {
@@ -33,6 +40,10 @@ fn main() -> ExitCode {
             lang = it.next().map(|v| Lang::parse(v)).unwrap_or(Lang::En);
         } else if let Some(v) = a.strip_prefix("--lang=") {
             lang = Lang::parse(v);
+        } else if a == "--export" {
+            export_path = it.next().cloned();
+        } else if let Some(v) = a.strip_prefix("--export=") {
+            export_path = Some(v.to_string());
         } else {
             positional.push(a.clone());
         }
@@ -59,10 +70,29 @@ fn main() -> ExitCode {
         Ok(r) => r,
         Err(e) => {
             // 宪法第 5 条：不支持的格式必须明确报错，不允许静默降级
-            eprintln!("{} {}", t(lang, "err_review_fail", &[]), e);
+            eprintln!("{}", t(lang, "err_review_fail", &[&e.to_string()]));
             return ExitCode::FAILURE;
         }
     };
+
+    // ---- 导出（B3 离线全链路：review → export → 交回签名器） ----
+    // 宪法第 2 条：本工具不签名。导出的是**未经任何修改**的输入字节——
+    // 审阅完成后原样交回，签名由用户自己的签名器完成。
+    if let Some(out) = &export_path {
+        let raw = match lscore::base64::decode(text.trim()) {
+            Ok(r) => r,
+            Err(e) => {
+                eprintln!("{} {:?}", t(lang, "err_review_fail", &[]), e);
+                return ExitCode::FAILURE;
+            }
+        };
+        let digest = lscore::tx::sha256(&raw).iter().map(|b| format!("{:02x}", b)).collect::<String>();
+        if let Err(e) = fs::write(out, &raw) {
+            eprintln!("{}", t(lang, "cli_export_fail", &[out, &e.to_string()]));
+            return ExitCode::FAILURE;
+        }
+        println!("{}", t(lang, "cli_export_done", &[out, &digest]));
+    }
 
     let f = &review.facts;
     println!("==================================================");
@@ -182,20 +212,25 @@ fn main() -> ExitCode {
 fn print_help() {
     // 帮助文本双语并列，避免帮本身再引入一层参数
     println!(
-        "lscli {} —— Lotus Signer command-line review / 命令行审阅端\n\
+        "lscli {} ({}) —— Lotus Signer command-line review / 命令行审阅端\n\
          \n\
          Usage / 用法:\n  \
-           lscli [--lang en|zh] <PSBT file>\n  \
+           lscli [--lang en|zh] [--export <file>] <PSBT file>\n  \
            lscli --version\n  \
            lscli --help\n\
          \n\
          Default language is English; `--lang zh` switches to Chinese.\n\
          默认语言为英文，`--lang zh` 切换到中文。\n\
          \n\
+         --export writes an UNMODIFIED copy of the input PSBT (byte-identical), for handing\n\
+         back to the signer after review. This tool never signs — Constitution §2.\n\
+         --export 把输入 PSBT 原样导出（字节一致），供审阅后交回签名器。\n\
+         本工具不签名 —— 宪法第 2 条。\n\
+         \n\
          This tool does not go online, never touches private keys, and never outputs\n\
          a \"safe/dangerous\" verdict. All parsing and judgement lives in the lscore core.\n\
          本工具不联网、不接触私钥、不输出「安全/危险」结论；\n\
          所有解析与判定由 lscore 内核提供，本端不含任何解析逻辑。",
-        VERSION
+        VERSION, GIT_HASH
     );
 }

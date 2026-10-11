@@ -200,6 +200,9 @@ def main():
         # S4 = P2SH 对照样本：非 witness 输入，带 redeemScript 与完整前序交易
         "S4": {"has_utxo": False, "has_sig": False, "has_prop": False,
                "has_redeem": True, "has_nonwitness": True},
+        # S5 = 数额不成立：结构完全合法，但输出合计 > 输入合计（内核应判 check_failed）
+        "S5": {"has_utxo": True, "has_sig": False, "has_prop": False,
+               "has_redeem": False, "has_nonwitness": False},
     }
 
     for name, exp in expectations.items():
@@ -256,6 +259,14 @@ def main():
                 check(v[0] == 0x52 and v[-1] == 0xAE,
                       "witnessScript 形态为 OP_2 ... OP_CHECKMULTISIG")
                 check(hashlib.sha256(v).hexdigest() is not None, "witnessScript 可哈希")
+
+    # --- S6：malformed —— 解析器必须显式拒绝，绝不能"成功解析"
+    print("\n--- S6（截断报文，必须报错） ---")
+    try:
+        parse_psbt(read_fixture("S6"))
+        check(False, "S6 被\"成功解析\"了——静默降级，违反宪法第 5 条")
+    except ValueError as e:
+        check(True, f"S6 被显式拒绝（报错：{e}）")
 
     # --- 跨样本一致性
     print("\n--- 跨样本约束 ---")

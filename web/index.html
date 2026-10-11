@@ -181,6 +181,7 @@
   <div class="actions">
     <button id="go" class="primary"></button>
     <button id="demo" class="ghost"></button>
+    <button id="export" class="ghost" disabled style="display:none"></button>
     <span class="hint" id="hint"></span>
   </div>
 
@@ -262,6 +263,7 @@ function applyUi(){
   $("#input").placeholder = UI.input_placeholder;
   $("#go").textContent = UI.btn_review;
   $("#demo").textContent = UI.btn_demo;
+  $("#export").textContent = UI.btn_export;
   $("#t-footer1").textContent = UI.footer1;
   $("#t-footer2").textContent = UI.footer2;
   $("#lang-en").classList.toggle("on", LANG === "en");
@@ -355,16 +357,43 @@ function render(r){
 }
 
 // ---------- 交互 ----------
+let LAST_B64 = null;    // 最近一次成功审阅的 base64 文本（导出用，字节级原样）
+let LAST_TXID = null;
+
 async function run(text){
   $("#hint").textContent = "";
-  if (!text.trim()){ $("#out").innerHTML = ""; return; }
+  if (!text.trim()){ $("#out").innerHTML = ""; $("#export").style.display = "none"; return; }
   try {
     const r = callCore(text.trim(), LANG);
     $("#out").innerHTML = render(r);
+    if (r.ok){
+      // 审阅成功后才允许导出：导出的正是本次载入的原始字节（B3 全链路的出口）
+      LAST_B64 = text.trim();
+      LAST_TXID = r.facts.txid;
+      $("#export").style.display = "";
+      $("#export").disabled = false;
+    }
   } catch(e){
     $("#out").innerHTML = `<div class="err">${esc((UI && UI.err_core_fail ? UI.err_core_fail : "Core call failed: {0}").replace("{0}", e.message))}</div>`;
   }
 }
+
+// 导出：把审阅过的 PSBT **未经修改**地交回用户（宪法第 2 条：签名由用户自己的签名器完成）
+$("#export").onclick = () => {
+  if (!LAST_B64) return;
+  const bin = atob(LAST_B64.replace(/\s+/g, ""));
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/octet-stream" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = (LAST_TXID || "reviewed") + ".psbt";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(a.href);
+  $("#hint").textContent = UI.hint_export_done;
+};
 
 async function setLang(lang){
   LANG = lang;

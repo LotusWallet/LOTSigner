@@ -14,7 +14,8 @@ use crate::json;
 pub fn ui_object(lang: Lang) -> String {
     let keys = [
         "app_title", "tagline", "offline_badge", "drop_title", "drop_sub", "input_placeholder",
-        "btn_review", "btn_demo", "hint_ready", "hint_wasm_fail", "hint_demo_fail",
+        "btn_review", "btn_demo", "btn_export", "hint_export_done", "hint_ready",
+        "hint_wasm_fail", "hint_demo_fail",
         "layer1", "layer2", "layer3", "layer4", "footer1", "footer2",
         "th_index", "th_outpoint", "th_type", "th_amount", "th_sigs", "th_value", "th_script_addr",
         "dt_txid", "dt_version", "dt_locktime", "dt_total_out", "dt_fee", "dt_sighash",

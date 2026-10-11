@@ -345,6 +345,39 @@ def main():
     p2sh_output_maps = [[], [kv(OUT_REDEEM_SCRIPT, b"", rscript)]]
     s4 = build_psbt(1, unsigned_tx_p2sh, [p2sh_input], p2sh_output_maps)
 
+    # ---------------- S5：数额不成立（check_failed） ----------------
+    # 目的：补齐五态中最后一个没有触发样本的状态 check_failed。
+    # 定义好的校验规则：fee = 输入合计 − 输出合计；若输出合计 > 输入合计，
+    # 则手续费字段无法成立 → check_failed（内核 R003 风险提示）。
+    # 这是「字段存在、类型已知、但未通过明确定义的校验」的教科书场景——
+    # 与 S2a 的 missing（字段不存在）和 S2b 的 unsupported（语义不可解释）都不同。
+    unsigned_tx_bad = build_unsigned_tx(
+        n_inputs=1,
+        inputs=[(prev_txid, 0, 0xFFFFFFFE)],
+        outputs=[(send_amount, send_spk), (change_amount, change_spk)],
+        n_outputs=2,
+    )
+    witness_utxo_bad = (
+        struct.pack("<Q", 500_000)   # 输入只有 0.005 BTC，但输出要付出 1_490_000 sat
+        + varint(len(p2wsh_spk(wscript)))
+        + p2wsh_spk(wscript)
+    )
+    bad_amount_input = [
+        kv(IN_WITNESS_UTXO, b"", witness_utxo_bad),
+        kv(IN_SIGHASH_TYPE, b"", struct.pack("<I", 1)),
+        kv(IN_WITNESS_SCRIPT, b"", wscript),
+        kv(IN_BIP32_DERIVATION, pk1,
+           b"\x00" * 4 + b"\x80\x00\x00\x00" + b"\x00\x00\x00\x00"),
+    ]
+    s5 = build_psbt(1, unsigned_tx_bad, [bad_amount_input], output_maps)
+
+    # ---------------- S6：截断报文（malformed → 必须显式报错） ----------------
+    # 目的：B2——不支持/损坏的格式必须明确报错，绝不静默降级（宪法第 5 条）。
+    # 取合法的 S1 并截掉尾部 12 字节：输入 map 未以 0x00 终止，任何标准解析器都应拒绝。
+    # 断言截断点落在最后一个 map 内部，而不是恰好把 0x00 终止符留下（那会变成合法截断）。
+    s6_raw = s1[:-12]
+    assert s6_raw[-1] != 0x00, "截断点不应恰好是 map 终止符"
+
     samples = {
         "S1": (s1, "受托场景 2-of-3 P2WSH 多签 PSBT，未签名。1 输入 2 输出（含找零），"
                    "含 witness_utxo / sighash / witnessScript / bip32 derivation"),
@@ -354,6 +387,11 @@ def main():
         "S2a": (s2a, "S1 移除 witness_utxo → 无法得知输入金额。对应五态 missing"),
         "S2b": (s2b, "S1 追加 PSBT_IN_PROPRIETARY(0x0f) 未知字段。对应五态 unsupported"),
         "S3": (s3, "S1 追加 pk1 的一个 partial_sig → 已收集 1/2 签名，待第 2 个"),
+        "S5": (s5, "**数额不成立样本（check_failed）**：输入 witness_utxo 只有 500,000 sat，"
+                   "而输出合计 1,490,000 sat。手续费 = 输入 − 输出 无法成立 → "
+                   "内核 fee 字段应为 check_failed 并触发 R003。补齐五态最后一个触发样本"),
+        "S6": (s6_raw, "**截断报文（malformed）**：S1 截去尾部 12 字节，输入 map 未以 0x00 终止。"
+                   "任何标准解析器都必须显式报错（宪法第 5 条），用于 BETA-READINESS B2 验证"),
     }
 
     index = {}

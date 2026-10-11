@@ -21,17 +21,21 @@
 
 | 项 | 内容 |
 |---|---|
-| 当前阶段 | **初稿产品已可运行**——Rust 内核 + 命令行端 + 离线网页端全链路跑通（见下方「快速开始」）。G3 判定：有条件通过（①⑤被实测反证、②④以 A 级证据成立、③未测） |
+| 当前阶段 | **内测就绪的工作稿**——Rust 内核 + 命令行端 + 离线网页端全链路跑通；BETA-READINESS Track-1 的 A/B/D 段已有证据（见该文件）。G3 判定：有条件通过（①⑤被实测反证、②④以 A 级证据成立、③未测） |
 | 论证结论 | 方向成立。**P1 功能范围不预锁**，规格待 G1–G3 有结论后动笔 |
-| 执行状态 | G3 仅剩差异项③（导出部分签名 PSBT）；下一步 G1；G2 待硬件设备 |
+| 执行状态 | G3 仅剩差异项③（Caravan 侧导出部分签名 PSBT 的补测）；下一步 G1；G2 待硬件设备 |
 | 主打场景 | BTC PSBT 受托审阅 + 签名回导 + 导出（无状态、不做钱包管理） |
 | 目标人群 | 熟悉自托管与多签、能判断交易是否符合预期、**但不愿仅凭原始 PSBT 或单一钱包界面作签名决定**的技术型用户（刻意收窄） |
 | 开发投入 | 核心开发 1–2 人；止损线**前移至 P1-0** |
 | 立项性质 | **技术信誉资产 + 战略期权**，不以收入 KPI 考核 |
 
+> **⚠️ 目前不存在任何官方签名产物。** 内测仅以「源码 + 一键构建」形式提供
+> （BETA-READINESS Track 1 / §5-C3）。凡不是来自对本仓库 `git clone` + `./build.sh` 的东西，
+> 都不是本项目发布的。官方签名产物属 Track 2（T0 + 签名密钥三要件），今日尚不存在。
+
 ## 快速开始（初稿产品）
 
-零第三方 crate——构建过程不访问 crates.io。
+完整说明、工具链版本与手动等价步骤见 **[`BUILD.md`](BUILD.md)**。
 
 ```bash
 git clone https://github.com/LotusWallet/LOTSigner
@@ -42,10 +46,14 @@ cd LOTSigner
 ```
 
 或直接用命令行端：`./target/release/lscli g3/fixtures/S1.psbt`
+（`--export out.psbt` 在审阅后把**未经修改**的副本交回；签名由你自己的签名器完成。）
 
-**已验证行为**（自动化浏览器测试，证据在 `g3/evidence/web-verify.json`）：
-页面全程只发出 **3 个本地请求**（`index.html`、`lswasm.wasm`、示例固件）——
-**零外部请求**，四层审阅全部渲染，五态徽标正常，「不提供的结论」恒显 5 条。
+**在信任任何输出之前，请先读 [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md)。**
+
+**已验证行为**（自动化浏览器测试，证据在 `g3/evidence/web2-verify.json`）：
+在拦截一切非本地请求的条件下，全链路离线可用——
+**审阅 → 导出 → 再导入 → 再审阅**；导出与输入字节一致（sha256 校验）；
+损坏输入报错并点名出问题的 map 与字节偏移；全程恰好 **3 个本地请求，零外部请求**。
 
 **多语言**：默认英文，界面提供 EN/中文 切换（初始语言跟随浏览器语言）。所有面向用户的句子——
 包括风险提示与五态解释——都出自内核文案表（`crates/lscore/src/i18n.rs`），
@@ -82,11 +90,16 @@ cd LOTSigner
 ## 目录
 
 ```
-g3/                 P1-0 闸门 G3：预注册、固件、工具、证据
-packages/           源码（core / parsers / risk / transport / web / cli）
+crates/lscore/      Rust 内核 —— 唯一权威实现（解析 / 五态 / i18n）
+crates/lscli/       命令行前端（不含解析逻辑）
+crates/lswasm/      wasm 导出层（不含解析逻辑）→ web/
+web/                离线单页界面（零外部请求）
+g3/                 P1-0 闸门 G3：预注册、固件、工具、证据、T4 对照报告
 ANNOUNCEMENTS.md    对外发布内容队列（手工发布）
 PROGRESS.md         进展看板（唯一入口）
 BETA-READINESS.md   决定"何时可以 open"的冻结清单
+BUILD.md            干净 clone 的一键构建说明
+KNOWN-LIMITATIONS.md 本内测版不做什么——信任输出前必读
 ```
 
 > **论证过程文档不在本仓。** 四轮论证的稿件与终裁已由项目负责人单独归档，2026-10-11 从本仓及
@@ -99,8 +112,12 @@ BETA-READINESS.md   决定"何时可以 open"的冻结清单
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | 进展看板（唯一入口） |
 | [`BETA-READINESS.md`](BETA-READINESS.md) | **冻结清单：我们何时才被允许 open** |
+| [`BUILD.md`](BUILD.md) | 干净 clone 的一键构建说明（BETA-READINESS A1） |
+| [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **本内测版不做什么——信任输出前必读（A2）** |
 | [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) | 对外发布内容队列 |
 | [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 预注册（已冻结，测试后不得修改） |
+| [`g3/G3-判定表-实跑结果.md`](g3/G3-判定表-实跑结果.md) | G3 实跑判定表 |
+| [`g3/T4-异源对照报告.md`](g3/T4-异源对照报告.md) | 与 bitcoinjs-lib 的独立对照，分歧逐条裁定（B5） |
 | [`g3/G3-实测记录-阶段1.md`](g3/G3-实测记录-阶段1.md) | G3 阶段 1 实测记录（含环境坑） |
 | [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT 固件说明与双重验证结果 |
 
