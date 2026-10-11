@@ -1,46 +1,57 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lotus Signer · 受托签名审阅</title>
+<title>Lotus Signer · Entrusted-signature review</title>
 <!-- 内联 favicon：避免浏览器自动请求 /favicon.ico 产生 404（本页承诺零外部请求） -->
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🪷</text></svg>">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%AA%B7%3C/text%3E%3C/svg%3E">
 <!--
   Lotus Signer 网页端
   ------------------------------------------------------------
-  本文件**不得**包含任何 PSBT 解析、交易事实判定或五态逻辑。
-  它只做三件事：读文件 → 交给 wasm 内核 → 渲染返回的 JSON（宪法第 8 条）。
+  本文件**不得**包含任何 PSBT 解析、交易事实判定或五态逻辑，也**不得包含语义文案**——
+  界面上的句子全部来自 wasm 内核的文案表（宪法第 8 条及其延伸）。
+  加一种语言 = 在 crates/lscore/src/i18n.rs 加一个 match 分支，本文件零改动。
 
   本页面刻意不含任何外部资源引用（无 CDN、无字体、无分析脚本），
   因为产品承诺场景内不发起外部请求（宪法 G-II）。
-  你可以在浏览器开发者工具的 Network 面板核对：断网后功能完全可用。
 -->
 <style>
   :root{
     --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#30363d;
     --fg:#e6edf3; --fg-dim:#8b949e; --fg-faint:#6e7681;
-    --accent:#7c8cff; --accent-dim:#39406b;
+    --accent:#7c8cff;
     --st-verified:#3fb950; --st-parsed:#d29922; --st-missing:#8b949e;
     --st-unsupported:#a371f7; --st-failed:#f85149;
     --risk:#f0883e;
   }
   *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
   body{
     margin:0; background:var(--bg); color:var(--fg);
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
     line-height:1.6; font-size:14px;
   }
   .wrap{max-width:960px;margin:0 auto;padding:32px 20px 80px}
-  header{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px}
-  h1{font-size:22px;margin:0 0 6px;font-weight:600;letter-spacing:.3px}
-  .tagline{color:var(--fg-dim);font-size:13px}
+  header{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}
+  .brand h1{font-size:22px;margin:0 0 6px;font-weight:600;letter-spacing:.3px}
+  .tagline{color:var(--fg-dim);font-size:13px;max-width:34em}
   .badge-offline{
     display:inline-flex;align-items:center;gap:6px;margin-top:12px;
     font-size:12px;color:var(--st-verified);background:#0f2417;
     border:1px solid #1f4d2e;border-radius:20px;padding:3px 12px;
   }
   .badge-offline::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--st-verified)}
+
+  /* 语言切换 */
+  .lang{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;flex:none}
+  .lang button{
+    background:transparent;color:var(--fg-dim);border:0;border-radius:0;
+    padding:5px 14px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  .lang button.on{background:var(--accent);color:#fff}
+  .lang button:not(.on):hover{color:var(--fg);background:var(--panel2)}
 
   .drop{
     border:1.5px dashed var(--border);border-radius:12px;padding:40px 24px;text-align:center;
@@ -58,13 +69,14 @@
   }
   textarea:focus{outline:none;border-color:var(--accent)}
 
-  .actions{display:flex;gap:10px;align-items:center;margin:14px 0}
-  button{
+  .actions{display:flex;gap:10px;align-items:center;margin:14px 0;flex-wrap:wrap}
+  button.primary{
     background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 20px;
     font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
   }
-  button:hover{background:#6a7bf0}
-  button.ghost{background:transparent;color:var(--fg-dim);border:1px solid var(--border)}
+  button.primary:hover{background:#6a7bf0}
+  button.ghost{background:transparent;color:var(--fg-dim);border:1px solid var(--border);border-radius:8px;
+    padding:9px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
   button.ghost:hover{color:var(--fg);border-color:var(--fg-dim);background:var(--panel)}
   .hint{color:var(--fg-faint);font-size:12px}
 
@@ -75,19 +87,21 @@
   }
   .layer-title .n{
     font-size:11px;color:var(--fg-faint);font-weight:400;
-    border:1px solid var(--border);border-radius:4px;padding:1px 6px;
+    border:1px solid var(--border);border-radius:4px;padding:1px 6px;white-space:nowrap;
   }
   .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
 
-  .kv{display:grid;grid-template-columns:130px 1fr;gap:8px 16px;font-size:13px}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:8px 16px;font-size:13px;margin:0}
   .kv dt{color:var(--fg-dim)}
   .kv dd{margin:0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all}
 
-  table{width:100%;border-collapse:collapse;font-size:13px}
-  th{text-align:left;color:var(--fg-dim);font-weight:500;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--border)}
-  td{padding:8px 10px;border-bottom:1px solid #21262d;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+  /* 表格在小屏放进横向滚动容器，避免挤压 */
+  .table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{width:100%;border-collapse:collapse;font-size:13px;min-width:520px}
+  th{text-align:left;color:var(--fg-dim);font-weight:500;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:8px 10px;border-bottom:1px solid #21262d;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;vertical-align:top}
   tr:last-child td{border-bottom:0}
-  td.num{text-align:right}
+  td.num{text-align:right;white-space:nowrap}
   .addr{word-break:break-all}
 
   .st{
@@ -123,34 +137,58 @@
   footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);color:var(--fg-faint);font-size:12px;text-align:center}
   .err{background:#2d1418;border:1px solid #5c2228;color:#ffa198;border-radius:8px;padding:14px 16px;font-size:13px;margin-top:16px}
   .hidden{display:none}
+
+  /* ---------- 响应式：平板与手机 ---------- */
+  @media (max-width: 720px){
+    .wrap{padding:20px 14px 64px}
+    .drop{padding:26px 14px}
+    .card{padding:12px 12px}
+    /* 概览键值对改单列 */
+    .kv{grid-template-columns:1fr;gap:2px}
+    .kv dt{margin-top:8px}
+    header{flex-direction:column;align-items:flex-start}
+    .lang{align-self:flex-start}
+    section.layer{margin-top:22px}
+  }
+  @media (max-width: 400px){
+    body{font-size:13px}
+    .drop h2{font-size:14px}
+    button.primary,button.ghost{padding:8px 14px;width:auto}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Lotus Signer</h1>
-    <div class="tagline">别人让你签的东西，先过一遍 Lotus Signer。</div>
-    <div class="badge-offline">本页不发起任何外部请求 · 完全离线运行</div>
+    <div class="brand">
+      <h1>Lotus Signer</h1>
+      <div class="tagline" id="t-tagline"></div>
+      <div class="badge-offline"><span id="t-offline"></span></div>
+    </div>
+    <div class="lang" role="group" aria-label="Language">
+      <button id="lang-en">EN</button>
+      <button id="lang-zh">中文</button>
+    </div>
   </header>
 
   <div class="drop" id="drop">
-    <h2>把待签的 PSBT 拖到这里</h2>
-    <p>或点击选择文件 —— 支持 <code>.psbt</code> 文本（base64）。文件不会离开这台浏览器。</p>
+    <h2 id="t-drop-title"></h2>
+    <p id="t-drop-sub"></p>
     <input type="file" id="file" accept=".psbt,.txt,application/base64,text/plain" class="hidden">
   </div>
 
-  <textarea id="input" placeholder="……也可以直接把 base64 文本粘贴到这里"></textarea>
+  <textarea id="input" spellcheck="false"></textarea>
   <div class="actions">
-    <button id="go">审阅</button>
-    <button id="demo" class="ghost">载入示例</button>
+    <button id="go" class="primary"></button>
+    <button id="demo" class="ghost"></button>
     <span class="hint" id="hint"></span>
   </div>
 
   <div id="out"></div>
 
   <footer>
-    以上为「循证审阅」结果，不构成任何人签名或不签名的建议。<br>
-    解析与判定由唯一的 Rust 内核提供，本页不含任何解析逻辑。
+    <div id="t-footer1"></div>
+    <div id="t-footer2"></div>
   </footer>
 </div>
 
@@ -159,6 +197,8 @@
 
 // ---------- wasm 加载（零工具链：手写 linear memory 交互） ----------
 let wasm = null;
+let UI = null;   // 界面壳文案，全部来自内核文案表（本文件不持有任何语义句子）
+let LANG = "en";
 
 async function loadWasm(){
   const buf = await (await fetch("./lswasm.wasm")).arrayBuffer();
@@ -166,24 +206,41 @@ async function loadWasm(){
   wasm = instance.exports;
 }
 
-// 调用内核：把 UTF-8 文本写入 wasm 内存，取回 JSON
-function callCore(text){
-  const enc = new TextEncoder();
-  const bytes = enc.encode(text);
+// 帮助：写 UTF-8 串进 wasm 内存 → 调用 → 释放
+function writeBytes(text){
+  const bytes = new TextEncoder().encode(text);
   const ptr = wasm.ls_alloc(bytes.length);
-  if (!ptr) throw new Error("wasm 内存分配失败");
+  if (!ptr) throw new Error("wasm alloc failed");
   new Uint8Array(wasm.memory.buffer, ptr, bytes.length).set(bytes);
-
-  const out = wasm.ls_review(ptr, bytes.length);
-  wasm.ls_dealloc(ptr, bytes.length);
-  if (!out) throw new Error("wasm 返回空指针");
-
+  return {ptr, len: bytes.length};
+}
+function readPacked(out){
+  if (!out) throw new Error("wasm null pointer");
   const view = new DataView(wasm.memory.buffer);
   const len = view.getUint32(out, true);
-  const jsonBytes = new Uint8Array(wasm.memory.buffer, out + 4, len);
-  const json = new TextDecoder().decode(jsonBytes); // 复制出视图
+  const s = new TextDecoder().decode(new Uint8Array(wasm.memory.buffer, out + 4, len));
   wasm.ls_dealloc(out, len + 4);
-  return JSON.parse(json);
+  return s;
+}
+
+// 调用内核审阅：文本 + 语言
+function callCore(text, lang){
+  const inp = writeBytes(text);
+  const lg = writeBytes(lang);
+  const out = wasm.ls_review(inp.ptr, inp.len, lg.ptr, lg.len);
+  wasm.ls_dealloc(inp.ptr, inp.len);
+  wasm.ls_dealloc(lg.ptr, lg.len);
+  return JSON.parse(readPacked(out));
+}
+
+// 取界面壳文案
+async function loadUi(lang){
+  const lg = writeBytes(lang);
+  const out = wasm.ls_ui(lg.ptr, lg.len);
+  wasm.ls_dealloc(lg.ptr, lg.len);
+  const r = JSON.parse(readPacked(out));
+  if (!r.ok) throw new Error("ui load failed");
+  return r.ui;
 }
 
 // ---------- 工具 ----------
@@ -192,87 +249,106 @@ const esc = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;","
 const sats = (n) => n.toLocaleString("en-US");
 
 function stateBadge(f){
-  const s = f.state;
-  return `<span class="st st-${s}" title="${esc(f.state_explain || "")}">${s}</span>`;
+  return `<span class="st st-${f.state}" title="${esc(f.state_explain || "")}">${f.state}</span>`;
+}
+
+// ---------- 静态界面文案（来自内核 ui 对象） ----------
+function applyUi(){
+  document.title = UI.app_title + " · " + UI.layer1;
+  $("#t-tagline").textContent = UI.tagline;
+  $("#t-offline").textContent = UI.offline_badge;
+  $("#t-drop-title").textContent = UI.drop_title;
+  $("#t-drop-sub").innerHTML = UI.drop_sub.replace(/\.psbt/, '<code>.psbt</code>');
+  $("#input").placeholder = UI.input_placeholder;
+  $("#go").textContent = UI.btn_review;
+  $("#demo").textContent = UI.btn_demo;
+  $("#t-footer1").textContent = UI.footer1;
+  $("#t-footer2").textContent = UI.footer2;
+  $("#lang-en").classList.toggle("on", LANG === "en");
+  $("#lang-zh").classList.toggle("on", LANG !== "en");
+  document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
 }
 
 // ---------- 渲染四层 ----------
 function render(r){
-  if (!r.ok) return `<div class="err">审阅失败：${esc(r.error)}</div>`;
+  if (!r.ok) return `<div class="err">${esc(UI.err_review_fail.replace("{0}", r.error || ""))}</div>`;
   const f = r.facts;
   let h = "";
 
   // 第一层
-  h += `<section class="layer"><div class="layer-title"><span class="n">第一层</span>交易事实</div><div class="card">`;
+  h += `<section class="layer"><div class="layer-title"><span class="n">1</span>${esc(UI.layer1)}</div><div class="card">`;
   h += `<dl class="kv">
-    <dt>txid</dt><dd>${esc(f.txid)}</dd>
-    <dt>version</dt><dd>${f.version}</dd>
-    <dt>nLockTime</dt><dd>${f.locktime}　<span style="color:var(--fg-dim);font-family:inherit">${esc(f.locktime_meaning)}</span></dd>
+    <dt>${esc(UI.dt_txid)}</dt><dd>${esc(f.txid)}</dd>
+    <dt>${esc(UI.dt_version)}</dt><dd>${f.version}</dd>
+    <dt>${esc(UI.dt_locktime)}</dt><dd>${f.locktime}　<span style="color:var(--fg-dim);font-family:inherit">${esc(f.locktime_meaning)}</span></dd>
   </dl></div>`;
 
   // 输入
-  h += `<div class="card" style="margin-top:12px"><table><thead><tr>
-    <th style="width:38px">#</th><th>Outpoint</th><th style="width:90px">类型</th>
-    <th style="width:130px;text-align:right">金额</th><th style="width:70px">签名</th></tr></thead><tbody>`;
+  h += `<div class="card" style="margin-top:12px"><div class="table-scroll"><table><thead><tr>
+    <th style="width:38px">${esc(UI.th_index)}</th><th>${esc(UI.th_outpoint)}</th><th style="width:90px">${esc(UI.th_type)}</th>
+    <th style="width:150px;text-align:right">${esc(UI.th_amount)}</th><th style="width:80px">${esc(UI.th_sigs)}</th></tr></thead><tbody>`;
   f.inputs.forEach(i => {
     const amt = i.amount.value === null
-      ? `<span style="color:var(--fg-dim)">未知</span>`
+      ? `<span style="color:var(--fg-dim)">${esc(UI.unknown)}</span>`
       : `${sats(i.amount.value)} sat`;
+    const sigs = i.partial_sig_count > 0
+      ? esc(UI.sig_count.replace("{0}", i.partial_sig_count))
+      : esc(UI.no_sigs);
     h += `<tr>
       <td>${i.index}</td>
       <td class="addr">${esc(i.outpoint)}</td>
       <td>${esc(i.script_type || "—")}</td>
       <td class="num">${amt} ${stateBadge(i.amount)}</td>
-      <td>${i.partial_sig_count > 0 ? i.partial_sig_count + " 个" : "—"}</td>
+      <td>${sigs}</td>
     </tr>`;
     if (i.amount.note) h += `<tr><td></td><td colspan="4" class="note">${esc(i.amount.note)}</td></tr>`;
   });
-  h += `</tbody></table></div>`;
+  h += `</tbody></table></div></div>`;
 
   // 输出
-  h += `<div class="card" style="margin-top:12px"><table><thead><tr>
-    <th style="width:38px">#</th><th style="width:150px;text-align:right">金额</th>
-    <th>收款脚本 / 地址</th></tr></thead><tbody>`;
+  h += `<div class="card" style="margin-top:12px"><div class="table-scroll"><table><thead><tr>
+    <th style="width:38px">${esc(UI.th_index)}</th><th style="width:150px;text-align:right">${esc(UI.th_value)}</th>
+    <th>${esc(UI.th_script_addr)}</th></tr></thead><tbody>`;
   f.outputs.forEach(o => {
     const to = o.address
       ? `<span class="addr">${esc(o.address)}</span>`
-      : `<span style="color:var(--fg-dim)">无法呈现地址（${esc(o.script_type)}）</span>`;
+      : `<span style="color:var(--fg-dim)">${esc(UI.cannot_show_addr.replace("{0}", o.script_type))}</span>`;
     h += `<tr><td>${o.index}</td><td class="num">${sats(o.value_sats)} sat</td>
       <td>${to}<div class="note" style="margin-top:2px">${esc(o.script_type)}</div></td></tr>`;
   });
-  h += `</tbody></table></div>`;
+  h += `</tbody></table></div></div>`;
 
   // 汇总
   const fee = f.fee_sats.value === null
-    ? `<span style="color:var(--fg-dim)">未知</span>`
+    ? `<span style="color:var(--fg-dim)">${esc(UI.unknown)}</span>`
     : `${sats(f.fee_sats.value)} sat`;
   h += `<div class="card" style="margin-top:12px"><dl class="kv">
-    <dt>输出合计</dt><dd>${sats(f.total_out_sats)} sat</dd>
-    <dt>手续费</dt><dd>${fee} ${stateBadge(f.fee_sats)}
+    <dt>${esc(UI.dt_total_out)}</dt><dd>${sats(f.total_out_sats)} sat</dd>
+    <dt>${esc(UI.dt_fee)}</dt><dd>${fee} ${stateBadge(f.fee_sats)}
       ${f.fee_sats.note ? `<div class="note" style="font-family:inherit">${esc(f.fee_sats.note)}</div>` : ""}</dd>
-    <dt>sighash</dt><dd>${f.sighash_type.value === null ? "未标注" : "0x" + f.sighash_type.value.toString(16).padStart(2,"0")} ${stateBadge(f.sighash_type)}
+    <dt>${esc(UI.dt_sighash)}</dt><dd>${f.sighash_type.value === null ? esc(UI.not_provided_label) : "0x" + f.sighash_type.value.toString(16).padStart(2,"0")} ${stateBadge(f.sighash_type)}
       <div class="note" style="font-family:inherit">${esc(f.sighash_policy)}</div></dd>
   </dl></div></section>`;
 
   // 第二层
-  h += `<section class="layer"><div class="layer-title"><span class="n">第二层</span>上下文解释</div>
+  h += `<section class="layer"><div class="layer-title"><span class="n">2</span>${esc(UI.layer2)}</div>
     <div class="card"><ul class="plain">${r.context.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div></section>`;
 
   // 第三层
-  h += `<section class="layer"><div class="layer-title"><span class="n">第三层</span>风险提示</div>`;
+  h += `<section class="layer"><div class="layer-title"><span class="n">3</span>${esc(UI.layer3)}</div>`;
   if (r.risks.length === 0){
-    h += `<div class="card empty">本次未检出需要提示的问题。这不代表「安全」，只代表未触发已知规则。</div>`;
+    h += `<div class="card empty">${esc(UI.empty_risks)}</div>`;
   } else {
     r.risks.forEach(k => {
       h += `<div class="risk"><span class="code">[${esc(k.code)}]</span>
         <div class="sum">${esc(k.summary)}</div>
-        <div class="why"><b>触发原因：</b>${esc(k.trigger_reason)}<br><b>依据：</b>${esc(k.evidence)}</div></div>`;
+        <div class="why">${esc(k.trigger_reason)}<br>${esc(k.evidence)}</div></div>`;
     });
   }
   h += `</section>`;
 
   // 第四层（永远可见）
-  h += `<section class="layer"><div class="layer-title"><span class="n">第四层</span>本工具不提供以下结论</div>
+  h += `<section class="layer"><div class="layer-title"><span class="n">4</span>${esc(UI.layer4)}</div>
     <div class="refuse"><ul>${r.not_provided.map(n => `<li>${esc(n)}</li>`).join("")}</ul></div></section>`;
 
   return h;
@@ -283,15 +359,27 @@ async function run(text){
   $("#hint").textContent = "";
   if (!text.trim()){ $("#out").innerHTML = ""; return; }
   try {
-    const r = callCore(text.trim());
+    const r = callCore(text.trim(), LANG);
     $("#out").innerHTML = render(r);
   } catch(e){
-    $("#out").innerHTML = `<div class="err">调用内核出错：${esc(e.message)}</div>`;
+    $("#out").innerHTML = `<div class="err">${esc((UI && UI.err_core_fail ? UI.err_core_fail : "Core call failed: {0}").replace("{0}", e.message))}</div>`;
   }
+}
+
+async function setLang(lang){
+  LANG = lang;
+  try { localStorage.setItem("ls_lang", lang); } catch(e){}
+  UI = await loadUi(lang);
+  applyUi();
+  const cur = $("#input").value;
+  if (cur.trim()) run(cur);   // 已有内容则按新语言重渲染
 }
 
 $("#go").onclick = () => run($("#input").value);
 $("#drop").onclick = () => $("#file").click();
+$("#lang-en").onclick = () => setLang("en");
+$("#lang-zh").onclick = () => setLang("zh");
+
 $("#file").onchange = (e) => {
   const file = e.target.files[0];
   if (!file) return;
@@ -317,11 +405,19 @@ $("#demo").onclick = async () => {
     const t = await (await fetch("./demo/S1.psbt")).text();
     $("#input").value = t.trim();
     run(t);
-  } catch(e){ $("#hint").textContent = "示例加载失败"; }
+  } catch(e){ $("#hint").textContent = UI ? UI.hint_demo_fail : "sample load failed"; }
 };
 
-loadWasm().then(() => { $("#hint").textContent = "内核就绪"; })
-          .catch(e => { $("#hint").textContent = "内核加载失败：" + e.message; });
+// ---------- 启动 ----------
+(async () => {
+  await loadWasm();
+  // 语言优先级：用户手动选择(localStorage) > 浏览器语言 > 英文
+  let saved = null;
+  try { saved = localStorage.getItem("ls_lang"); } catch(e){}
+  const initial = saved || (navigator.language && navigator.language.startsWith("zh") ? "zh" : "en");
+  await setLang(initial);
+  $("#hint").textContent = UI.hint_ready;
+})().catch(e => { $("#hint").textContent = "wasm: " + e.message; });
 </script>
 </body>
 </html>

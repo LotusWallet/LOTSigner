@@ -1,29 +1,22 @@
 {
-  "hint": "内核就绪",
-  "layers": {
-    "第一层": true,
-    "第二层": true,
-    "第三层": true,
-    "第四层": true
-  },
-  "facts": {
-    "txid": true,
-    "out0": true,
-    "out1": true,
-    "fee": true,
-    "addr0": true
-  },
-  "badges": {
-    "verified": true,
-    "parsed_unverified": true
-  },
-  "refuseCount": 5,
-  "external": [],
-  "totalRequests": 3,
   "errors": [],
-  "allRequests": [
-    "http://127.0.0.1:4180/index.html",
-    "http://127.0.0.1:4180/lswasm.wasm",
-    "http://127.0.0.1:4180/demo/S1.psbt"
-  ]
+  "checks": {
+    "default_en": true,
+    "en_offline_badge": true,
+    "en_facts": true,
+    "en_layers": true,
+    "en_parsed_badge": true,
+    "en_refuse5": true,
+    "zh_layers": true,
+    "zh_kernel_sentences": true,
+    "zh_facts_kept": true,
+    "desktop_external_zero": true,
+    "mobile_no_page_overflow": true,
+    "mobile_tables_scrollable": true,
+    "mobile_refuse5": true,
+    "mobile_external_zero": true,
+    "no_overflow_tablet": true,
+    "no_overflow_wide": true,
+    "console_errors_zero": true
+  }
 }

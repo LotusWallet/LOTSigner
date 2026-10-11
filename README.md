@@ -53,6 +53,16 @@ the page issues exactly **3 requests, all local** (`index.html`, `lswasm.wasm`, 
 **zero external requests**, four review layers rendered, five-state badges present, the
 "what this tool does NOT tell you" layer always shows 5 items.
 
+**Internationalisation**: the default language is English; the UI offers an English/中文 switch
+(the initial language follows the browser locale). Every user-facing sentence — including risk
+notices and five-state explanations — comes from the kernel's i18n table (`crates/lscore/src/i18n.rs`),
+so CLI and web always speak identically and adding a language is one match arm. More languages
+(Japanese/Korean/French/Thai) are architecturally ready but deliberately **not shipped** until
+proofread by a native speaker — a mistranslated risk notice would mislead the user.
+
+**Layout**: responsive across common resolutions (375 px phone → 1920 px desktop), tables scroll
+inside their cards on narrow screens, no page-level horizontal overflow. Verified at 375/768/1280/1920.
+
 **The repository is currently private. See [Openness policy](#openness-policy) — we do not open a
 half-finished, untestable build.**
 

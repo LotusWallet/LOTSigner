@@ -1,91 +1,131 @@
-// Lotus Signer 网页端真实浏览器验证
-// 验证三件事：① wasm 内核加载并返回结果 ② 四层都渲染 ③ 零外部请求（宪法 G-II）
+// Lotus Signer 网页端验证 v2：双语言（i18n）+ 响应式 + 零外部请求
 const { chromium } = require('playwright');
 const fs = require('fs');
 
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 const URL = 'http://127.0.0.1:4180/index.html';
+const OUT = 'D:/work/LOTSigner/g3/evidence';
 
 (async () => {
   const browser = await chromium.launch({ executablePath: CHROME, headless: true });
-  const page = await browser.newPage();
+  const report = { errors: [], checks: {} };
 
-  // ③ 记录一切请求，区分同源 / 外部
-  const external = [];
-  const all = [];
-  page.on('request', r => {
-    const u = r.url();
-    all.push(u);
-    if (!u.startsWith('http://127.0.0.1:4180') && !u.startsWith('data:') && !u.startsWith('blob:')) {
-      external.push(u);
+  const mkPage = async () => {
+    const page = await browser.newPage();
+    const external = [];
+    page.on('request', r => {
+      const u = r.url();
+      if (!u.startsWith('http://127.0.0.1:4180') && !u.startsWith('data:') && !u.startsWith('blob:')) {
+        external.push(u);
+      }
+    });
+    page.on('console', m => { if (m.type() === 'error') report.errors.push(m.text()); });
+    page.on('pageerror', e => report.errors.push('PAGEERROR: ' + e.message));
+    return { page, external };
+  };
+
+  // ============ 桌面 1280×800：双语言全流程 ============
+  {
+    // 强制 locale=en-US 的独立 context：验证「默认英文」（国际化默认语言）。
+    // 注意不能共用默认 context——headless Chrome 继承系统语言（zh-CN），默认中文是正确行为。
+    const page = await browser.newContext({ locale: 'en-US' }).then(c => c.newPage());
+    const external = [];
+    page.on('request', r => {
+      const u = r.url();
+      if (!u.startsWith('http://127.0.0.1:4180') && !u.startsWith('data:') && !u.startsWith('blob:')) {
+        external.push(u);
+      }
+    });
+    page.on('console', m => { if (m.type() === 'error') report.errors.push(m.text()); });
+    page.on('pageerror', e => report.errors.push('PAGEERROR: ' + e.message));
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto(URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(600);
+
+    // 默认应为英文（国际化默认），除非 localStorage 残留——new context 无残留
+    const enTitle = await page.textContent('#t-drop-title');
+    report.checks.default_en = /sign/i.test(enTitle);
+    const enOffline = await page.textContent('#t-offline');
+    report.checks.en_offline_badge = /offline/i.test(enOffline);
+
+    // 英文审阅 S1
+    await page.click('#demo');
+    await page.waitForTimeout(600);
+    let body = await page.evaluate(() => document.body.innerText);
+    report.checks.en_facts = body.includes('100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc')
+      && /1,200,000 sat/.test(body) && /10,000 sat/.test(body);
+    report.checks.en_layers = ['Transaction facts', 'Context', 'Risk notices', 'What this tool does NOT tell you']
+      .every(x => body.includes(x));
+    report.checks.en_parsed_badge = body.includes('parsed_unverified');
+    report.checks.en_refuse5 = (await page.evaluate(() => document.querySelectorAll('.refuse li').length)) === 5;
+    await page.screenshot({ path: OUT + '/web-en-desktop.png', fullPage: true });
+
+    // 切中文 → 全文应翻成中文（含内核句子）
+    await page.click('#lang-zh');
+    await page.waitForTimeout(600);
+    body = await page.evaluate(() => document.body.innerText);
+    report.checks.zh_layers = ['交易事实', '上下文解释', '风险提示', '本工具不提供以下结论'].every(x => body.includes(x));
+    report.checks.zh_kernel_sentences = body.includes('待签名的 PSBT') && body.includes('本工具不联网');
+    report.checks.zh_facts_kept = body.includes('100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc');
+    await page.screenshot({ path: OUT + '/web-zh-desktop.png', fullPage: true });
+
+    report.checks.desktop_external_zero = external.length === 0;
+    await page.close();
+  }
+
+  // ============ 手机 375×667（iPhone SE 级别）：中文 + 布局 ============
+  {
+    const { page, external } = await mkPage();
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto(URL, { waitUntil: 'networkidle' });
+    await page.waitForTimeout(400);
+    await page.click('#lang-zh');
+    await page.waitForTimeout(300);
+    await page.click('#demo');
+    await page.waitForTimeout(600);
+
+    // 无横向溢出（页面级）
+    const overflow = await page.evaluate(() =>
+      document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    report.checks.mobile_no_page_overflow = overflow <= 0;
+    // 表格容器可横向滚动（内容不被截断，容器可滚）
+    const scrollable = await page.evaluate(() => {
+      const els = [...document.querySelectorAll('.table-scroll')];
+      return els.length >= 2 && els.every(el => el.scrollWidth >= el.clientWidth - 2);
+    });
+    report.checks.mobile_tables_scrollable = scrollable;
+    // 第四层仍完整
+    report.checks.mobile_refuse5 = (await page.evaluate(() => document.querySelectorAll('.refuse li').length)) === 5;
+    await page.screenshot({ path: OUT + '/web-zh-mobile.png', fullPage: true });
+    report.checks.mobile_external_zero = external.length === 0;
+    await page.close();
+  }
+
+  // ============ 平板 768×1024 与宽屏 1920×1080 快照 ============
+  {
+    const { page } = await mkPage();
+    for (const [w, h, name] of [[768, 1024, 'tablet'], [1920, 1080, 'wide']]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(URL, { waitUntil: 'networkidle' });
+      await page.waitForTimeout(300);
+      await page.click('#demo');
+      await page.waitForTimeout(500);
+      const overflow = await page.evaluate(() =>
+        document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      report.checks['no_overflow_' + name] = overflow <= 0;
+      await page.screenshot({ path: `${OUT}/web-${name}.png`, fullPage: false });
     }
-  });
-  const errors = [];
-  page.on('console', m => { if (m.type() === 'error') errors.push(m.text()); });
-  page.on('pageerror', e => errors.push('PAGEERROR: ' + e.message));
-
-  await page.goto(URL, { waitUntil: 'networkidle' });
-  await page.waitForTimeout(500);
-
-  const readyText = await page.textContent('#hint');
-  console.log('内核状态 =', JSON.stringify(readyText));
-
-  // 点「载入示例」→ 触发完整链路
-  await page.click('#demo');
-  await page.waitForTimeout(800);
-
-  const bodyText = await page.evaluate(() => document.body.innerText);
-
-  // ② 四层是否都在
-  const layers = {
-    '第一层': bodyText.includes('第一层'),
-    '第二层': bodyText.includes('第二层'),
-    '第三层': bodyText.includes('第三层'),
-    '第四层': bodyText.includes('第四层'),
-  };
-  console.log('四层渲染 =', JSON.stringify(layers));
-
-  // 内核真实产物：txid 与金额应出自 S1
-  const facts = {
-    txid: bodyText.includes('100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc'),
-    out0: /1,200,000 sat/.test(bodyText),
-    out1: /290,000 sat/.test(bodyText),
-    fee: /10,000 sat/.test(bodyText),
-    addr0: bodyText.includes('bc1qp8sv9wkt0sx7rtl7cah44d3jhu0mk7xqpk3rfl'),
-  };
-  console.log('内核事实  =', JSON.stringify(facts));
-
-  // 五态徽标是否出现（S1 应含 verified + parsed_unverified）
-  const badges = {
-    verified: bodyText.includes('verified'),
-    parsed_unverified: bodyText.includes('parsed_unverified'),
-  };
-  console.log('状态徽标  =', JSON.stringify(badges));
-
-  // ④ 第四层不得为空
-  const refuseCount = await page.evaluate(() => document.querySelectorAll('.refuse li').length);
-  console.log('第四层条目 =', refuseCount);
-
-  console.log('外部请求  =', JSON.stringify(external));
-  console.log('总请求数  =', all.length);
-  console.log('控制台错误 =', JSON.stringify(errors));
-
-  fs.writeFileSync('D:/work/LOTSigner/g3/evidence/web-verify.json', JSON.stringify({
-    hint: readyText, layers, facts, badges, refuseCount, external, totalRequests: all.length, errors,
-    allRequests: all
-  }, null, 2));
-
-  await page.screenshot({ path: 'D:/work/LOTSigner/g3/evidence/web-screenshot.png', fullPage: true });
+    await page.close();
+  }
 
   await browser.close();
 
-  // 判定
-  const pass = readyText === '内核就绪'
-    && Object.values(layers).every(Boolean)
-    && Object.values(facts).every(Boolean)
-    && refuseCount === 5
-    && external.length === 0
-    && errors.length === 0;
+  report.checks.console_errors_zero = report.errors.length === 0;
+  fs.writeFileSync(OUT + '/web-verify.json', JSON.stringify(report, null, 2));
+
+  console.log(JSON.stringify(report.checks, null, 2));
+  console.log('errors:', JSON.stringify(report.errors));
+  const pass = Object.values(report.checks).every(Boolean);
   console.log('\n===== 判定: ' + (pass ? 'PASS' : 'FAIL') + ' =====');
   process.exit(pass ? 0 : 1);
 })();

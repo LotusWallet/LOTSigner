@@ -1,13 +1,34 @@
 //! 把 `lscore::Review` 编码成前端消费的 JSON。
 //!
 //! 关键约定：**五态与四层都出现在数据模型里**，前端只负责展示，不做任何判定或补全。
-//! 每个字段都带 `state`，前端据此决定徽标与措辞（宪法第 6、7 条）。
+//! 每个字段都带 `state` 与按语言渲染好的 `state_explain`。
+//! `ui` 对象把界面壳文案也从内核带出——前端**不持有任何语义文案**，
+//! 加语言只改 `lscore::i18n`（宪法第 8 条的延伸）。
 
+use lscore::i18n::{t, Lang};
 use lscore::state::{Field, Review};
 
 use crate::json;
 
-fn field_json<T: std::fmt::Display>(f: &Field<T>) -> String {
+/// 界面壳文案（纯标签，无语义判断）。前端拿它渲染，不得自行拼句子。
+pub fn ui_object(lang: Lang) -> String {
+    let keys = [
+        "app_title", "tagline", "offline_badge", "drop_title", "drop_sub", "input_placeholder",
+        "btn_review", "btn_demo", "hint_ready", "hint_wasm_fail", "hint_demo_fail",
+        "layer1", "layer2", "layer3", "layer4", "footer1", "footer2",
+        "th_index", "th_outpoint", "th_type", "th_amount", "th_sigs", "th_value", "th_script_addr",
+        "dt_txid", "dt_version", "dt_locktime", "dt_total_out", "dt_fee", "dt_sighash",
+        "unknown", "not_provided_label", "no_sigs", "sig_count", "cannot_show_addr",
+        "empty_risks", "err_review_fail", "err_core_fail",
+    ];
+    let items: Vec<String> = keys
+        .iter()
+        .map(|k| format!("{}:{}", json::string(k), json::string(&t(lang, k, &[]))))
+        .collect();
+    format!("{{{}}}", items.join(","))
+}
+
+fn field_json<T: std::fmt::Display>(lang: Lang, f: &Field<T>) -> String {
     format!(
         "{{\"state\":{},\"value\":{},\"note\":{},\"state_explain\":{}}}",
         json::string(f.state.as_str()),
@@ -16,21 +37,22 @@ fn field_json<T: std::fmt::Display>(f: &Field<T>) -> String {
             None => "null".to_string(),
         },
         json::opt_string(&f.note),
-        json::string(f.state.explain()),
+        json::string(&f.state.explain(lang)),
     )
 }
 
-fn field_u64_json(f: &Field<u64>) -> String {
+fn field_u64_json(lang: Lang, f: &Field<u64>) -> String {
     format!(
         "{{\"state\":{},\"value\":{},\"note\":{},\"state_explain\":{}}}",
         json::string(f.state.as_str()),
         json::opt_u64(&f.value),
         json::opt_string(&f.note),
-        json::string(f.state.explain()),
+        json::string(&f.state.explain(lang)),
     )
 }
 
 pub fn review_to_json(r: &Review) -> String {
+    let lang = r.lang;
     let f = &r.facts;
 
     let inputs: Vec<String> = f
@@ -43,7 +65,7 @@ pub fn review_to_json(r: &Review) -> String {
                 json::string(&i.outpoint),
                 i.sequence,
                 json::opt_string(&i.script_type),
-                field_u64_json(&i.amount_sats),
+                field_u64_json(lang, &i.amount_sats),
                 i.partial_sig_count,
                 i.has_witness_utxo,
                 i.has_non_witness_utxo,
@@ -81,10 +103,12 @@ pub fn review_to_json(r: &Review) -> String {
         .collect();
 
     format!(
-        "{{\"ok\":true,\"facts\":{{\"txid\":{},\"version\":{},\"locktime\":{},\"locktime_meaning\":{},\
+        "{{\"ok\":true,\"lang\":{},\"ui\":{},\"facts\":{{\"txid\":{},\"version\":{},\"locktime\":{},\"locktime_meaning\":{},\
 \"inputs\":[{}],\"outputs\":[{}],\"total_out_sats\":{},\"fee_sats\":{},\
 \"sighash_type\":{},\"sighash_policy\":{}}},\
 \"context\":{},\"risks\":[{}],\"not_provided\":{},\"unsupported_keys\":{}}}",
+        json::string(lang.code()),
+        ui_object(lang),
         json::string(&f.txid),
         f.version,
         f.locktime,
@@ -92,8 +116,8 @@ pub fn review_to_json(r: &Review) -> String {
         inputs.join(","),
         outputs.join(","),
         f.total_out_sats,
-        field_u64_json(&f.fee_sats),
-        field_json(&f.sighash_type),
+        field_u64_json(lang, &f.fee_sats),
+        field_json(lang, &f.sighash_type),
         json::string(&f.sighash_policy),
         json::strings(&r.context),
         risks.join(","),

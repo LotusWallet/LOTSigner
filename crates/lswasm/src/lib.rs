@@ -40,28 +40,71 @@ pub unsafe extern "C" fn ls_dealloc(ptr: *mut u8, size: usize) {
 
 /// 审阅入口。
 ///
-/// 输入：`ptr`/`len` 指向 UTF-8 的 base64 PSBT 文本。
+/// 输入：`ptr`/`len` 指向 UTF-8 的 base64 PSBT 文本；`lang_ptr`/`lang_len` 指向语言标签
+/// （"en"、"zh-CN"…，空串或未知标签回退英文）。
 /// 输出：指向一块**长度前缀缓冲区**的指针 —— 头 4 字节为小端 u32 长度，其后为 JSON 字节。
 /// 返回空指针表示分配失败。调用方读完须用 `ls_dealloc(ptr, len + 4)` 释放。
 ///
 /// # Safety
-/// `ptr` 必须指向 `len` 字节的有效可读内存。
+/// `ptr` 必须指向 `len` 字节、`lang_ptr` 必须指向 `lang_len` 字节的有效可读内存。
 #[no_mangle]
-pub unsafe extern "C" fn ls_review(ptr: *const u8, len: usize) -> *mut u8 {
+pub unsafe extern "C" fn ls_review(
+    ptr: *const u8,
+    len: usize,
+    lang_ptr: *const u8,
+    lang_len: usize,
+) -> *mut u8 {
     let input = std::slice::from_raw_parts(ptr, len);
+    let lang = if lang_ptr.is_null() || lang_len == 0 {
+        lscore::i18n::Lang::En
+    } else {
+        let lang_bytes = std::slice::from_raw_parts(lang_ptr, lang_len);
+        match std::str::from_utf8(lang_bytes) {
+            Ok(s) => lscore::i18n::Lang::parse(s),
+            Err(_) => lscore::i18n::Lang::En,
+        }
+    };
+
     let text = match std::str::from_utf8(input) {
         Ok(t) => t,
         Err(e) => {
-            let body = format!("{{\"ok\":false,\"error\":\"输入不是合法的 UTF-8：{}\"}}", json::escape(&e.to_string()));
+            let body = format!(
+                "{{\"ok\":false,\"error\":{}}}",
+                json::string(&format!("invalid UTF-8 input: {}", e))
+            );
             return pack(&body);
         }
     };
 
-    let body = match lscore::review_psbt_base64(text) {
+    let body = match lscore::review_psbt_base64_lang(text, lang) {
         Ok(review) => serialize::review_to_json(&review),
         Err(e) => format!("{{\"ok\":false,\"error\":{}}}", json::string(&e.to_string())),
     };
 
+    pack(&body)
+}
+
+/// 界面壳文案：返回「4 字节小端长度 + JSON」——`{"ui":{...}}`（含 app_title/按钮/表头等）。
+/// 前端在页面加载与切换语言时调用，**不持有任何语义文案**（宪法第 8 条的延伸）。
+///
+/// # Safety
+/// `lang_ptr` 必须指向 `lang_len` 字节的有效可读内存（可为空指针/0）。
+#[no_mangle]
+pub unsafe extern "C" fn ls_ui(lang_ptr: *const u8, lang_len: usize) -> *mut u8 {
+    let lang = if lang_ptr.is_null() || lang_len == 0 {
+        lscore::i18n::Lang::En
+    } else {
+        let lang_bytes = std::slice::from_raw_parts(lang_ptr, lang_len);
+        match std::str::from_utf8(lang_bytes) {
+            Ok(s) => lscore::i18n::Lang::parse(s),
+            Err(_) => lscore::i18n::Lang::En,
+        }
+    };
+    let body = format!(
+        "{{\"ok\":true,\"lang\":{},\"ui\":{}}}",
+        json::string(lang.code()),
+        serialize::ui_object(lang)
+    );
     pack(&body)
 }
 

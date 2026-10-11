@@ -2,13 +2,16 @@
 //!
 //! **这是唯一的实现。** 网页端与命令行端都由它提供结果，禁止各自重写解析或判定逻辑。
 //! 第三方 PSBT 库（如 `@caravan/psbt` / `rust-bitcoin`）只允许出现在对照测试中，不得进入此解析链路。
+//! 所有面向用户的句子出自 `i18n` 文案表——加语言只改那一处（宪法第 8 条的延伸）。
 
 pub mod base64;
+pub mod i18n;
 pub mod psbt;
 pub mod script;
 pub mod state;
 pub mod tx;
 
+use crate::i18n::{t, Lang};
 use crate::psbt::*;
 use crate::script::{classify, script_to_address, script_summary, ScriptType};
 use crate::state::*;
@@ -23,28 +26,39 @@ pub enum ReviewError {
 impl core::fmt::Display for ReviewError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            ReviewError::Decode(e) => write!(f, "输入解码失败：{}", e),
-            ReviewError::Parse(e) => write!(f, "PSBT 解析失败：{}", e),
+            ReviewError::Decode(e) => write!(f, "{}", t(Lang::En, "err_decode", &[e])),
+            ReviewError::Parse(e) => write!(f, "{}", t(Lang::En, "err_parse", &[e])),
         }
     }
 }
 
-/// 审阅入口：吃 base64 文本（或裸路径不重要，调用方负责读文件），吐四层结构。
+/// 审阅入口：吃 base64 文本，吐四层结构（英文，默认语言）。
 pub fn review_psbt_base64(input: &str) -> Result<Review, ReviewError> {
-    let raw = crate::base64::decode(input).map_err(|e| ReviewError::Decode(format!("{:?}", e)))?;
-    review_psbt_bytes(&raw)
+    review_psbt_base64_lang(input, Lang::En)
+}
+
+pub fn review_psbt_base64_lang(input: &str, lang: Lang) -> Result<Review, ReviewError> {
+    let raw = crate::base64::decode(input)
+        .map_err(|e| ReviewError::Decode(t(lang, "err_decode", &[&format!("{:?}", e)])))?;
+    review_psbt_bytes_lang(&raw, lang)
 }
 
 pub fn review_psbt_bytes(raw: &[u8]) -> Result<Review, ReviewError> {
-    let psbt = psbt::parse_psbt(raw).map_err(|e| ReviewError::Parse(format!("{:?}", e)))?;
-    let raw_tx = psbt.unsigned_tx_raw.as_ref().ok_or_else(|| {
-        ReviewError::Parse("缺少 PSBT_GLOBAL_UNSIGNED_TX，本版本暂不支持 PSBTv2".to_string())
-    })?;
-    let utx = parse_unsigned_tx(raw_tx).map_err(|e| ReviewError::Parse(format!("{:?}", e)))?;
-    Ok(build_review(&psbt, &utx))
+    review_psbt_bytes_lang(raw, Lang::En)
 }
 
-fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
+pub fn review_psbt_bytes_lang(raw: &[u8], lang: Lang) -> Result<Review, ReviewError> {
+    let psbt = psbt::parse_psbt(raw)
+        .map_err(|e| ReviewError::Parse(t(lang, "err_parse", &[&format!("{:?}", e)])))?;
+    let raw_tx = psbt.unsigned_tx_raw.as_ref().ok_or_else(|| {
+        ReviewError::Parse(t(lang, "err_no_global_tx", &[]))
+    })?;
+    let utx = parse_unsigned_tx(raw_tx)
+        .map_err(|e| ReviewError::Parse(t(lang, "err_parse", &[&format!("{:?}", e)])))?;
+    Ok(build_review(&psbt, &utx, lang))
+}
+
+fn build_review(psbt: &Psbt, utx: &UnsignedTx, lang: Lang) -> Review {
     let mut unsupported_keys: Vec<String> = Vec::new();
     let mut risks: Vec<RiskNote> = Vec::new();
 
@@ -69,7 +83,7 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
                     (true, true) => "P2SH-P2WSH".to_string(),
                     (false, true) => "P2WSH".to_string(),
                     (true, false) => "P2SH".to_string(),
-                    (false, false) => "未标注脚本类型".to_string(),
+                    (false, false) => t(lang, "unlabelled", &[]),
                 })
             }
             None => None,
@@ -82,25 +96,21 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
                         let v = u64::from_le_bytes(w.value[0..8].try_into().unwrap());
                         Field::parsed_unverified(
                             v,
-                            "该金额来自 PSBT 随附的 witness_utxo 字段；\
-                             本工具不联网，无法核实它是否与链上前序交易一致",
+                            t(lang, "note_amount_witness", &[]),
                         )
                     } else {
-                        Field::check_failed("witness_utxo 长度不足 8 字节")
+                        Field::check_failed(t(lang, "check_witness_len", &[]))
                     }
                 } else if let Some(nw) = p.get(IN_NON_WITNESS_UTXO) {
-                    match parse_prev_output_value(&nw.value, txin.prev_vout) {
-                        Ok(v) => Field::verified(v),
+                    match parse_prev_output_value(&nw.value, txin.prev_vout, lang) {
+                        Ok(v) => Field::with_state(v, FieldState::Verified, t(lang, "note_amount_nw", &[])),
                         Err(e) => Field::check_failed(e),
                     }
                 } else {
-                    Field::missing(
-                        "PSBT 未随附 witness_utxo 或 non_witness_utxo，\
-                         且本工具不联网查询，故输入金额未知",
-                    )
+                    Field::missing(t(lang, "missing_amount_no_utxo", &[]))
                 }
             }
-            None => Field::missing("该输入无对应的 PSBT 输入映射"),
+            None => Field::missing(t(lang, "missing_input_map", &[])),
         };
 
         input_amounts.push(amount_sats.value);
@@ -142,8 +152,8 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
     if !unsupported_keys.is_empty() {
         risks.push(RiskNote {
             code: "R001",
-            summary: "报文中含有本工具无法解释的字段".to_string(),
-            trigger_reason: format!("检出 {} 个未知/专有键", unsupported_keys.len()),
+            summary: t(lang, "r001_summary", &[]),
+            trigger_reason: t(lang, "r001_trigger", &[&unsupported_keys.len().to_string()]),
             evidence: unsupported_keys.join(", "),
         });
     }
@@ -164,47 +174,38 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
 
     // ---------- 手续费（诚实标注的范例） ----------
     let fee_sats = if input_amounts.iter().any(|a| a.is_none()) {
-        Field::missing(
-            "至少一个输入金额未知（PSBT 未随附前序交易信息且本工具不联网查询），\
-             因此手续费无法计算 —— 本工具不会把它当作 0，也不会用推测值填补",
-        )
+        Field::missing(t(lang, "missing_fee", &[]))
     } else {
         let total_in: u64 = input_amounts.iter().map(|a| a.unwrap_or(0)).sum();
         match total_in.checked_sub(total_out) {
-            Some(fee) => Field::parsed_unverified(
-                fee,
-                "手续费 = 输入合计 - 输出合计；输入金额来自 PSBT 随附字段，未经链上核实",
-            ),
-            None => Field::check_failed("输出合计超过输入合计，这笔交易在数额上不成立"),
+            Some(fee) => Field::parsed_unverified(fee, t(lang, "note_fee", &[])),
+            None => Field::check_failed(t(lang, "check_out_exceed_in", &[])),
         }
     };
 
     if fee_sats.state == FieldState::Missing {
+        let states = input_amounts
+            .iter()
+            .enumerate()
+            .map(|(i, a)| match a {
+                Some(v) => t(lang, "in_amount", &[&i.to_string(), &v.to_string()]),
+                None => t(lang, "in_unknown", &[&i.to_string()]),
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
         risks.push(RiskNote {
             code: "R002",
-            summary: "手续费未知".to_string(),
-            trigger_reason: "至少一个输入未提供 witness_utxo / non_witness_utxo，且本工具不联网"
-                .to_string(),
-            evidence: format!(
-                "输入金额状态：{}",
-                input_amounts
-                    .iter()
-                    .enumerate()
-                    .map(|(i, a)| match a {
-                        Some(v) => format!("in[{}]={} sat", i, v),
-                        None => format!("in[{}]=未知", i),
-                    })
-                    .collect::<Vec<_>>()
-                    .join(", ")
-            ),
+            summary: t(lang, "r002_summary", &[]),
+            trigger_reason: t(lang, "r002_trigger", &[]),
+            evidence: t(lang, "r002_evidence", &[&states]),
         });
     }
     if fee_sats.state == FieldState::CheckFailed {
         risks.push(RiskNote {
             code: "R003",
-            summary: "输出数额超过输入数额".to_string(),
-            trigger_reason: "输入合计 < 输出合计".to_string(),
-            evidence: format!("输出合计 = {} sat", total_out),
+            summary: t(lang, "r003_summary", &[]),
+            trigger_reason: t(lang, "r003_trigger", &[]),
+            evidence: t(lang, "r003_evidence", &[&total_out.to_string()]),
         });
     }
 
@@ -213,9 +214,9 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
         if inp.partial_sig_count > 0 {
             risks.push(RiskNote {
                 code: "R004",
-                summary: "该输入已包含既有签名".to_string(),
-                trigger_reason: format!("input[{}] 检出 {} 个 partial_sig", inp.index, inp.partial_sig_count),
-                evidence: "签名本身未经密码学核验（本工具不接触或不推导密钥，也不做验签）".to_string(),
+                summary: t(lang, "r004_summary", &[]),
+                trigger_reason: t(lang, "r004_trigger", &[&inp.index.to_string(), &inp.partial_sig_count.to_string()]),
+                evidence: t(lang, "r004_evidence", &[]),
             });
         }
     }
@@ -225,11 +226,8 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
         if o.script_type == ScriptType::Unknown.name() {
             risks.push(RiskNote {
                 code: "R005",
-                summary: "存在无法识别的输出脚本形态".to_string(),
-                trigger_reason: format!(
-                    "output[{}] 的 scriptPubKey 未匹配任何已知标准形态",
-                    o.index
-                ),
+                summary: t(lang, "r005_summary", &[]),
+                trigger_reason: t(lang, "r005_trigger", &[&o.index.to_string()]),
                 evidence: o.script_hex.clone(),
             });
         }
@@ -237,31 +235,27 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
 
     // ---------- 第二层：上下文解释 ----------
     let locktime_meaning = if utx.locktime == 0 {
-        "0：不使用时间锁，交易可被立即打包".to_string()
+        t(lang, "locktime_0", &[])
     } else if utx.locktime < 500_000_000 {
-        format!("{}：区块高度锁 —— 在该区块高度之前不会被打包", utx.locktime)
+        t(lang, "locktime_block", &[&utx.locktime.to_string()])
     } else {
-        format!("{}：时间戳锁 —— 在该 UNIX 时间之后才可被打包", utx.locktime)
+        t(lang, "locktime_time", &[&utx.locktime.to_string()])
     };
 
     let mut context = Vec::new();
-    context.push(format!(
-        "这是一笔待签名的 PSBT：{} 个输入、{} 个输出，输出合计 {} sat。",
-        inputs.len(),
-        outputs.len(),
-        total_out
-    ));
-    context.push(format!("nLockTime = {}（{}）", utx.locktime, locktime_meaning));
-    context.push(
-        "PSBT 只是待签名的草稿：其中的数值来自递交方随附的字段，\
-         在不联网核实前序交易的前提下，本工具无法保证它们与链上一致。"
-            .to_string(),
-    );
+    context.push(t(lang, "ctx_summary", &[
+        &inputs.len().to_string(),
+        &outputs.len().to_string(),
+        &total_out.to_string(),
+    ]));
+    context.push(t(lang, "ctx_locktime", &[&utx.locktime.to_string(), &locktime_meaning]));
+    context.push(t(lang, "ctx_draft", &[]));
     if inputs.iter().all(|i| i.partial_sig_count == 0) {
-        context.push("当前没有任何既有签名 —— 你可能是第一个签名者。".to_string());
+        context.push(t(lang, "ctx_first_signer", &[]));
     }
 
     Review {
+        lang,
         facts: TransactionFacts {
             txid: txid_hex(utx),
             version: utx.version,
@@ -271,36 +265,44 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx) -> Review {
             outputs,
             total_out_sats: total_out,
             fee_sats,
-            sighash_type: sighash_field(psbt),
-            sighash_policy: sighash_policy_text(psbt),
+            sighash_type: sighash_field(psbt, lang),
+            sighash_policy: sighash_policy_text(psbt, lang),
         },
         context,
         risks,
-        not_provided: Review::default_not_provided(),
+        not_provided: not_provided_list(lang),
         unsupported_keys,
     }
 }
 
-fn sighash_field(psbt: &Psbt) -> Field<u32> {
+/// 第四层的固定内容，任何情况下都不得为空。
+pub fn not_provided_list(lang: Lang) -> Vec<String> {
+    ["np1", "np2", "np3", "np4", "np5"]
+        .iter()
+        .map(|k| t(lang, k, &[]))
+        .collect()
+}
+
+fn sighash_field(psbt: &Psbt, lang: Lang) -> Field<u32> {
     match psbt.inputs.first().and_then(|p| p.get(IN_SIGHASH_TYPE)) {
         Some(p) if p.value.len() == 4 => {
             Field::verified(u32::from_le_bytes(p.value[0..4].try_into().unwrap()))
         }
-        Some(_) => Field::check_failed("sighash_type 字段长度不为 4 字节"),
-        None => Field::missing("PSBT 未标注 sighash 类型；默认按 SIGHASH_ALL 解释，但这是猜测——本工具不作自动填补"),
+        Some(_) => Field::check_failed(t(lang, "check_sighash_len", &[])),
+        None => Field::missing(t(lang, "missing_sighash", &[])),
     }
 }
 
-fn sighash_policy_text(psbt: &Psbt) -> String {
-    match sighash_field(psbt).value {
-        Some(0x01) => "SIGHASH_ALL：签名覆盖全部输入与输出".to_string(),
-        Some(0x02) => "SIGHASH_NONE：签名不覆盖任何输出（他人可改写收款方）".to_string(),
-        Some(0x03) => "SIGHASH_SINGLE：签名只覆盖同序号输出".to_string(),
-        Some(0x81) => "SIGHASH_ALL | ANYONECANPAY：他人可追加输入".to_string(),
-        Some(0x82) => "SIGHASH_NONE | ANYONECANPAY".to_string(),
-        Some(0x83) => "SIGHASH_SINGLE | ANYONECANPAY".to_string(),
-        Some(v) => format!("未知 sighash 值 0x{:02x}", v),
-        None => "未标注".to_string(),
+fn sighash_policy_text(psbt: &Psbt, lang: Lang) -> String {
+    match sighash_field(psbt, lang).value {
+        Some(0x01) => t(lang, "policy_all", &[]),
+        Some(0x02) => t(lang, "policy_none", &[]),
+        Some(0x03) => t(lang, "policy_single", &[]),
+        Some(0x81) => t(lang, "policy_acp_all", &[]),
+        Some(0x82) => t(lang, "policy_acp_none", &[]),
+        Some(0x83) => t(lang, "policy_acp_single", &[]),
+        Some(v) => t(lang, "policy_unknown", &[&format!("0x{:02x}", v)]),
+        None => t(lang, "policy_unspecified", &[]),
     }
 }
 
@@ -311,10 +313,11 @@ fn reverse_hex(b: &[u8; 32]) -> String {
 }
 
 /// 从前序交易报文中取出第 vout 个输出的金额
-fn parse_prev_output_value(prev_tx: &[u8], vout: u32) -> Result<u64, String> {
-    let prev = parse_unsigned_tx(prev_tx).map_err(|e| format!("前序交易解析失败：{:?}", e))?;
+fn parse_prev_output_value(prev_tx: &[u8], vout: u32, lang: Lang) -> Result<u64, String> {
+    let prev = parse_unsigned_tx(prev_tx)
+        .map_err(|e| t(lang, "err_prev_parse", &[&format!("{:?}", e)]))?;
     if vout as usize >= prev.outputs.len() {
-        return Err(format!("前序交易的第 {} 个输出不存在", vout));
+        return Err(t(lang, "err_prev_out_range", &[&vout.to_string()]));
     }
     Ok(prev.outputs[vout as usize].value_sats)
 }

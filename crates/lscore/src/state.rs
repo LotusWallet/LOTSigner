@@ -3,6 +3,7 @@
 //! **五态**（字段的证据状态）与**四层**（给用户的四类信息）不可互替，两者都进数据模型而非只存在于界面上。
 //! 这是宪法第 6、7 条的直接落实。
 
+use crate::i18n::{t, Lang};
 
 /// 字段的证据状态
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -30,14 +31,14 @@ impl FieldState {
         }
     }
 
-    /// 面向普通用户的一句解释。刻意避免"安全/危险"措辞。
-    pub fn explain(self) -> &'static str {
+    /// 面向普通用户的一句解释。刻意避免"安全/危险"措辞。语言由文案表决定。
+    pub fn explain(self, lang: Lang) -> String {
         match self {
-            FieldState::Verified => "已按明确规则解析并通过结构校验",
-            FieldState::ParsedUnverified => "已从报文中读出，但其内容正确性未在此验证",
-            FieldState::Missing => "报文中未提供此项，本工具不作推测",
-            FieldState::Unsupported => "报文中存在但本工具无法解释此项含义",
-            FieldState::CheckFailed => "此项存在但未能通过校验",
+            FieldState::Verified => t(lang, "st_verified", &[]),
+            FieldState::ParsedUnverified => t(lang, "st_parsed", &[]),
+            FieldState::Missing => t(lang, "st_missing", &[]),
+            FieldState::Unsupported => t(lang, "st_unsupported", &[]),
+            FieldState::CheckFailed => t(lang, "st_failed", &[]),
         }
     }
 }
@@ -126,6 +127,8 @@ pub struct RiskNote {
 
 #[derive(Debug, Clone)]
 pub struct Review {
+    /// 本份审阅结果的语言（文案已按该语言生成）
+    pub lang: crate::i18n::Lang,
     /// 第一层：交易事实
     pub facts: TransactionFacts,
     /// 第二层：上下文解释
@@ -136,17 +139,4 @@ pub struct Review {
     pub not_provided: Vec<String>,
     /// 未知/专有键清单
     pub unsupported_keys: Vec<String>,
-}
-
-impl Review {
-    /// 第四层的固定内容，任何情况下都不得为空。
-    pub fn default_not_provided() -> Vec<String> {
-        vec![
-            "本工具不判断这笔交易「安全」或「危险」。".to_string(),
-            "本工具不知道交易对手方是谁，无法判断收款方是否可信。".to_string(),
-            "本工具不联网，因此无法核实前序交易是否存在、是否已被花费。".to_string(),
-            "本工具不接触私钥，也无法判断你是否有权签署这笔交易。".to_string(),
-            "本工具不提供价格、税务或合规意见。".to_string(),
-        ]
-    }
 }
