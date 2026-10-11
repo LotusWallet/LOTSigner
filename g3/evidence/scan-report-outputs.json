@@ -1,0 +1,55 @@
+{
+  "steps": [
+    {
+      "step": "A-导入S4后(Script Explorer)",
+      "screenshot": "40-scan-after-import.png",
+      "hits": [],
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nAddress\n351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg\n \nBTC\nMainnet\n2-of-3\nP2SH\nScript\na9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987\nOP_HASH160 2475ffa90c61bdedab5f6b1079fe57a2fd2e79e9 OP_EQUAL\nRedeem Script\n5221031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c410904647381142102007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe69121034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd34653ae\nOP_2 031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c41090464738114 02007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe691 034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd346 OP_3 OP_CHECKMULTISIG\nSpend from this address\nConfirm ownership\nThis address has a zero balance.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "buttons": [
+        "Spend from this address",
+        "Confirm ownership"
+      ]
+    },
+    {
+      "step": "B-点击 Spend from this address 后",
+      "screenshot": "41-scan-after-spend.png",
+      "hits": [],
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nAddress\n351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg\n \nBTC\nMainnet\n2-of-3\nP2SH\nScript\na9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987\nOP_HASH160 2475ffa90c61bdedab5f6b1079fe57a2fd2e79e9 OP_EQUAL\nRedeem Script\n5221031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c410904647381142102007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe69121034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd34653ae\nOP_2 031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c41090464738114 02007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe691 034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd346 OP_3 OP_CHECKMULTISIG\nSpend from this address\nConfirm ownership\nThis address has a zero balance.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "buttons": [
+        "Spend from this address",
+        "Confirm ownership"
+      ]
+    },
+    {
+      "step": "C-Wallet 页",
+      "screenshot": "42-scan---wallet.png",
+      "hits": [],
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\n My Multisig Wallet\nImport Wallet Configuration\nConfigure with descriptor\n Extended Public Key 1\nSelect Method\n​\n Extended Public Key 2\nSelect Method\n​\n Extended Public Key 3\nSelect Method\n​\nOnce you have imported all 3 extended public keys, your wallet will be generated here.\nQuorum\n \n2\nRequired\nof\n3\nTotal\n \nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nStarting Address Index\nDefault (0)\nCustom\nUse the default value if you do not understand how to use starting address index.\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "buttons": []
+    },
+    {
+      "step": "D-Hermit PSBT Interface",
+      "screenshot": "42-scan---hermit.png",
+      "hits": [],
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nSecure your bitcoin with Caravan, a fully open-source stateless multisig coordinator\nCaravan simplifies multisig custody by coordinating your transactions without storing your keys. Self-custody your bitcoin with enhanced security, privacy, and protection against single points of failure.\nGet started\nLearn more\nCompatible with your favorite tools\nCaravan works seamlessly with industry-leading hardware wallets, browsers, and other bitcoin coordination tools.\nHardware wallet support\nBrowser compatibility\nInteroperable coordinators\nStateless multisig coordinator\nCaravan makes bitcoin multisig custody easier and safer through transparency and standards. Create common setups like 2-of-3 or 3-of-5 multisig wallets for different security needs. Caravan supports both wallet coordination derived from xpubs and individual multisig addresses derived from pubkeys. Being fully open-source and stateless, Caravan stores no data outside your current browser session, giving you complete control over your funds while protecting your privacy.\nKeys & recovery\nAll bitcoin is ultimately protected by private keys. Your private key may live on a piece of paper, a hardware wallet, some software on a laptop, or even just in your mind. Caravan, being stateless, does not store or ask for your private key but it can talk to hardware devices which do. With multisig, you're protected against the loss of any single key, creating a robust disaster recovery setup. Caravan supports P2SH, P2WSH, and P2TR address formats, and works with all major hardware wallets and key management systems.\nPrivacy & consensus\nIn order to look up wallet addresses and their balances, and broadcast transactions, Caravan requires knowledge of the constantly changing bitcoin network. Running a full bitcoin node is the most private way to determine the current state of the bitcoin network and prevents third-party services from tracking your wallet activity. Caravan can be easily configured to use your own node for consensus information and broadcasting transactions. If you don't want to or cannot run your own full node, Caravan defaults to using the freely available API at mempool.space.\nSecure your bitcoin with confidence\nPowerful benefits for secure multisig management\nSecurity\nMinimize attack vectors with Caravan's stateless design and multisig coordination. Protect against exchange failures, theft, and single points of compromise.\nTransparency\nMaintain complete control over your private keys with open standards and user-managed key storage. As a fully open-source solution, the code can be verified by anyone.\nFlexibility\nImport and export wallet configurations or descriptors compatible with popular software like Unchained, Sparrow, and Electrum. Connect to your own bitcoin node for maximum sovereignty or use lightweight options like mempool.space and Blockstream for convenient access anywhere.\nAdvanced features\nSupport for blinded xpubs to enhance privacy, PSBTv2 compatibility, and descriptors for advanced configurations. All backed by industry-standard BIP implementations.\nHardware support\nSeamless integration with industry-leading hardware wallets including Ledger, Trezor, Coldcard, and Bitbox. Protect your keys with dedicated hardware security while using Caravan's coordination capabilities.\nSelf-custody\nTake full control of your bitcoin without relying on third-party custodians. True financial sovereignty with enhanced security through multisig technology.\nTake control of your bitcoin. Create a multisig wallet today\nManage your bitcoin with increased security and control. Caravan's user-friendly interface guides you through creating, recovering, and managing multisig wallets. Protect against key loss, theft, and exchange insolvency with true self-custody.\nGet started\n×\nCreated and supported by Unchained\nMultisig made easy. Manage your bitcoin statelessly with Caravan.\n© Copyright 2025 by ",
+      "buttons": [
+        "Get started",
+        "Learn more",
+        "Get started"
+      ]
+    },
+    {
+      "step": "E-Setup 页",
+      "screenshot": "42-scan---setup.png",
+      "hits": [],
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nWelcome to Caravan!\nLet's get you started. To use Caravan's multisignature features, you'll need a compatible wallet. You can either create a new wallet directly in Caravan or import an existing one.\nWallet\nAddress\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "buttons": []
+    }
+  ],
+  "markerHits": {},
+  "network": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons",
+    "https://unchained.mempool.space/api/address/351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg/utxo"
+  ],
+  "pageErrors": []
+}

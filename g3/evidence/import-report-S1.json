@@ -1,0 +1,34 @@
+{
+  "fixture": "S1.psbt",
+  "base": "http://127.0.0.1:4174",
+  "steps": [
+    {
+      "step": "1-进入ScriptExplorer(未配置钱包)",
+      "tag": "20-S1-before",
+      "screenshot": "20-S1-before.png",
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nEnter a valid redeem script to generate an address to spend funds from.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "alerts": [],
+      "buttons": []
+    },
+    {
+      "step": "2-上传S1.psbt之后",
+      "tag": "21-S1-after",
+      "screenshot": "21-S1-after.png",
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nCannot read properties of undefined (reading 'toString')\nEnter a valid redeem script to generate an address to spend funds from.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "alerts": [
+        "Cannot read properties of undefined (reading 'toString')"
+      ],
+      "buttons": []
+    }
+  ],
+  "fileInputCount": 1,
+  "fileInputAccepts": [
+    "application/base64"
+  ],
+  "route": "file-input(base64)",
+  "importButtonPresent": false,
+  "network": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons"
+  ],
+  "consoleErrors": []
+}

@@ -1,0 +1,28 @@
+{
+  "mode": "offline",
+  "fixture": "S4.psbt",
+  "steps": [
+    {
+      "step": "2-导入S4后",
+      "tag": "32-offline-after-import",
+      "screenshot": "32-offline-after-import.png",
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nAddress\n351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg\n \nBTC\nMainnet\n2-of-3\nP2SH\nScript\na9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987\nOP_HASH160 2475ffa90c61bdedab5f6b1079fe57a2fd2e79e9 OP_EQUAL\nRedeem Script\n5221031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c410904647381142102007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe69121034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd34653ae\nOP_2 031db231e09e5db79f2293128737d4175891eb656a1b004dbd0c41090464738114 02007f8862c874397e594cc81c35d206766bdc3a2cdba368530718b210c61fe691 034284a8b793e323145805cf313e3b559331149010fcec92558012949b3edcd346 OP_3 OP_CHECKMULTISIG\nSpend from this address\nConfirm ownership\nThis address has a zero balance.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit:",
+      "alerts": [
+        "This address has a zero balance."
+      ],
+      "buttons": [
+        "Spend from this address",
+        "Confirm ownership"
+      ]
+    }
+  ],
+  "uploaded": true,
+  "blockedRequests": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons",
+    "https://unchained.mempool.space/api/address/351oc99Eva2AoWUfMyBgJjRS2DPcVfA1Pg/utxo"
+  ],
+  "networkObserved": [],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_FAILED"
+  ]
+}
