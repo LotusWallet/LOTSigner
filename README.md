@@ -26,13 +26,32 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 
 | Item | Value |
 |---|---|
-| Current stage | **P1-0 technical validation gates** (2 weeks / 1 person) — order **G3 → G1 → G2**, G2 deferrable |
+| Current stage | **First working draft exists** — Rust core + CLI + offline web page all run end-to-end (see Quick start below). G3 verdict: conditional pass (①⑤ disproven by live test, ②④ hold at evidence grade A, ③ not yet tested) |
 | Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
-| Execution | **G3 and G1 can start immediately**; G2 awaits hardware |
+| Execution | G3 done except item ③ (export of a partially-signed PSBT); G1 next; G2 awaits hardware |
 | Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
 | Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
 | Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
 | Nature of the project | **Technical-credibility asset + strategic option**; not measured by revenue KPI |
+
+## Quick start (working draft)
+
+Zero third-party crates — the build never touches crates.io.
+
+```bash
+git clone https://github.com/LotusWallet/LOTSigner
+cd LOTSigner
+./build.sh            # builds lscli (CLI) and lswasm (wasm core) into web/
+# Windows: double-click web\serve.cmd   |   others: cd web && python3 -m http.server 4180
+# open http://127.0.0.1:4180 and drop a base64 PSBT (try demo/S1.psbt)
+```
+
+Or use the CLI directly: `./target/release/lscli g3/fixtures/S1.psbt`
+
+**Verified behaviour** (automated browser test, evidence in `g3/evidence/web-verify.json`):
+the page issues exactly **3 requests, all local** (`index.html`, `lswasm.wasm`, the demo fixture) —
+**zero external requests**, four review layers rendered, five-state badges present, the
+"what this tool does NOT tell you" layer always shows 5 items.
 
 **The repository is currently private. See [Openness policy](#openness-policy) — we do not open a
 half-finished, untestable build.**

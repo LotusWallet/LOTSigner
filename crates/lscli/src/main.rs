@@ -7,7 +7,6 @@ use std::env;
 use std::fs;
 use std::process::ExitCode;
 
-use lscore::state::FieldState;
 use lscore::review_psbt_base64;
 
 const VERSION: &str = env!("CARGO_PKG_VERSION");

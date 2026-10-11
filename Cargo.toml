@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["crates/lscore", "crates/lscli"]
+members = ["crates/lscore", "crates/lscli", "crates/lswasm"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,3 +14,9 @@ repository = "https://github.com/LotusWallet/LOTSigner"
 #   2. 解析器是最高风险组件，手写 + 固件测试可以让每一行都被证据覆盖；
 #   3. rust-bitcoin 等第三方实现只用于 T0/T4 异源对照（见 docs 说明），不得进入解析链路。
 [workspace.dependencies]
+
+# wasm 产物追求体积最小化
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true

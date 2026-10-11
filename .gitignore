@@ -15,3 +15,6 @@ coverage/
 # Rust
 target/
 Cargo.lock
+
+# wasm 构建产物（由 build.sh 生成，不入库）
+web/lswasm.wasm

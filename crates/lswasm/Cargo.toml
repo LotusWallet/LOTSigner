@@ -1,0 +1,16 @@
+[package]
+name = "lswasm"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+lscore = { path = "../lscore" }
+
+# 说明：本 crate 刻意**不使用** wasm-bindgen / wasm-pack。
+# 理由是依赖最小化：绑定层只做「收字节 → 调内核 → 回 JSON」，手写 extern "C" 已足够，
+# 且免去额外工具链（沙箱对长时间子进程有限制，能少一个环节就少一个环节）。
+# 若将来前端需要更复杂的类型互操作，再评估引入 wasm-bindgen。

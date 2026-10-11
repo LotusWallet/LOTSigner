@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lotus Signer · 受托签名审阅</title>
+<!-- 内联 favicon：避免浏览器自动请求 /favicon.ico 产生 404（本页承诺零外部请求） -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='26' font-size='26'>🪷</text></svg>">
+<!--
+  Lotus Signer 网页端
+  ------------------------------------------------------------
+  本文件**不得**包含任何 PSBT 解析、交易事实判定或五态逻辑。
+  它只做三件事：读文件 → 交给 wasm 内核 → 渲染返回的 JSON（宪法第 8 条）。
+
+  本页面刻意不含任何外部资源引用（无 CDN、无字体、无分析脚本），
+  因为产品承诺场景内不发起外部请求（宪法 G-II）。
+  你可以在浏览器开发者工具的 Network 面板核对：断网后功能完全可用。
+-->
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2128; --border:#30363d;
+    --fg:#e6edf3; --fg-dim:#8b949e; --fg-faint:#6e7681;
+    --accent:#7c8cff; --accent-dim:#39406b;
+    --st-verified:#3fb950; --st-parsed:#d29922; --st-missing:#8b949e;
+    --st-unsupported:#a371f7; --st-failed:#f85149;
+    --risk:#f0883e;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.6; font-size:14px;
+  }
+  .wrap{max-width:960px;margin:0 auto;padding:32px 20px 80px}
+  header{border-bottom:1px solid var(--border);padding-bottom:20px;margin-bottom:28px}
+  h1{font-size:22px;margin:0 0 6px;font-weight:600;letter-spacing:.3px}
+  .tagline{color:var(--fg-dim);font-size:13px}
+  .badge-offline{
+    display:inline-flex;align-items:center;gap:6px;margin-top:12px;
+    font-size:12px;color:var(--st-verified);background:#0f2417;
+    border:1px solid #1f4d2e;border-radius:20px;padding:3px 12px;
+  }
+  .badge-offline::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--st-verified)}
+
+  .drop{
+    border:1.5px dashed var(--border);border-radius:12px;padding:40px 24px;text-align:center;
+    background:var(--panel);transition:.15s;cursor:pointer;margin-bottom:16px;
+  }
+  .drop:hover,.drop.over{border-color:var(--accent);background:var(--panel2)}
+  .drop h2{margin:0 0 8px;font-size:15px;font-weight:600}
+  .drop p{margin:0;color:var(--fg-dim);font-size:13px}
+  .drop code{background:#0d1117;border:1px solid var(--border);border-radius:4px;padding:1px 6px;font-size:12px}
+
+  textarea{
+    width:100%;min-height:90px;background:var(--panel);color:var(--fg);
+    border:1px solid var(--border);border-radius:8px;padding:12px;
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px;resize:vertical;
+  }
+  textarea:focus{outline:none;border-color:var(--accent)}
+
+  .actions{display:flex;gap:10px;align-items:center;margin:14px 0}
+  button{
+    background:var(--accent);color:#fff;border:0;border-radius:8px;padding:9px 20px;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;
+  }
+  button:hover{background:#6a7bf0}
+  button.ghost{background:transparent;color:var(--fg-dim);border:1px solid var(--border)}
+  button.ghost:hover{color:var(--fg);border-color:var(--fg-dim);background:var(--panel)}
+  .hint{color:var(--fg-faint);font-size:12px}
+
+  section.layer{margin-top:28px}
+  .layer-title{
+    display:flex;align-items:baseline;gap:10px;margin-bottom:12px;
+    font-size:14px;font-weight:600;color:var(--fg);
+  }
+  .layer-title .n{
+    font-size:11px;color:var(--fg-faint);font-weight:400;
+    border:1px solid var(--border);border-radius:4px;padding:1px 6px;
+  }
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:16px 18px}
+
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:8px 16px;font-size:13px}
+  .kv dt{color:var(--fg-dim)}
+  .kv dd{margin:0;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all}
+
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;color:var(--fg-dim);font-weight:500;font-size:12px;padding:6px 10px;border-bottom:1px solid var(--border)}
+  td{padding:8px 10px;border-bottom:1px solid #21262d;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:12px}
+  tr:last-child td{border-bottom:0}
+  td.num{text-align:right}
+  .addr{word-break:break-all}
+
+  .st{
+    display:inline-block;font-size:10px;font-weight:600;border-radius:4px;
+    padding:1px 6px;vertical-align:middle;font-family:-apple-system,sans-serif;
+    border:1px solid transparent;white-space:nowrap;
+  }
+  .st-verified{color:var(--st-verified);background:#0f2417;border-color:#1f4d2e}
+  .st-parsed_unverified{color:var(--st-parsed);background:#2b2313;border-color:#5a4a1a}
+  .st-missing{color:var(--st-missing);background:#1c2128;border-color:#30363d}
+  .st-unsupported{color:var(--st-unsupported);background:#21163b;border-color:#3d2a63}
+  .st-check_failed{color:var(--st-failed);background:#2d1418;border-color:#5c2228}
+
+  .note{color:var(--fg-dim);font-size:12px;margin-top:6px;line-height:1.5}
+  .note::before{content:"↳ ";color:var(--fg-faint)}
+
+  ul.plain{margin:0;padding-left:18px;font-size:13px}
+  ul.plain li{margin:5px 0}
+
+  .risk{border-left:3px solid var(--risk);background:var(--panel);border-radius:6px;padding:12px 16px;margin-bottom:10px}
+  .risk .code{font-family:ui-monospace,monospace;font-size:11px;color:var(--risk);font-weight:600}
+  .risk .sum{font-weight:600;margin:2px 0 6px;font-size:13px}
+  .risk .why{color:var(--fg-dim);font-size:12px}
+  .risk .why b{color:var(--fg);font-weight:500}
+
+  .refuse{background:#1a1410;border:1px solid #3d2f1f;border-radius:10px;padding:16px 18px}
+  .refuse ul{margin:0;padding-left:0;list-style:none}
+  .refuse li{font-size:13px;color:var(--fg-dim);margin:7px 0;padding-left:22px;position:relative}
+  .refuse li::before{content:"×";position:absolute;left:6px;color:var(--risk);font-weight:700}
+
+  .empty{color:var(--fg-faint);font-size:13px;font-style:italic}
+
+  footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--border);color:var(--fg-faint);font-size:12px;text-align:center}
+  .err{background:#2d1418;border:1px solid #5c2228;color:#ffa198;border-radius:8px;padding:14px 16px;font-size:13px;margin-top:16px}
+  .hidden{display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Lotus Signer</h1>
+    <div class="tagline">别人让你签的东西，先过一遍 Lotus Signer。</div>
+    <div class="badge-offline">本页不发起任何外部请求 · 完全离线运行</div>
+  </header>
+
+  <div class="drop" id="drop">
+    <h2>把待签的 PSBT 拖到这里</h2>
+    <p>或点击选择文件 —— 支持 <code>.psbt</code> 文本（base64）。文件不会离开这台浏览器。</p>
+    <input type="file" id="file" accept=".psbt,.txt,application/base64,text/plain" class="hidden">
+  </div>
+
+  <textarea id="input" placeholder="……也可以直接把 base64 文本粘贴到这里"></textarea>
+  <div class="actions">
+    <button id="go">审阅</button>
+    <button id="demo" class="ghost">载入示例</button>
+    <span class="hint" id="hint"></span>
+  </div>
+
+  <div id="out"></div>
+
+  <footer>
+    以上为「循证审阅」结果，不构成任何人签名或不签名的建议。<br>
+    解析与判定由唯一的 Rust 内核提供，本页不含任何解析逻辑。
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+// ---------- wasm 加载（零工具链：手写 linear memory 交互） ----------
+let wasm = null;
+
+async function loadWasm(){
+  const buf = await (await fetch("./lswasm.wasm")).arrayBuffer();
+  const { instance } = await WebAssembly.instantiate(buf, {});
+  wasm = instance.exports;
+}
+
+// 调用内核：把 UTF-8 文本写入 wasm 内存，取回 JSON
+function callCore(text){
+  const enc = new TextEncoder();
+  const bytes = enc.encode(text);
+  const ptr = wasm.ls_alloc(bytes.length);
+  if (!ptr) throw new Error("wasm 内存分配失败");
+  new Uint8Array(wasm.memory.buffer, ptr, bytes.length).set(bytes);
+
+  const out = wasm.ls_review(ptr, bytes.length);
+  wasm.ls_dealloc(ptr, bytes.length);
+  if (!out) throw new Error("wasm 返回空指针");
+
+  const view = new DataView(wasm.memory.buffer);
+  const len = view.getUint32(out, true);
+  const jsonBytes = new Uint8Array(wasm.memory.buffer, out + 4, len);
+  const json = new TextDecoder().decode(jsonBytes); // 复制出视图
+  wasm.ls_dealloc(out, len + 4);
+  return JSON.parse(json);
+}
+
+// ---------- 工具 ----------
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const sats = (n) => n.toLocaleString("en-US");
+
+function stateBadge(f){
+  const s = f.state;
+  return `<span class="st st-${s}" title="${esc(f.state_explain || "")}">${s}</span>`;
+}
+
+// ---------- 渲染四层 ----------
+function render(r){
+  if (!r.ok) return `<div class="err">审阅失败：${esc(r.error)}</div>`;
+  const f = r.facts;
+  let h = "";
+
+  // 第一层
+  h += `<section class="layer"><div class="layer-title"><span class="n">第一层</span>交易事实</div><div class="card">`;
+  h += `<dl class="kv">
+    <dt>txid</dt><dd>${esc(f.txid)}</dd>
+    <dt>version</dt><dd>${f.version}</dd>
+    <dt>nLockTime</dt><dd>${f.locktime}　<span style="color:var(--fg-dim);font-family:inherit">${esc(f.locktime_meaning)}</span></dd>
+  </dl></div>`;
+
+  // 输入
+  h += `<div class="card" style="margin-top:12px"><table><thead><tr>
+    <th style="width:38px">#</th><th>Outpoint</th><th style="width:90px">类型</th>
+    <th style="width:130px;text-align:right">金额</th><th style="width:70px">签名</th></tr></thead><tbody>`;
+  f.inputs.forEach(i => {
+    const amt = i.amount.value === null
+      ? `<span style="color:var(--fg-dim)">未知</span>`
+      : `${sats(i.amount.value)} sat`;
+    h += `<tr>
+      <td>${i.index}</td>
+      <td class="addr">${esc(i.outpoint)}</td>
+      <td>${esc(i.script_type || "—")}</td>
+      <td class="num">${amt} ${stateBadge(i.amount)}</td>
+      <td>${i.partial_sig_count > 0 ? i.partial_sig_count + " 个" : "—"}</td>
+    </tr>`;
+    if (i.amount.note) h += `<tr><td></td><td colspan="4" class="note">${esc(i.amount.note)}</td></tr>`;
+  });
+  h += `</tbody></table></div>`;
+
+  // 输出
+  h += `<div class="card" style="margin-top:12px"><table><thead><tr>
+    <th style="width:38px">#</th><th style="width:150px;text-align:right">金额</th>
+    <th>收款脚本 / 地址</th></tr></thead><tbody>`;
+  f.outputs.forEach(o => {
+    const to = o.address
+      ? `<span class="addr">${esc(o.address)}</span>`
+      : `<span style="color:var(--fg-dim)">无法呈现地址（${esc(o.script_type)}）</span>`;
+    h += `<tr><td>${o.index}</td><td class="num">${sats(o.value_sats)} sat</td>
+      <td>${to}<div class="note" style="margin-top:2px">${esc(o.script_type)}</div></td></tr>`;
+  });
+  h += `</tbody></table></div>`;
+
+  // 汇总
+  const fee = f.fee_sats.value === null
+    ? `<span style="color:var(--fg-dim)">未知</span>`
+    : `${sats(f.fee_sats.value)} sat`;
+  h += `<div class="card" style="margin-top:12px"><dl class="kv">
+    <dt>输出合计</dt><dd>${sats(f.total_out_sats)} sat</dd>
+    <dt>手续费</dt><dd>${fee} ${stateBadge(f.fee_sats)}
+      ${f.fee_sats.note ? `<div class="note" style="font-family:inherit">${esc(f.fee_sats.note)}</div>` : ""}</dd>
+    <dt>sighash</dt><dd>${f.sighash_type.value === null ? "未标注" : "0x" + f.sighash_type.value.toString(16).padStart(2,"0")} ${stateBadge(f.sighash_type)}
+      <div class="note" style="font-family:inherit">${esc(f.sighash_policy)}</div></dd>
+  </dl></div></section>`;
+
+  // 第二层
+  h += `<section class="layer"><div class="layer-title"><span class="n">第二层</span>上下文解释</div>
+    <div class="card"><ul class="plain">${r.context.map(c => `<li>${esc(c)}</li>`).join("")}</ul></div></section>`;
+
+  // 第三层
+  h += `<section class="layer"><div class="layer-title"><span class="n">第三层</span>风险提示</div>`;
+  if (r.risks.length === 0){
+    h += `<div class="card empty">本次未检出需要提示的问题。这不代表「安全」，只代表未触发已知规则。</div>`;
+  } else {
+    r.risks.forEach(k => {
+      h += `<div class="risk"><span class="code">[${esc(k.code)}]</span>
+        <div class="sum">${esc(k.summary)}</div>
+        <div class="why"><b>触发原因：</b>${esc(k.trigger_reason)}<br><b>依据：</b>${esc(k.evidence)}</div></div>`;
+    });
+  }
+  h += `</section>`;
+
+  // 第四层（永远可见）
+  h += `<section class="layer"><div class="layer-title"><span class="n">第四层</span>本工具不提供以下结论</div>
+    <div class="refuse"><ul>${r.not_provided.map(n => `<li>${esc(n)}</li>`).join("")}</ul></div></section>`;
+
+  return h;
+}
+
+// ---------- 交互 ----------
+async function run(text){
+  $("#hint").textContent = "";
+  if (!text.trim()){ $("#out").innerHTML = ""; return; }
+  try {
+    const r = callCore(text.trim());
+    $("#out").innerHTML = render(r);
+  } catch(e){
+    $("#out").innerHTML = `<div class="err">调用内核出错：${esc(e.message)}</div>`;
+  }
+}
+
+$("#go").onclick = () => run($("#input").value);
+$("#drop").onclick = () => $("#file").click();
+$("#file").onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => { $("#input").value = rd.result; run(rd.result); };
+  rd.readAsText(file);
+};
+
+// 拖拽
+const drop = $("#drop");
+["dragenter","dragover"].forEach(ev => drop.addEventListener(ev, e => {e.preventDefault(); drop.classList.add("over");}));
+["dragleave","drop"].forEach(ev => drop.addEventListener(ev, e => {e.preventDefault(); drop.classList.remove("over");}));
+drop.addEventListener("drop", e => {
+  const file = e.dataTransfer.files[0];
+  if (!file) return;
+  const rd = new FileReader();
+  rd.onload = () => { $("#input").value = rd.result; run(rd.result); };
+  rd.readAsText(file);
+});
+
+$("#demo").onclick = async () => {
+  try {
+    const t = await (await fetch("./demo/S1.psbt")).text();
+    $("#input").value = t.trim();
+    run(t);
+  } catch(e){ $("#hint").textContent = "示例加载失败"; }
+};
+
+loadWasm().then(() => { $("#hint").textContent = "内核就绪"; })
+          .catch(e => { $("#hint").textContent = "内核加载失败：" + e.message; });
+</script>
+</body>
+</html>
