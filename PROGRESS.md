@@ -239,3 +239,15 @@ G3 仍是一级否决项，**G3 未过不动笔写规格**（只做内核技术�
 ### 待办（open 之后）
 
 C1（T0 进 CI）+ C2（签名三要件）→ Track 2 官方产物；G1（bdk-wasm）；G3 差异项③补测；G2 待硬件。
+
+---
+
+## 八、公开事件（2026-10-12）
+
+**项目负责人发出 "Open!" 指令 → Track 1 打开，仓库转 public。**
+
+- 触发依据：[`BETA-READINESS.md`](BETA-READINESS.md) §8（A/B/D 全部有证据 + C3 声明 + 负责人验证放行）。
+- Track 1 形态：**源码 + 一条命令自建**（`git clone` + `./build.sh`），无官方签名产物（§5-C3 声明不变）。
+- **Track 2 未开**：C1（T0 进 CI）与 C2（签名三要件）仍 ⬜，在此之前一切产物不得称"官方"。
+- 对外公告草稿已入 [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) 队列（🟡 待发布，负责人手工发 X/TG）。
+- 文档同步：README / README_CN 可见性改"公开（2026-10-12 起）"；BETA-READINESS §8 记录 open 事件。

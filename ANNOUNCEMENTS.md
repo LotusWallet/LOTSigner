@@ -25,7 +25,37 @@
 ## 队列
 
 > 状态标记：`⬜ 草稿` → `🟡 待发布` → `✅ 已发布`
-> 目前**无可发布内容**（尚无产物、闸门未过）。首个可发布节点是 **G3 判定完成**。
+
+### 🟡 [2026-10-12] Lotus Signer 公开内测：源码 + 自建构建
+
+**平台**：X / Telegram / 两者（同稿）
+**关联**：commit `9381f7d`（Track-1 冲刺）· 仓库 https://github.com/LotusWallet/LOTSigner
+**状态**：🟡 待发布
+
+**正文（中文）**
+> Lotus Signer 已公开（github.com/LotusWallet/LOTSigner）。
+>
+> 它做的事很简单：别人让你签的东西——先过一遍 Lotus Signer。本地还原待签交易的事实，标出缺什么、不支持什么，然后由**你自己的钱包或硬件**去签。它不托管密钥、没有我们的业务服务器、审阅全链路零外部请求。
+>
+> 当前为内测形态：**仅提供源码 + 一条命令自建**（`git clone` + `./build.sh`），**尚无官方签名产物**——请只从源码自行构建，勿从其他渠道获取可执行文件。
+>
+> 已知边界在 KNOWN-LIMITATIONS.md 里写明：目前只处理 BTC PSBT；不支持的内容会明确报错，不会静默降级；`verified` 表示"通过了明确的解析与校验规则"，**不表示交易已验证安全**。
+>
+> 使用前请先读 README 与 KNOWN-LIMITATIONS.md。发现问题请开 issue。
+
+**正文（English）**
+> Lotus Signer is now public: github.com/LotusWallet/LOTSigner
+>
+> It does one thing: before you sign what someone else handed you, run it through Lotus Signer. It reconstructs the transaction facts locally, marks what is missing and what is unsupported, and you sign with **your own** wallet or hardware. It never custodies a key, there is no Lotus-operated server, and the review chain issues zero external requests.
+>
+> This is a **beta offered as source + one-command build only** (`git clone` + `./build.sh`). **No officially signed artifact exists yet** — build it yourself from source; do not trust binaries from any other channel.
+>
+> Boundaries are written down in KNOWN-LIMITATIONS.md: BTC PSBT only; unsupported content raises an explicit error, never silent degradation; `verified` means "passed the defined parsing and verification rules" — **it does not mean the transaction has been verified as safe**.
+>
+> Read the README and KNOWN-LIMITATIONS.md before use. Issues welcome.
+
+**附链接**：仓库主页 · KNOWN-LIMITATIONS.md · BETA-READINESS.md（判定依据）
+**自查**：[x] 无终局判定　[x] 无绝对离线表述（写"审阅全链路零外部请求"，属 L-B 场景描述，未称"完全不联网"）　[x] 无未核验事实　[x] 无"官方发布"措辞（明示无官方签名产物）　[x] 未暗示替代硬件钱包
 
 ### 模板（新增条目时照抄）
 

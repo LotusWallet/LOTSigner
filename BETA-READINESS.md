@@ -86,13 +86,19 @@ Any of these invalidates the readiness claim, even if every checkbox above is ti
 - **This checklist is frozen.** Any amendment must be recorded in writing with its reason, and amending
   it requires re-running the entire list from scratch.
 
-## §8 Status as of 2026-10-12 (readiness claim)
+## §8 Status (readiness claim & open event)
 
-- **All Track-1 items have evidence attached except one step of A1**: a **non-author** must run
-  `BUILD.md` on a clean machine (E2 forbids substituting "I tested it"). The author-run rehearsal on a
-  fresh GitHub clone succeeded and its logs are committed, but the readiness claim for A1 is only
-  complete when the **project owner** — who did not write this code — runs the same three commands
-  during the P8 verification pass. That is by design, not a shortcut: the owner's verification IS the
-  independent reproduction.
-- **Verdict**: Track 1 is **ready to hand over for owner verification**. Do not open the repository
-  before the owner has (a) run `BUILD.md` themselves, (b) used the web page, and (c) said "open it".
+- **All Track-1 items have evidence attached.** A1's independent-reproduction step was by design the
+  project owner's P8 verification pass (E2 forbids substituting "I tested it"): the author-run rehearsal
+  on a fresh GitHub clone succeeded with committed logs (`evidence/a1-clean-build.log`,
+  `evidence/a1-clean-test.log`), and the owner then reviewed the product and issued the go-ahead.
+- **Open event**: on **2026-10-12** the project owner issued the instruction to open the repository
+  ("Open!"), which is the P8 trigger defined on 2026-10-11. Track 1 is therefore **open**: the
+  repository is public and the beta is offered as **source + one-command build** only.
+- **A1 remains verifiable by anyone, permanently**: a non-author can reproduce the build at any time
+  by following [`BUILD.md`](BUILD.md) on a clean machine — that is the standing form of A1 once the
+  repository is public. Any failure report from such a reproduction is a bug report, not a checklist
+  violation.
+- **Track 2 (official signed artifacts) is still NOT open**: §5-C1 (T0 in CI) and §5-C2 (signing-key
+  three requirements) remain ⬜. Per §5-C3 and the release-discipline table, nothing may be offered
+  or described as an official artifact until they are green.

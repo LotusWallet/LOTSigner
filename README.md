@@ -72,8 +72,8 @@ proofread by a native speaker — a mistranslated risk notice would mislead the 
 **Layout**: responsive across common resolutions (375 px phone → 1920 px desktop), tables scroll
 inside their cards on narrow screens, no page-level horizontal overflow. Verified at 375/768/1280/1920.
 
-**The repository is currently private. See [Openness policy](#openness-policy) — we do not open a
-half-finished, untestable build.**
+**The repository is now public (opened 2026-10-12** once the Track-1 readiness checklist was
+evidenced and the project owner gave the go-ahead — see [Openness policy](#openness-policy).
 
 ## Product Constitution
 
@@ -218,7 +218,7 @@ GitHub: `https://github.com/LotusWallet/LOTSigner`
 |---|---|
 | Owner | `LotusWallet` (personal account, not an org) |
 | Push identity | `BingLeague` (as collaborator) |
-| Visibility | **private** |
+| Visibility | **public** (since 2026-10-12) |
 
 ## Openness Policy
 
