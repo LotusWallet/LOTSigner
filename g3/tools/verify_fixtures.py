@@ -30,12 +30,15 @@ PSBT_MAGIC = b"\x70\x73\x62\x74\xff"
 
 KEY_NAMES = {
     (0, 0x00): "GLOBAL_UNSIGNED_TX",
+    (-1, 0x00): "IN_NON_WITNESS_UTXO",   # 输入 map 的 0x00 = 完整前序交易
     (-1, 0x01): "IN_WITNESS_UTXO",
     (-1, 0x02): "IN_PARTIAL_SIG",
     (-1, 0x03): "IN_SIGHASH_TYPE",
+    (-1, 0x04): "IN_REDEEM_SCRIPT",
     (-1, 0x05): "IN_WITNESS_SCRIPT",
     (-1, 0x06): "IN_BIP32_DERIVATION",
     (-1, 0x0F): "IN_PROPRIETARY",
+    (1, 0x00): "OUT_REDEEM_SCRIPT",
     (1, 0x01): "OUT_WITNESS_SCRIPT",
 }
 
@@ -111,13 +114,17 @@ def parse_psbt(raw):
     # 跳过 inputs
     p = o
     inputs = []
+    outpoints = []
     for _ in range(n_in):
-        p += 32 + 4
+        txid = unsigned_tx[p:p + 32]
+        p += 32
+        p += 4  # vout
         slen, p = read_varint(unsigned_tx, p)
         script_sig = unsigned_tx[p:p + slen]
         p += slen
-        p += 4
+        p += 4  # sequence
         inputs.append(script_sig)
+        outpoints.append(txid)
     n_out, p = read_varint(unsigned_tx, p)
 
     input_maps = []
@@ -135,6 +142,7 @@ def parse_psbt(raw):
         "n_in": n_in,
         "n_out": n_out,
         "input_script_sigs": inputs,
+        "input_outpoints": outpoints,
         "inputs": input_maps,
         "outputs": output_maps,
         "consumed": i,
@@ -181,10 +189,17 @@ def main():
     print("=" * 66)
 
     expectations = {
-        "S1": {"has_utxo": True, "has_sig": False, "has_prop": False},
-        "S2a": {"has_utxo": False, "has_sig": False, "has_prop": False},
-        "S2b": {"has_utxo": True, "has_sig": False, "has_prop": True},
-        "S3": {"has_utxo": True, "has_sig": True, "has_prop": False},
+        "S1": {"has_utxo": True, "has_sig": False, "has_prop": False,
+               "has_redeem": False, "has_nonwitness": False},
+        "S2a": {"has_utxo": False, "has_sig": False, "has_prop": False,
+                "has_redeem": False, "has_nonwitness": False},
+        "S2b": {"has_utxo": True, "has_sig": False, "has_prop": True,
+                "has_redeem": False, "has_nonwitness": False},
+        "S3": {"has_utxo": True, "has_sig": True, "has_prop": False,
+               "has_redeem": False, "has_nonwitness": False},
+        # S4 = P2SH 对照样本：非 witness 输入，带 redeemScript 与完整前序交易
+        "S4": {"has_utxo": False, "has_sig": False, "has_prop": False,
+               "has_redeem": True, "has_nonwitness": True},
     }
 
     for name, exp in expectations.items():
@@ -206,6 +221,8 @@ def main():
         has_utxo = "IN_WITNESS_UTXO" in names
         has_sig = "IN_PARTIAL_SIG" in names
         has_prop = has_unsupported(names)
+        has_redeem = "IN_REDEEM_SCRIPT" in names
+        has_nonwitness = "IN_NON_WITNESS_UTXO" in names
 
         check(has_utxo == exp["has_utxo"],
               f"witness_utxo {'存在' if exp['has_utxo'] else '缺失'}（期望一致）")
@@ -213,6 +230,22 @@ def main():
               f"partial_sig {'存在' if exp['has_sig'] else '缺失'}（期望一致）")
         check(has_prop == exp["has_prop"],
               f"未知/专有字段 {'存在' if exp['has_prop'] else '缺失'}（期望一致）")
+        check(has_redeem == exp["has_redeem"],
+              f"redeemScript {'存在' if exp['has_redeem'] else '缺失'}（期望一致）")
+        check(has_nonwitness == exp["has_nonwitness"],
+              f"non_witness_utxo {'存在' if exp['has_nonwitness'] else '缺失'}（期望一致）")
+
+        # S4 专项自检：outpoint 的 txid 必须等于前序交易的 sha256d（BIP-174 硬要求）。
+        # 这条不成立的话，任何标准解析器都会拒绝该 PSBT，而失败会落在差异项①上，
+        # 把固件缺陷误读成被测工具能力不足——与 33 字节 txid 是同一类陷阱。
+        if has_nonwitness:
+            for n, _, v in im:
+                if n == "IN_NON_WITNESS_UTXO":
+                    import hashlib as _hl
+                    d = _hl.sha256(_hl.sha256(v).digest()).digest()
+                    check(d == parsed["input_outpoints"][0],
+                          "前序交易 txid 与 outpoint 一致（sha256d 校验通过）")
+                    break
 
         print(f"  输入字段: {', '.join(names)}")
         print(f"  五态自检: utxo={field_status(im, 'IN_WITNESS_UTXO')}")

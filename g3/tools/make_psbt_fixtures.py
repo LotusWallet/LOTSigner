@@ -110,12 +110,15 @@ PSBT_MAGIC = b"\x70\x73\x62\x74\xff"  # "psbt" + 0xff
 
 # --- key types
 GLOBAL_UNSIGNED_TX = 0x00
+IN_NON_WITNESS_UTXO = 0x00   # 输入 map 中的 0x00 = 完整前序交易（非 witness 输入）
 IN_WITNESS_UTXO = 0x01
 IN_PARTIAL_SIG = 0x02
 IN_SIGHASH_TYPE = 0x03
+IN_REDEEM_SCRIPT = 0x04
 IN_WITNESS_SCRIPT = 0x05
 IN_BIP32_DERIVATION = 0x06
 IN_PROPRIETARY = 0x0F
+OUT_REDEEM_SCRIPT = 0x00     # 输出 map 中的 0x00 = redeemScript
 OUT_WITNESS_SCRIPT = 0x01
 
 
@@ -184,6 +187,41 @@ def make_2of3_script(k1, k2, k3):
 
 def p2wsh_spk(witness_script):
     return b"\x00\x20" + sha256(witness_script)
+
+
+def p2sh_spk(redeem_script):
+    """OP_HASH160 <hash160(redeemScript)> OP_EQUAL"""
+    return b"\xa9\x14" + hash160(redeem_script) + b"\x87"
+
+
+def sha256d(b):
+    return sha256(sha256(b))
+
+
+def build_prev_tx(value_sat, spk):
+    """
+    构造一笔完整的前序交易：1 输入（空 scriptSig）+ 1 输出（付给 spk）。
+
+    为什么需要它：非 witness 输入（P2SH）按 BIP-174 必须提供
+    PSBT_IN_NON_WITNESS_UTXO(0x00)，其内容是**完整的前序交易序列化**，
+    且输入 outpoint 的 txid 必须等于该交易的 sha256d。
+    这与 witness 输入只需 witness_utxo 不同，是 P2SH 对照样本的构造要点。
+
+    返回 (tx_bytes, txid_internal)。txid_internal 可直接用作 outpoint 的 txid 字段
+    （交易序列化中的 txid 即 sha256d 的原始字节序，不需要反转）。
+    """
+    dummy_prevout = bytes(range(32))  # 32 字节任意值，无真实含义
+    b = struct.pack("<i", 2)                 # version
+    b += ser_compact_size(1)                 # 输入数
+    b += dummy_prevout
+    b += struct.pack("<I", 0)                # vout
+    b += ser_compact_size(0)                 # scriptSig 必须为空
+    b += struct.pack("<I", 0xFFFFFFFF)       # sequence
+    b += ser_compact_size(1)                 # 输出数
+    b += struct.pack("<Q", value_sat)
+    b += ser_compact_size(len(spk)) + spk
+    b += struct.pack("<I", 0)                # locktime
+    return b, sha256d(b)
 
 
 def build_psbt(n_inputs, unsigned_tx, input_maps, output_maps):
@@ -279,9 +317,40 @@ def main():
     ]
     s3 = build_psbt(1, unsigned_tx, [with_sig], output_maps)
 
+    # ---------------- S4：P2SH 对照样本（差异项①的关键对照） ----------------
+    # 目的：Caravan 的 Script Explorer 导入路径读的是 PSBT_IN_REDEEM_SCRIPT(0x04)，
+    # 而 S1 是 P2WSH、只带 0x05，导致 ScriptEntry.jsx:301 取 undefined 而崩溃。
+    # 要区分「Caravan 只支持 P2SH 系」与「Caravan 导入路径整体不可用」，
+    # 必须给一个**带 redeemScript 的对照样本**——这就是 S4。
+    # 非 witness 输入按 BIP-174 需提供完整前序交易（NON_WITNESS_UTXO）。
+    rscript = wscript  # 同一个 2-of-3 脚本，此处作 P2SH 的 redeemScript
+    prev_tx, prev_txid_internal = build_prev_tx(input_amount, p2sh_spk(rscript))
+    assert len(prev_txid_internal) == 32
+    # 自检：outpoint 的 txid 必须等于前序交易的 sha256d（BIP-174 硬要求）
+    assert sha256d(prev_tx) == prev_txid_internal
+
+    unsigned_tx_p2sh = build_unsigned_tx(
+        n_inputs=1,
+        inputs=[(prev_txid_internal, 0, 0xFFFFFFFE)],
+        outputs=[(send_amount, send_spk), (change_amount, p2sh_spk(rscript))],
+        n_outputs=2,
+    )
+    p2sh_input = [
+        kv(IN_NON_WITNESS_UTXO, b"", prev_tx),
+        kv(IN_SIGHASH_TYPE, b"", struct.pack("<I", 1)),
+        kv(IN_REDEEM_SCRIPT, b"", rscript),
+        kv(IN_BIP32_DERIVATION, pk1,
+           b"\x00" * 4 + b"\x80\x00\x00\x00" + b"\x00\x00\x00\x00"),
+    ]
+    p2sh_output_maps = [[], [kv(OUT_REDEEM_SCRIPT, b"", rscript)]]
+    s4 = build_psbt(1, unsigned_tx_p2sh, [p2sh_input], p2sh_output_maps)
+
     samples = {
         "S1": (s1, "受托场景 2-of-3 P2WSH 多签 PSBT，未签名。1 输入 2 输出（含找零），"
                    "含 witness_utxo / sighash / witnessScript / bip32 derivation"),
+        "S4": (s4, "**P2SH 对照样本**：同一个 2-of-3 脚本作 redeemScript（0x04），"
+                   "输入为 P2SH（非 witness），含完整前序交易 NON_WITNESS_UTXO(0x00)。"
+                   "用于判定 Caravan 导入路径是「只支持 P2SH 系」还是「整体不可用」"),
         "S2a": (s2a, "S1 移除 witness_utxo → 无法得知输入金额。对应五态 missing"),
         "S2b": (s2b, "S1 追加 PSBT_IN_PROPRIETARY(0x0f) 未知字段。对应五态 unsupported"),
         "S3": (s3, "S1 追加 pk1 的一个 partial_sig → 已收集 1/2 签名，待第 2 个"),
