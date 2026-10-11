@@ -1,187 +1,235 @@
 # Lotus Signer
 
-> 别人让你签的东西，先过一遍 Lotus Signer。
+**English** · [中文版 README_CN.md](README_CN.md)
 
-**Lotus Signer —— 本地运行优先的待签数据审阅与签名协作工具。**
+> Before you sign what someone else handed you, run it through Lotus Signer.
 
-当有人把一份待签数据交给你时，Lotus Signer 在本地还原交易事实、标注缺失与风险、由你确认后用你自己的钱包或硬件签名，再把签名结果交还发起方。不托管任何密钥，不设 Lotus 自有业务服务器。
+**Lotus Signer is a local-first review and signing-collaboration tool for data you are asked to sign.**
 
-> **价值本体是"提供独立的验证证据"（第二意见）**，不是替用户读懂数据。语义翻译是必要能力，不是价值本体——翻译层正在被基础设施化，可复制性高；**明确指出"信息缺失、验证边界、工具间结果差异"这件事，因以"承认自己不知道"为前提，商业产品天然不愿做。诚实是有壁垒的，翻译没有。**
+When someone hands you a piece of data to sign, Lotus Signer reconstructs the transaction facts locally,
+marks what is missing and what is risky, lets you confirm, and then you sign with **your own** wallet or
+hardware. It never custodies a key, and there is no Lotus-operated business server.
 
-> **承诺分四层**（终裁定义）：L-A 绝对承诺｜L-B 场景承诺（对明确支持且信息完整的 PSBT，审阅→签名→导出全链路离线）｜L-C 增强层（风险标注等，显著标注"需联网"，数据源用户自选）｜L-D 明确不承诺。**不使用"全程离线""完全不联网"的笼统表述。**
+> **The core value is providing independent verification evidence — a second opinion — not explaining the
+> data for you.** Semantic translation is a required capability, but it is not the value itself: the
+> translation layer is being commoditised into infrastructure and is easy to copy. **Explicitly stating
+> "this information is missing", "here is the boundary of what was verified", and "these two tools
+> disagree" requires admitting you do not know, which commercial products are structurally unwilling to
+> do. Honesty has a moat; translation does not.**
 
-## 状态
+> **Commitments come in four layers**: L-A absolute ｜ L-B scoped (for clearly supported, complete PSBTs:
+> review → sign → export, entirely offline) ｜ L-C enhanced (risk annotation etc., **prominently labelled
+> "requires network"**, data source chosen by the user) ｜ L-D explicitly not committed.
+> **We never use blanket phrasing like "always offline" or "never connects".**
 
-| 项 | 内容 |
+## Status
+
+| Item | Value |
 |---|---|
-| 当前阶段 | **P1-0 技术验证闸门**（2 周 / 1 人）——执行顺序 **G3 → G1 → G2**，G2 为可延后项 |
-| 论证结论 | 方向成立；采用**三级否决权与三类结果**（通过 / 有条件通过 / 不通过）。**P1 功能范围不再视为已锁定**，规格待 G1–G3 有结论后动笔 |
-| 执行状态 | **G3 与 G1 已可立即启动**（第四轮修订不阻塞执行）；G2 待硬件设备 |
-| 主打场景 | BTC PSBT 受托审阅 + 签名回导 + 导出（无状态、不做钱包管理） |
-| 目标人群 | 熟悉自托管与多签、能判断交易是否符合预期、**但不愿仅凭原始 PSBT 或单一钱包界面作签名决定**的技术型用户（刻意收窄） |
-| 开发投入 | 核心开发 1–2 人；止损线**前移至 P1-0** |
-| 立项性质 | **技术信誉资产 + 战略期权**，不以收入 KPI 考核 |
+| Current stage | **P1-0 technical validation gates** (2 weeks / 1 person) — order **G3 → G1 → G2**, G2 deferrable |
+| Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
+| Execution | **G3 and G1 can start immediately**; G2 awaits hardware |
+| Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
+| Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
+| Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
+| Nature of the project | **Technical-credibility asset + strategic option**; not measured by revenue KPI |
 
-## 产品宪法
+**The repository is currently private. See [Openness policy](#openness-policy) — we do not open a
+half-finished, untestable build.**
 
-1. **只处理"签名的内容"与"签名的结果"，不处理"账户"与"上链"。**
-2. 不创建、不托管、不接触用户私钥。
-3. 无 Lotus 自有业务服务器。
-4. **代码分发可信是 P0 要求（5 条不可裁剪安全目标），设为独立发布门槛，未通过不得发布，不因工期裁剪。**
-   - **G-I** 用户能独立核验运行产物的版本、完整性及发布来源（双路径：自建比对 / 消费官方产物，P0 期内后者必须就绪）
-   - **G-II** 承诺场景内不发起外部请求 ｜ **G-III** 关键解析行为可复现 ｜ **G-IV** 发布权限边界与披露 ｜ **G-V** 用户可自主部署
-   具体实现手段（IPFS/CID、SRI、构建工具、发布平台）可经安全评审替换，但须重出证据，不得单方变更。
-5. 不支持的数据格式与字段必须**明确报错**，不允许静默降级、不允许用推测填补。
-6. 每个关键字段须携带五态之一：`verified` / `parsed_unverified` / `missing` / `unsupported` / `check_failed`。**`verified` 仅表示"通过明确定义的解析与校验规则"，不得表示"交易已验证安全"。**
-7. 输出分四层：交易事实 / 上下文解释 / 风险提示（须展示触发原因）/ 不提供的结论。**不输出"安全/危险"终局判定。**（五态描述字段证据状态，四层描述用户信息类型，二者不可互替）
-8. **权威语义实现唯一**：所有影响交易事实与审阅状态的判断只能有一个实现（Rust core → native CLI + wasm32 网页）。
-   网页可有展示与适配代码，但**不得重复实现权威解析、交易事实判定或五态逻辑**；相关适配层须纳入测试。
-   对外：T4 独立对照须用**异源**实现，并由 CI 检查依赖树防止对照库进入生产构建。
+## Product Constitution
 
-## 明确不做
+1. **Handle only "what is being signed" and "the result of signing". Never handle accounts or broadcast.**
+2. Never create, custody, or touch a user's private key.
+3. No Lotus-operated business server.
+4. **Trustworthy code distribution is a P0 requirement (5 non-negotiable goals) and a separate release
+   gate. It is not met by a deadline and is never cut for schedule.**
+   - **G-I** the user can independently verify the version, integrity and provenance of the artifact they
+     run (two paths: self-build comparison / consuming the official artifact; the latter must be ready
+     within P0)
+   - **G-II** no outbound requests inside committed scenarios ｜ **G-III** key parsing behaviour is
+     reproducible ｜ **G-IV** release-authority boundaries and disclosure ｜ **G-V** the user can
+     self-host
+   Concrete mechanisms (IPFS/CID, SRI, build tooling, release platform) may be swapped after security
+   review, but the evidence must be re-established and never changed unilaterally.
+5. Unsupported formats and fields **must raise explicit errors**. No silent degradation, no filling gaps
+   with guesses.
+6. Every critical field carries one of five states: `verified` / `parsed_unverified` / `missing` /
+   `unsupported` / `check_failed`. **`verified` means only "passed a clearly defined parse and
+   validation rule" — it never means "this transaction is verified safe".**
+7. Output has four layers: transaction facts / contextual explanation / risk notes (with the trigger
+   shown) / conclusions we do not provide. **We never emit a final "safe/dangerous" verdict.**
+   (The five states describe field evidence status; the four layers describe information types. They are
+   not interchangeable.)
+8. **Single authoritative semantic implementation.** Every judgement affecting transaction facts or
+   review state has exactly one implementation (Rust core → native CLI + wasm32 web). The web layer may
+   contain presentation, input adaptation and file-handling code, but **must not re-implement
+   authoritative parsing, transaction-fact decisions, or the five-state logic**; adaptation layers that
+   could change a conclusion are covered by tests. Externally, T4 independent cross-checks must use an
+   **independently sourced** implementation, with CI inspecting the dependency tree to keep the
+   cross-check library out of production builds.
 
-自研 MPC · 自研硬件设备 · 浏览器扩展 · 移动端（P3 前）· 与 LotusWallet 主站代码级集成（P3 前）· 代币叙事
+## Explicitly Out of Scope
 
-## 目录
+In-house MPC · own hardware device · browser extension · mobile (before P3) · code-level integration
+with the LotusWallet main product (before P3) · token narrative
+
+## Repository Layout
 
 ```
-g3/           P1-0 闸门 G3 实测：预注册、固件、工具、证据
-packages/     源码（core / parsers / risk / transport / web / cli）
-ANNOUNCEMENTS.md  对外发布内容队列（手工发布用）
-PROGRESS.md   进展看板（唯一入口）
+g3/                 P1-0 gate G3: pre-registration, fixtures, tools, evidence
+packages/           source (core / parsers / risk / transport / web / cli)
+ANNOUNCEMENTS.md    outbound announcement queue (published manually)
+PROGRESS.md         progress board (single entry point)
+BETA-READINESS.md   the frozen checklist that decides when we may open the repo
 ```
 
-> **论证过程文档不在本仓。** 四轮论证的稿件与终裁已由项目负责人单独归档，2026-10-11 从本仓及
-> **全部 git 历史**中清除（含 `git filter-branch` 重写）。结论已固化在本文件的「产品宪法」与
-> 「明确不做」两节——**以本 README 为准**。
+> **The deliberation documents are not in this repository.** Drafts and verdicts from the four review
+> rounds were archived separately by the project owner and removed from this repo **and from the entire
+> git history** on 2026-10-11 (history rewritten). The conclusions live in **Product Constitution** and
+> **Explicitly Out of Scope** above — **this README is the authoritative source for external reference.**
 
-## 工程文档索引
+## Engineering Documents
 
-| 文档 | 说明 |
+| Document | Description |
 |---|---|
-| [`PROGRESS.md`](PROGRESS.md) | **进展看板（唯一入口）** |
-| [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) | 对外发布内容队列 |
-| [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 预注册（五要素冻结，测试后不得修改） |
-| [`g3/G3-实测记录-阶段1.md`](g3/G3-实测记录-阶段1.md) | G3 阶段 1 实测记录（含环境坑） |
-| [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT 固件说明与双重验证结果 |
+| [`PROGRESS.md`](PROGRESS.md) | Progress board (single entry point) |
+| [`BETA-READINESS.md`](BETA-READINESS.md) | **Frozen checklist: when we are allowed to open the repo** |
+| [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) | Outbound announcement queue |
+| [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 pre-registration (frozen; must not change after testing) |
+| [`g3/G3-实测记录-阶段1.md`](g3/G3-实测记录-阶段1.md) | G3 phase-1 test log (including environment pitfalls) |
+| [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT fixtures and dual-verification results |
 
-## 流程约定
+## Process Rules
 
-1. **闸门预注册**：每个闸门测试前书面锁定五要素（支持范围 / 关键字段 / 必拒错误 / 差异规则 / 复现方式），测试后不得修改。
-2. **元原则**：**不得以工程可行性替代市场验证，也不得以用户需求替代安全验证。两类证据必须分别成立。**
-3. **结论以本文件为准**：论证过程文档已归档出仓，产品宪法与「明确不做」两节即最终结论。
-4. *（留档）版本指纹与引证核验制度：论证轮换期间用于防版本事故，论证阶段结束后不再强制。*
+1. **Gate pre-registration**: before each gate, five elements are frozen in writing (supported scope /
+   critical fields / must-reject errors / difference rules / reproduction method) and may not change
+   after testing.
+2. **Meta-principle**: **engineering feasibility must never substitute for market validation, and user
+   demand must never substitute for security validation. Both classes of evidence must stand on their
+   own.**
+3. **This file is authoritative**: the deliberation documents have been archived out of the repo; the
+   Product Constitution and Explicitly Out of Scope sections are the final conclusions.
+4. *(Archived)* Version-fingerprint and citation-verification rules were used to prevent version
+   incidents during the deliberation rounds; no longer mandatory now that deliberation has ended.
 
-## 关于 LotusWallet Team
+## About LotusWallet Team
 
-**LotusWallet Team** 发起 Lotus Signer，以独立产品形态开发，作为团队的技术信誉资产与获客漏斗。成熟后按 P3 阶段回灌主站。
+**LotusWallet Team** initiates Lotus Signer, developed as an independent product and treated as a
+technical-credibility asset and acquisition funnel for the team. It feeds back into the main product at
+stage P3.
 
-## 对外渠道战略
+## Outbound Channels
 
-> 项目负责人 2026-10-11 决策：**以 GitHub / X 作为与用户交互的主要渠道。GitHub 承载内容，X 发布信息，并同步一份到 Telegram 群组。公司自身 serverless——凡是需要下发或推送的信息，都以 GitHub 开源库的方式承载。**
+> Decision by the project owner, 2026-10-11: **GitHub and X are the primary channels for interacting
+> with users. GitHub carries the content, X publishes the news, and a copy is mirrored to a Telegram
+> group. The company itself is serverless — anything that needs to be distributed or pushed is carried
+> as an open-source GitHub repository.**
 
-这条把宪法第 3 条「无 Lotus 自有业务服务器」从**产品层**抬升到了**组织层**：我们做的工具，和我们做事的方式，是同一套。
+This lifts Constitution item 3 ("no Lotus-operated business server") from the **product layer** to the
+**organisational layer**: the tool we build and the way we operate are the same thing.
 
-| 层 | 渠道 | 承载什么 | 发布方式 |
+| Layer | Channel | Carries | Publishing |
 |---|---|---|---|
-| **内容层** | **GitHub** | README、路线图、文档、Release Notes、安全公告。**必须自包含**——不读 X、不进 Telegram 也能读得懂 | git 提交 |
-| **广播层** | X | 发布信息 | **手工**（低频） |
-| **广播层** | Telegram 群组 | X 信息的同步副本 | **手工**（低频） |
+| **Content** | **GitHub** | README, roadmap, docs, release notes, security advisories. **Must be self-contained** — readable without X or Telegram | git commit |
+| **Broadcast** | X | announcements | **manual** (low frequency) |
+| **Broadcast** | Telegram group | mirror of X posts | **manual** (low frequency) |
 
-X 与 Telegram 只做广播，不做内容源。缓解渠道集中风险的唯一办法就是让 GitHub 上的内容自包含。
+X and Telegram are broadcast only, never a source of truth. Making the GitHub content self-contained is
+the only mitigation for channel-concentration risk.
 
-**不做 API 集成、不建 Telegram bot**（项目负责人 2026-10-11 决定：发布不是高频工作）。
-对外内容一律先写进 [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md)，由项目负责人手工复制发布。
-bot 与自动化留待以后，需要时再评估。
+**No API integration, no Telegram bot** (project owner, 2026-10-11: publishing is not high-frequency).
+Outbound content is written into [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) first and published manually by
+the project owner. Bots and automation are deferred.
 
-### ⚠️ 发布纪律（不可裁剪，源自宪法第 4 条）
+### ⚠️ Release discipline (non-negotiable, from Constitution item 4)
 
-**代码可公开 ≠ 产物可发布。** 内容随时可以公开；可运行产物必须等到能被签名核验之后。
+**Code being public ≠ artifact being releasable.** Content can be published at any time; a runnable
+artifact must wait until it can be signature-verified.
 
-| 层级 | 内容 | 门槛 |
+| Layer | Contents | Gate |
 |---|---|---|
-| 仓库可读 | 源码、README、路线图、文档 | 无 P0 门槛 |
-| **Release 附件 / 任何可运行产物** | 二进制、wasm、dist、安装包 | **T0 绿灯 + 签名密钥三要件就绪**，否则禁止上传 |
-| 提前试用 | 只允许「源码 + 自建构建说明」（G-I 路径 A） | 须显式标注**未经官方签名核验** |
+| Repository readable | source, README, roadmap, docs | no P0 gate |
+| **Release attachments / any runnable artifact** | binaries, wasm, dist, installers | **T0 green + signing-key three requirements**, otherwise upload is prohibited |
+| Early access | **source + self-build instructions only** (G-I path A) | must be labelled **not verified by official signature** |
 
-签名密钥三要件：① 密钥离线 / 独立环境保管 ② 公钥指纹自第一天起写入 git 签名 tag ③ 密钥泄露处置程序（写不出则不配上线）。
+Signing-key three requirements: ① key held offline / in an isolated environment ② public-key
+fingerprint written into a git signed tag **from day one** ③ documented key-compromise procedure (if you
+cannot write it, you are not ready to ship).
 
-**产品运行时不得内置"公告拉取"或"版本检查"。** 安全公告与版本信息的下发通道 = GitHub Security Advisory + Release + CHANGELOG。
+**The product must not embed "announcement fetch" or "version check" at runtime.** Security advisories
+and version information are distributed via GitHub Security Advisory + Release + CHANGELOG.
 
-## 远程仓库
+## Remote Repository
 
-GitHub 目标仓库：`https://github.com/LotusWallet/LOTSigner`
+GitHub: `https://github.com/LotusWallet/LOTSigner`
 
-⚠️ **注意拼写**：此前文档中记录的 `LOTSinger` 是笔误，正确名称为 **`LOTSigner`**（Lotus + Signer，无"g"）。
+⚠️ **Spelling**: `LOTSinger` (appearing in some earlier notes) is a typo. The correct name is
+**`LOTSigner`** (Lotus + Signer, no "g").
 
-**状态：已创建并已推送。** 本地目录已同步更名为 `D:\work\LOTSigner`（与仓库名一致），提交已推送至 `main`。
-
-| 项 | 说明 |
+| Item | Value |
 |---|---|
-| 仓库所有者 | `LotusWallet`（个人账号，非 org） |
-| 推送身份 | `BingLeague`（以 collaborator 身份推送） |
-| 远程初始提交 | `844d500 Initial commit`，其 README 正文为 `# LOTSinger`（笔误），已覆盖为正确版，仅存于历史 |
-| **可见性** | **当前私有** |
+| Owner | `LotusWallet` (personal account, not an org) |
+| Push identity | `BingLeague` (as collaborator) |
+| Visibility | **private** |
 
-### 可见性策略（三级解绑，2026-10-11 修订）
+## Openness Policy
 
-原策略只有一级开关（私有 → public），导致"GitHub 承载内容"在现阶段实际处于关闭状态。现把**内容公开**与**代码公开**解绑：
+**We do not open the repository while the product is an untestable half-finished state. Opening
+something the community cannot meaningfully test is irresponsible.**
 
-| 级别 | 内容 | 触发条件 | 当前 |
-|---|---|---|---|
-| **L1 内容公开** | README / 路线图 / 工程文档 | 与有没有代码无关，**无前置阻塞** | ⬜ |
-| **L2 代码公开** | 源码 | 首个可运行产物构建成功 | ⬜ |
-| **L3 产物发布** | Release 附件 | T0 绿灯 + 签名三要件就绪（宪法第 4 条） | ⬜ |
+Visibility is therefore driven by **a build that can actually be tested plus sign-off by the project
+owner** — never by a date on a calendar. The criteria are fixed in advance in
+**[`BETA-READINESS.md`](BETA-READINESS.md)** and must not be relaxed after the fact.
 
-**当前状态：私有**（L1 未触发）。
+### Making the repository public and publishing artifacts are two different acts
 
-**G-I 路径 A 影响**：路径 A（`git clone && cargo build` 自建核验）的**组织前提已成立**（公开为默认状态），**技术前提仍不成立**——仓库私有、尚无产物。须等 L2。
+**A public repository ≠ a published official artifact.** Conflating them would delay openness by
+roughly two weeks for no reason.
 
-### public 触发条件（项目负责人 2026-10-11 定义）
-
-> **"先把可以测试的产品发给我；我验证可以对外发布内测版时，才把 GitHub 改为 public。"**
-
-即：**仓库可见性由"可测产品交付 + 项目负责人验证通过"驱动，不由时间表驱动。**
-
-### ⚠️ 转 public 与发产物是两件事，门槛不同
-
-**仓库公开 ≠ 发布官方产物。** 二者门槛不同，混为一谈会让 public 白等两周。
-
-| 动作 | 需要什么 | 说明 |
+| Act | Requires | Note |
 |---|---|---|
-| **转 public（代码可读）** | 只需有可构建的代码 | 代码可读不需要签名 |
-| **发官方产物**（Release 附件 / 网页包） | **T0 绿灯 + 签名密钥三要件** | 宪法第 4 条，不因工期裁剪 |
+| **Making the repo public** (source readable) | buildable code | readable source needs no signature |
+| **Publishing an official artifact** (release attachment / web bundle) | **T0 green + signing-key three requirements** | Constitution item 4; never cut for schedule |
 
-**→ 内测版建议走「甲」先公开，不必等签名：**
+**→ Recommended: Track 1 first, Track 2 after.**
 
-- **甲（快，推荐先做）**：转 public，内测版以**「源码 + 一键构建脚本」**形式提供（G-I 路径 A）。
-  无需 T0、无需签名即可合规。代价：只有能自己构建的人用得了——**而这正好就是 P1 的目标人群**
-  （熟悉自托管与多签的技术型用户）。
-- **乙（必须做，可稍后）**：T0 跨构建产物一致性测试 + 签名密钥三要件（离线保管 / 指纹入 git 签名 tag /
-  泄露处置程序）就绪后，再发布**官方产物**（约 1–2 人日）。面向不愿自己构建的用户。
+- **Track 1 (fast)**: make the repo public; the beta is offered as **source + one-command build**
+  (G-I path A). Compliant **without T0 and without signing**. Cost: only people who can build it
+  themselves can use it — **which is exactly the P1 target audience** (technical users comfortable with
+  self-custody and multisig).
+- **Track 2 (required, later)**: once T0 (cross-build artifact consistency test) and the signing-key
+  three requirements are ready (~1–2 person-days), publish **official artifacts** for users who will not
+  build it themselves.
 
-**在正式（非内测）分发之前，乙必须完成。**
+**Track 2 must be complete before any non-beta distribution.**
 
-### 内测期间的交付形态（防扩散）
+**Either way, "testable" is not a judgement call** — it is the frozen checklist in
+[`BETA-READINESS.md`](BETA-READINESS.md).
 
-| 对象 | 形态 | 标注要求 |
+### Delivery forms during beta (to limit spread)
+
+| Recipient | Form | Labelling requirement |
 |---|---|---|
-| 项目负责人本人 | 优先**自己按脚本构建**；必要时由主持人提供构建产物 | 产物须标注**内部测试构建 · 未经官方签名核验 · 不得外传** |
-| 内测用户（甲方案） | 仓库源码 + 构建说明 | 说明中须写明**当前无官方签名产物** |
-| 内测用户（乙方案） | Release 官方产物 + 签名 + 校验说明 | 完整 G-I 路径 B |
+| Project owner | preferably **builds it themselves from the script**; a prebuilt artifact may be supplied when needed | must be labelled **internal test build · not verified by official signature · do not redistribute** |
+| Beta users (Track 1) | repo source + build instructions | instructions must state **no officially signed artifact exists yet** |
+| Beta users (Track 2) | official release artifact + signature + verification instructions | full G-I path B |
 
-### 论证文档已清除（2026-10-11 执行完毕）
+## Deliberation Documents Removed (done 2026-10-11)
 
-项目负责人 2026-10-11 决定：**论证文档全部删除**，规避版权问题，代码仓只管工程。
+The project owner decided on 2026-10-11 to **delete all deliberation documents**, avoiding copyright
+issues and keeping this repository purely engineering.
 
-执行方式（两步缺一不可）：
+Two steps, both required:
 
-1. `git rm -r doc` —— 删除工作区与未来提交；
-2. **`git filter-branch --index-filter` 重写全部历史** —— 否则前 13 个 commit 里的稿件仍完整躺在
-   `.git` 中，转 public 后任何人 `git show <旧commit>:doc/xxx.md` 就能全部取回，**等同于未删除**。
+1. `git rm -r doc` — removes the working tree and future commits;
+2. **rewrite the entire history** — otherwise the drafts remain intact inside `.git` in earlier commits,
+   and once public anyone could recover all of them with `git show <old-commit>:doc/xxx.md`.
+   **Removing without rewriting is equivalent to not removing anything.**
 
-> 同时清除 `g3/顾问A-第五轮分类确认.md`（同一类版权风险）。
-> 稿件已备份至仓外 `D:\work\LOTSigner-doc-archive\`（**不进 git**）。
+> `g3/顾问A-第五轮分类确认.md` was removed as well (same class of copyright risk).
+> Drafts are backed up outside the repo, and are **not in git**.
 
-**遗留影响**：论证过程的推演链条不再对外可见。结论已固化在本文件「产品宪法」与「明确不做」两节；
-推演理由保留在团队内部归档。**对外引用的唯一权威来源是本 README。**
+**Consequence**: the chain of reasoning is no longer visible externally. The conclusions are fixed in
+**Product Constitution** and **Explicitly Out of Scope** above; the reasoning stays in the team's
+internal archive. **This README is the single authoritative source for external reference.**
