@@ -1,0 +1,10 @@
+[package]
+name = "lscli"
+description = "Lotus Signer 命令行审阅端（由 lscore 提供结果，自身不含任何解析逻辑）"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+lscore = { path = "../lscore" }

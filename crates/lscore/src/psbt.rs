@@ -1,0 +1,267 @@
+//! BIP-174 PSBT 容器解析
+//!
+//! 设计约束（来自产品宪法）：
+//!   - 不支持的键类型必须**记录**而非丢弃，供上层标注 `Unsupported` 态；
+//!   - PSBTv2 结构（无 `GLOBAL_UNSIGNED_TX`）不做推测性解析，**明确报错**；
+//!   - 任何字节错位都报错返回，绝不静默降级。
+
+use crate::tx::{read_varint, TxError};
+
+pub const PSBT_MAGIC: [u8; 5] = [0x70, 0x73, 0x62, 0x74, 0xff]; // "psbt\xff"
+
+// ---- 全局键类型 ----
+pub const GLOBAL_UNSIGNED_TX: u64 = 0x00;
+pub const GLOBAL_XPUB: u64 = 0x01;
+pub const GLOBAL_PROPRIETARY: u64 = 0x0f;
+/// PSBTv2 专有（出现即表明不是 v0）
+pub const GLOBAL_TX_VERSION: u64 = 0x02;
+
+// ---- 输入键类型 ----
+pub const IN_NON_WITNESS_UTXO: u64 = 0x00;
+pub const IN_WITNESS_UTXO: u64 = 0x01;
+pub const IN_PARTIAL_SIG: u64 = 0x02;
+pub const IN_SIGHASH_TYPE: u64 = 0x03;
+pub const IN_REDEEM_SCRIPT: u64 = 0x04;
+pub const IN_WITNESS_SCRIPT: u64 = 0x05;
+pub const IN_BIP32_DERIVATION: u64 = 0x06;
+pub const IN_FINAL_SCRIPTSIG: u64 = 0x07;
+pub const IN_FINAL_SCRIPTWITNESS: u64 = 0x08;
+pub const IN_PREVIOUS_TXID: u64 = 0x0d; // v2
+pub const IN_OUTPUT_INDEX: u64 = 0x0e; // v2
+pub const IN_PROPRIETARY: u64 = 0x0f;
+
+// ---- 输出键类型 ----
+pub const OUT_REDEEM_SCRIPT: u64 = 0x00;
+pub const OUT_WITNESS_SCRIPT: u64 = 0x01;
+pub const OUT_BIP32_DERIVATION: u64 = 0x02;
+pub const OUT_AMOUNT: u64 = 0x03; // v2
+pub const OUT_SCRIPT: u64 = 0x04; // v2
+pub const OUT_PROPRIETARY: u64 = 0x0f;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum PsbtError {
+    BadMagic,
+    Truncated,
+    Tx(TxError),
+    /// 出现了 PSBTv2 结构。MVP 明确不支持，且**不允许**推测性解析。
+    UnsupportedVersion { key_type: u64 },
+    KeyCountMismatch { expected: usize, found: usize },
+}
+
+impl From<TxError> for PsbtError {
+    fn from(e: TxError) -> Self {
+        PsbtError::Tx(e)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Pair {
+    pub key_type: u64,
+    pub key_data: Vec<u8>,
+    pub value: Vec<u8>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PsbtInput {
+    pub pairs: Vec<Pair>,
+}
+
+#[derive(Debug, Clone)]
+pub struct PsbtOutput {
+    pub pairs: Vec<Pair>,
+}
+
+#[derive(Debug, Clone)]
+pub struct Psbt {
+    pub global_pairs: Vec<Pair>,
+    pub inputs: Vec<PsbtInput>,
+    pub outputs: Vec<PsbtOutput>,
+    pub unsigned_tx_raw: Option<Vec<u8>>,
+}
+
+impl PsbtInput {
+    pub fn get(&self, kt: u64) -> Option<&Pair> {
+        self.pairs.iter().find(|p| p.key_type == kt)
+    }
+    pub fn count(&self, kt: u64) -> usize {
+        self.pairs.iter().filter(|p| p.key_type == kt).count()
+    }
+}
+
+impl PsbtOutput {
+    pub fn get(&self, kt: u64) -> Option<&Pair> {
+        self.pairs.iter().find(|p| p.key_type == kt)
+    }
+}
+
+impl Psbt {
+    pub fn global_get(&self, kt: u64) -> Option<&Pair> {
+        self.global_pairs.iter().find(|p| p.key_type == kt)
+    }
+}
+
+/// 读取一个 map：连续键值序列以 0x00 终止
+fn read_map(b: &[u8], mut i: usize) -> Result<(Vec<Pair>, usize), PsbtError> {
+    let mut pairs = Vec::new();
+    loop {
+        if i >= b.len() {
+            return Err(PsbtError::Truncated);
+        }
+        let (key_len, n) = read_varint(b, i)?;
+        i += n;
+        if key_len == 0 {
+            return Ok((pairs, i));
+        }
+        // key = <keytype varint><keydata>
+        let (key_type, kn) = read_varint(b, i)?;
+        i += kn;
+        let data_len = key_len as usize - kn;
+        if i + data_len > b.len() {
+            return Err(PsbtError::Truncated);
+        }
+        let key_data = b[i..i + data_len].to_vec();
+        i += data_len;
+
+        let (value_len, vn) = read_varint(b, i)?;
+        i += vn;
+        if i + value_len as usize > b.len() {
+            return Err(PsbtError::Truncated);
+        }
+        let value = b[i..i + value_len as usize].to_vec();
+        i += value_len as usize;
+
+        pairs.push(Pair {
+            key_type,
+            key_data,
+            value,
+        });
+    }
+}
+
+pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
+    if b.len() < PSBT_MAGIC.len() || b[..5] != PSBT_MAGIC {
+        return Err(PsbtError::BadMagic);
+    }
+    let mut i = PSBT_MAGIC.len();
+
+    let (global_pairs, next) = read_map(b, i)?;
+    i = next;
+
+    // PSBTv2 检测：没有 GLOBAL_UNSIGNED_TX，却有 v2 专有键
+    let unsigned_tx_raw = global_pairs
+        .iter()
+        .find(|p| p.key_type == GLOBAL_UNSIGNED_TX)
+        .map(|p| p.value.clone());
+    if unsigned_tx_raw.is_none() {
+        if let Some(p) = global_pairs
+            .iter()
+            .find(|p| matches!(p.key_type, GLOBAL_TX_VERSION))
+        {
+            return Err(PsbtError::UnsupportedVersion {
+                key_type: p.key_type,
+            });
+        }
+        return Err(PsbtError::Truncated);
+    }
+
+    let unsigned_tx = unsigned_tx_raw.clone().expect("checked above");
+    let (_utx, consumed) = {
+        use crate::tx::parse_unsigned_tx;
+        let utx = parse_unsigned_tx(&unsigned_tx)?;
+        (utx, unsigned_tx.len())
+    };
+    let _ = consumed;
+
+    let n_in = {
+        use crate::tx::parse_unsigned_tx;
+        parse_unsigned_tx(&unsigned_tx)?.inputs.len()
+    };
+    let n_out = {
+        use crate::tx::parse_unsigned_tx;
+        parse_unsigned_tx(&unsigned_tx)?.outputs.len()
+    };
+
+    let mut inputs = Vec::with_capacity(n_in);
+    for _ in 0..n_in {
+        let (pairs, next) = read_map(b, i)?;
+        i = next;
+        inputs.push(PsbtInput { pairs });
+    }
+
+    let mut outputs = Vec::with_capacity(n_out);
+    for _ in 0..n_out {
+        let (pairs, next) = read_map(b, i)?;
+        i = next;
+        outputs.push(PsbtOutput { pairs });
+    }
+
+    if i != b.len() {
+        return Err(PsbtError::KeyCountMismatch {
+            expected: n_in + n_out,
+            found: inputs.len() + outputs.len(),
+        });
+    }
+
+    Ok(Psbt {
+        global_pairs,
+        inputs,
+        outputs,
+        unsigned_tx_raw,
+    })
+}
+
+/// 把「未知键类型」识别出来 —— 上层据此给出 `Unsupported` 五态
+pub fn unknown_key_type(is_input: bool, kt: u64) -> bool {
+    if kt == 0x0f {
+        return true; // proprietary 一律视为不支持（本工具无法解释其含义）
+    }
+    if is_input {
+        !matches!(
+            kt,
+            IN_NON_WITNESS_UTXO
+                | IN_WITNESS_UTXO
+                | IN_PARTIAL_SIG
+                | IN_SIGHASH_TYPE
+                | IN_REDEEM_SCRIPT
+                | IN_WITNESS_SCRIPT
+                | IN_BIP32_DERIVATION
+                | IN_FINAL_SCRIPTSIG
+                | IN_FINAL_SCRIPTWITNESS
+        )
+    } else {
+        !matches!(
+            kt,
+            OUT_REDEEM_SCRIPT | OUT_WITNESS_SCRIPT | OUT_BIP32_DERIVATION
+        )
+    }
+}
+
+pub fn input_key_name(kt: u64) -> &'static str {
+    match kt {
+        IN_NON_WITNESS_UTXO => "PSBT_IN_NON_WITNESS_UTXO",
+        IN_WITNESS_UTXO => "PSBT_IN_WITNESS_UTXO",
+        IN_PARTIAL_SIG => "PSBT_IN_PARTIAL_SIG",
+        IN_SIGHASH_TYPE => "PSBT_IN_SIGHASH_TYPE",
+        IN_REDEEM_SCRIPT => "PSBT_IN_REDEEM_SCRIPT",
+        IN_WITNESS_SCRIPT => "PSBT_IN_WITNESS_SCRIPT",
+        IN_BIP32_DERIVATION => "PSBT_IN_BIP32_DERIVATION",
+        IN_FINAL_SCRIPTSIG => "PSBT_IN_FINAL_SCRIPTSIG",
+        IN_FINAL_SCRIPTWITNESS => "PSBT_IN_FINAL_SCRIPTWITNESS",
+        IN_PREVIOUS_TXID => "PSBT_IN_PREVIOUS_TXID(v2)",
+        IN_OUTPUT_INDEX => "PSBT_IN_OUTPUT_INDEX(v2)",
+        IN_PROPRIETARY => "PSBT_IN_PROPRIETARY",
+        _ => "PSBT_IN_UNKNOWN",
+    }
+}
+
+pub fn output_key_name(kt: u64) -> &'static str {
+    match kt {
+        OUT_REDEEM_SCRIPT => "PSBT_OUT_REDEEM_SCRIPT",
+        OUT_WITNESS_SCRIPT => "PSBT_OUT_WITNESS_SCRIPT",
+        OUT_BIP32_DERIVATION => "PSBT_OUT_BIP32_DERIVATION",
+        OUT_AMOUNT => "PSBT_OUT_AMOUNT(v2)",
+        OUT_SCRIPT => "PSBT_OUT_SCRIPT(v2)",
+        OUT_PROPRIETARY => "PSBT_OUT_PROPRIETARY",
+        _ => "PSBT_OUT_UNKNOWN",
+    }
+}

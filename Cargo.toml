@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["crates/lscore", "crates/lscli"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/LotusWallet/LOTSigner"
+
+# 依赖策略说明（写入代码的判断，不是注记）：
+# 内核刻意保持零第三方依赖。理由有三：
+#   1. 宪法要求「权威解析实现唯一」，依赖越少，可复核性越高；
+#   2. 解析器是最高风险组件，手写 + 固件测试可以让每一行都被证据覆盖；
+#   3. rust-bitcoin 等第三方实现只用于 T0/T4 异源对照（见 docs 说明），不得进入解析链路。
+[workspace.dependencies]
