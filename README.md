@@ -70,4 +70,8 @@ Lotus Signer 由 LotusWallet 团队发起，以独立产品形态开发，作为
 
 ## 远程仓库
 
-GitHub 目标仓库：`https://github.com/LotusWallet/LOTSinger`（截至 2026-10-11 仍未创建，本地 4 个提交待其创建后推送）
+GitHub 目标仓库：`https://github.com/LotusWallet/LOTSigner`
+
+⚠️ **注意拼写**：此前文档中记录的 `LOTSinger` 是笔误，正确名称为 **`LOTSigner`**（Lotus + Signer，无"g"）。
+
+状态：截至 2026-10-11 仍未创建——`LOTSigner` 与 `LOTSinger` 两者经 API 核实**均返回 404**，`LotusWallet` 为个人账号（非 org）。本地提交待仓库创建后推送。
