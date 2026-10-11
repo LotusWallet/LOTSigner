@@ -83,6 +83,18 @@ GitHub 目标仓库：`https://github.com/LotusWallet/LOTSigner`
 
 ⚠️ **注意拼写**：此前文档中记录的 `LOTSinger` 是笔误，正确名称为 **`LOTSigner`**（Lotus + Signer，无"g"）。
 
-状态：截至 2026-10-11 —— `LOTSigner` 与 `LOTSinger` 经 API 核实**均 404**；`LotusWallet` 为个人账号（非 org），其下 22 个公开仓库中无此仓库。
+**状态：已创建并已推送。** 本地目录已同步更名为 `D:\work\LOTSigner`（与仓库名一致），7 个提交已推送至 `main`（`844d500..b1b28d2`）。
 
-⚠️ **当前阻塞原因是授权身份不对**：已授权的 GitHub 身份是 **`BingLeague`**，**不是 `LotusWallet`**。需确认用哪个账号建库（或把我方账号加为 collaborator）。身份确认前本地提交不推送，**但不阻塞 G3/G1 开工**。
+| 项 | 说明 |
+|---|---|
+| 仓库所有者 | `LotusWallet`（个人账号，非 org） |
+| 推送身份 | `BingLeague`（以 collaborator 身份推送） |
+| 远程初始提交 | `844d500 Initial commit`，其 README 正文为 `# LOTSinger`（笔误），已在首个内容提交中覆盖为正确版，仅存于历史 |
+| **可见性** | **当前为私有**（匿名 API 访问返回 404，而 collaborator 推送正常） |
+
+⚠️ **两项待项目负责人决策：**
+
+1. **仓库何时转公开。** 产品宪法 G-I 路径 A「自建核验」要求用户能 `git clone && cargo build`，私有仓库下该路径不成立。若按开源路线推进，需在**文档脱敏后**转为公开。
+2. **`doc/` 目录含两位外部顾问的全部稿件**（`discuss-chatgpt-*.md`、`workbuddy-expert1-V1.md`、`*顾问B-WorkBuddy.md`）。仓库转公开即等同于公开这些稿件，**转公开前须确认已获授权**。
+
+可见性与授权确认前维持私有，**不阻塞 G3/G1 开工**。
