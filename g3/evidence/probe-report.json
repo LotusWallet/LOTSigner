@@ -1,0 +1,156 @@
+{
+  "base": "http://127.0.0.1:4173",
+  "routes": [
+    {
+      "route": "/",
+      "screenshot": "00-landing.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Go to homepage",
+        "About",
+        "Features",
+        "Resources",
+        "Test suite",
+        "Get started",
+        "Learn more",
+        "Home",
+        "Blog",
+        "Tutorial",
+        "Source code",
+        "Multisig guide",
+        "GitHub",
+        "Contributing",
+        "X/Twitter"
+      ],
+      "bodyHead": "About\nFeatures\nResources\nTest suite\nGet started\nSecure your bitcoin with Caravan, a fully open-source stateless multisig coordinator\nCaravan simplifies multisig custody by coordinating your transactions without storing your keys. Self-custody your bitcoin with enhanced security, privacy, and protection against single points of failure.\nGet started\nLearn more\nCompatible with your favorite tools\nCaravan works seamlessly with industry-leading hardware wallets, browsers, and other bitcoin coordination tools.\nHardware wallet support\nBrowser compatibility\nInteroperable coordinators\nStateless multisig coordinator\nCaravan makes bitcoin multisig custody easier and safer through transparency and standards. Create common setups like 2-of-3 or 3-of-5 multisig wallets for different security needs. Caravan supports both wallet coordination derived from xpubs and individual multisig addresses derived from pubkeys. Being fully open-source and stateless, Caravan stores no data outside your current browser session, giving you complete control over your funds while protecting your privacy.\nKeys & recovery\nAll bitcoin is ultimately protected by private keys. Your private key may live on a piece of pap",
+      "fileInputs": []
+    },
+    {
+      "route": "/#/setup",
+      "screenshot": "01-setup.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "SPAN",
+        "Address",
+        "https://www.unchained.com"
+      ],
+      "bodyHead": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nWelcome to Caravan!\nLet's get you started. To use Caravan's multisignature features, you'll need a compatible wallet. You can either create a new wallet directly in Caravan or import an existing one.\nWallet\nAddress\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "fileInputs": []
+    },
+    {
+      "route": "/#/wallet",
+      "screenshot": "02-wallet.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "button",
+        "file",
+        "Import Wallet Configuration",
+        "Set Descriptors",
+        "checkbox",
+        "text",
+        "SPAN",
+        "radio",
+        "https://www.unchained.com"
+      ],
+      "bodyHead": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\n My Multisig Wallet\nImport Wallet Configuration\nConfigure with descriptor\n Extended Public Key 1\nSelect Method\n​\n Extended Public Key 2\nSelect Method\n​\n Extended Public Key 3\nSelect Method\n​\nOnce you have imported all 3 extended public keys, your wallet will be generated here.\nQuorum\n \n2\nRequired\nof\n3\nTotal\n \nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nStarting Address Index\nDefault (0)\nCustom\nUse the default value if you do not understand how to use starting address index.\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "fileInputs": [
+        "application/json"
+      ]
+    },
+    {
+      "route": "/#/script",
+      "screenshot": "03-script-explorer.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "textarea",
+        "file",
+        "Import PSBT",
+        "SPAN",
+        "radio",
+        "https://www.unchained.com"
+      ],
+      "bodyHead": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nEnter a valid redeem script to generate an address to spend funds from.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "fileInputs": [
+        "application/base64"
+      ]
+    },
+    {
+      "route": "/#/test",
+      "screenshot": "04-testsuite.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "text",
+        "Detect",
+        "textarea",
+        "Begin Test Suite",
+        "https://www.unchained.com"
+      ],
+      "bodyHead": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nSummary\nOS:\nWindows NT 10.0\nBrowser:\nChrome 149.0.0.0\nunchained-wallets:\nv.0.10.1\nTests\n0 Total\nChoose a keystore type to generate a test suite...\nChoose Keystore\nType\n​\nVersion\nDetect\nNotes\nBegin Test Suite\nKeystore Setup\nEnsure your keystore has been initialized with the following seed:\nmerge\nalley\nlucky\naxis\npenalty\nmanage\nlatin\ngasp\nvirus\ncaptain\nwheel\ndeal\nchase\nfragile\nchapter\nboss\nzero\ndirt\nstadium\ntooth\nphysical\nvalve\nkid\nplunge\nSeed Phrase QR Code\nScan with a hardware wallet or other compatible device\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "fileInputs": []
+    },
+    {
+      "route": "/#/address",
+      "screenshot": "05-create-address.png",
+      "title": "Caravan - Bitcoin Multisig",
+      "controls": [
+        "#/",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "button",
+        "text",
+        "SPAN",
+        "radio",
+        "https://www.unchained.com"
+      ],
+      "bodyHead": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nAddress Generator\n Public Key 1\n \nSelect Method\n​\n Public Key 2\n \nSelect Method\n​\n Public Key 3\n \nSelect Method\n​\n2-of-3 Multisig P2SH\nPublic Keys: 0/3\nOnce you have imported all 3 public keys, your address details will be displayed here.\nQuorum\n \n2\nRequired\nof\n3\nTotal\n \nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "fileInputs": []
+    }
+  ],
+  "externalRequests": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons"
+  ],
+  "consoleErrors": []
+}

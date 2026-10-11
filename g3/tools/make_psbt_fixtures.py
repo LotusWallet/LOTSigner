@@ -291,7 +291,12 @@ def main():
     for name, (raw, desc) in samples.items():
         b64 = base64.b64encode(raw).decode()
         p = OUT / f"{name}.psbt"
-        p.write_text(b64 + "\n", encoding="utf-8")
+        # 必须写成无换行的纯 base64 字节：
+        # Caravan 用 FileReader.readAsText() 读取后不做 trim，尾部换行会让其
+        # validBase64() 判定失败并抛 "Input cannot be bufferized."。
+        # 该错误是"固件格式"问题，不是"Caravan 不支持导入"——若据此判定
+        # 差异项①成立，即为方向性误判。
+        p.write_bytes(b64.encode("ascii"))
         index[name] = {
             "file": p.name,
             "description": desc,

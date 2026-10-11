@@ -1,0 +1,36 @@
+{
+  "fixture": "S1.psbt",
+  "steps": [
+    {
+      "step": "1-进入ScriptExplorer(未配置钱包)",
+      "tag": "10-script-before-import",
+      "screenshot": "10-script-before-import.png",
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nEnter a valid redeem script to generate an address to spend funds from.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "alerts": [],
+      "textareas": [
+        "",
+        "x"
+      ],
+      "buttons": []
+    },
+    {
+      "step": "2-上传S1.psbt之后",
+      "tag": "11-script-after-import",
+      "screenshot": "11-script-after-import.png",
+      "body": "Overview\nSetup\nWallet\nCreate Address\nScript Explorer\nHermit PSBT Interface\nTest Suite\nHelp\nEnter Redeem Script\nRedeem Script\nRedeem Script\nImport PSBT\nCannot read properties of undefined (reading 'toString')\nEnter a valid redeem script to generate an address to spend funds from.\nAddress Type\nP2SH\nP2SH-P2WSH\nP2WSH\nChoose 'P2WSH' for best practices, 'P2SH' for greatest compatibility.\nNetwork\nMainnet\nTestnet\nRegtest\nChoose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node.\nBitcoin Client\nMempool.space\nBlockstream.info\nPrivate\nCopyright 2026 by Unchained Capital and released under an MIT license.\nvundefined commit: b25532a",
+      "alerts": [
+        "Cannot read properties of undefined (reading 'toString')"
+      ],
+      "textareas": [
+        "",
+        "x"
+      ],
+      "buttons": []
+    }
+  ],
+  "network": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons"
+  ],
+  "consoleErrors": [],
+  "uploaded": true
+}
