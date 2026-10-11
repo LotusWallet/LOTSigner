@@ -5,9 +5,9 @@
 
 | 项 | 内容 |
 |---|---|
-| 最后更新 | 2026-10-11 · **初稿产品可运行** |
-| 当前阶段 | **内核 + CLI + 离线网页全链路跑通**，项目负责人可上手验证 |
-| 一句话状态 | **你现在的验证入口**：`web\serve.cmd` 双击 → http://127.0.0.1:4180 （自动化浏览器实测：零外部请求、四层全渲染、五态徽标正常） |
+| 最后更新 | 2026-10-12 · **BETA-READINESS Track-1 冲刺完成，待项目负责人验证** |
+| 当前阶段 | **内核 + CLI + 离线网页全链路跑通；A/B/D 段全部有证据，C3 已声明** |
+| 一句话状态 | **你的验证入口**：① 按 [`BUILD.md`](BUILD.md) 在干净目录 clone+构建（A1 的独立复现）② 双击 `web\serve.cmd` → http://127.0.0.1:4180 体验。**你验证通过后说一声，即转 public** |
 
 ---
 
@@ -210,3 +210,32 @@ G3 仍是一级否决项，**G3 未过不动笔写规格**（只做内核技术�
 - npm 上**不存在 `caravan-coordinator` 包**——必须从源码构建。
 - **键序会被参考实现重排**：bip174 会规范化 PSBT 键序。→ T0 一致性比对**必须比结构化语义**，不能比字节，否则必然假失败。此条已获实证。
 - 判定仓库可见性**必须跑对照组**：匿名 API 404 既可能是"私有"，也可能是"路径错/不存在"。
+
+---
+
+## 七、BETA-READINESS Track-1 冲刺记录（2026-10-12，commit c3e8a10 起）
+
+冻结清单：[`BETA-READINESS.md`](BETA-READINESS.md)。判定：**A/B/D 段全部有证据，C3 已声明；A1 留一步"非作者复现"给项目负责人（E2 要求，见清单 §8）**。
+
+| 项 | 内容 | 证据 |
+|---|---|---|
+| A1 | `BUILD.md` + 干净 GitHub clone（`c3e8a10`）作者演练：build.sh 退出码 0、22 项测试全过、`--version` 溯源 commit | `g3/evidence/a1-clean-build.log`、`a1-clean-test.log` |
+| A2 | `KNOWN-LIMITATIONS.md`（支持范围/不支持清单/五态呈现方式），README 显著链接 | 该文件 |
+| A3 | 每个展示字段带五态——集成测试逐项断言，五态全集被固件套件触发 | `crates/lscore/tests/fixtures.rs`、`evidence/b1-test-log.txt` |
+| A4 | 第四层界面可见 | `evidence/web-en-desktop.png`、`web-zh-mobile.png` |
+| B1 | 七固件套件全过（正常/missing/unsupported/部分签名/P2SH/check_failed/malformed） | `evidence/b1-test-log.txt` |
+| B2 | 损坏输入显式报错并**点名 map 与字节偏移**（中英双语）；坏魔数/非法 base64/PSBTv2 逐一拒绝 | 测试断言 + 浏览器实测 B2/6 |
+| B3 | 断网（拦截一切非本地请求）全链路：审阅→**导出（sha256 字节一致）**→再导入→再审阅 | `evidence/web2-verify.json`（11/11 PASS）、`evidence/b3-exported-s1.psbt` |
+| B4 | 外部请求审计：全程恰好 3 个本地请求、0 外部、0 控制台错误（双语言各测一遍） | 同上 B4/7、B4/10、B4/11 |
+| B5 | T4 异源对照（bitcoinjs-lib）：7/7 语义一致，4 处呈现层差异**逐条书面裁定** | [`g3/T4-异源对照报告.md`](g3/T4-异源对照报告.md)、`evidence/t4-xcheck.json` |
+| C3 | README 显著声明「尚无官方签名产物」 | README Status 区块引言 |
+
+### 本次顺带修复的真实缺陷
+
+- **bech32 校验和 bug**（漏加 6 个零参与 polymod）——BIP-173 官方向量抓出。此前所有 bech32 地址呈现均为无效校验和。已修复并用官方向量锚定。
+- 解析错误只报 Rust debug 串 → 改为按语言点名问题位置（map + 偏移）。
+- CLI 错误行 `{0}` 占位符未传参。
+
+### 待办（open 之后）
+
+C1（T0 进 CI）+ C2（签名三要件）→ Track 2 官方产物；G1（bdk-wasm）；G3 差异项③补测；G2 待硬件。
