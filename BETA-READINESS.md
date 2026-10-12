@@ -55,7 +55,7 @@ signing, because it ships no official artifact.
 
 | # | Criterion | Applies to | Status |
 |---|---|---|---|
-| **C1** | T0 (cross-build artifact consistency test) is in CI, **green**, and its canonical comparison basis is defined (structural semantics, not bytes) | Track 2 | ⬜ |
+| **C1** | T0 (cross-build artifact consistency test) is in CI, **green**, and its canonical comparison basis is defined (structural semantics, not bytes) | Track 2 | ✅ [`.github/workflows/ci.yml`](.github/workflows/ci.yml) — builds `lscli` on **ubuntu + windows + macos** runners, dumps canonical review output for all 7 fixtures (canonicalization fixed in `g3/tools/t0_dump.sh`: CRLF stripped, build-identity line dropped, everything semantic kept; per-fixture exit codes asserted — S6 must fail), then a `t0-compare` job diffs the three dumps. Green run: [actions/runs/38188600438](https://github.com/LotusWallet/LOTSigner/actions/runs/38188600438) (commit `7ec4038`). T0 proves consistency only; correctness evidence is T4/B5 |
 | **C2** | Signing-key three requirements complete **and written down**: ① key offline / isolated ② fingerprint in a git signed tag from day one ③ documented compromise procedure | Track 2 | ⬜ |
 | **C3** | README states prominently that **no officially signed artifact exists yet** | Track 1 | ✅ README Status block quote (**"No officially signed artifact exists yet"**), mirrored in README_CN; release-discipline table kept |
 

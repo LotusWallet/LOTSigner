@@ -43,7 +43,7 @@ git clone https://github.com/LotusWallet/LOTSigner
 cd LOTSigner
 ./build.sh            # 构建 lscli（命令行端）与 lswasm（wasm 内核）到 web/
 # Windows：双击 web\serve.cmd ｜ 其他：cd web && python3 -m http.server 4180
-# 浏览器打开 http://127.0.0.1:4180，拖入 base64 PSBT（可试 demo/S1.psbt）
+# 浏览器打开 http://127.0.0.1:4180，拖入 base64 PSBT（可试 web/demo/S1.psbt）
 ```
 
 或直接用命令行端：`./target/release/lscli g3/fixtures/S1.psbt`

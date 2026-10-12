@@ -49,7 +49,7 @@ git clone https://github.com/LotusWallet/LOTSigner
 cd LOTSigner
 ./build.sh            # builds lscli (CLI) and lswasm (wasm core) into web/
 # Windows: double-click web\serve.cmd   |   others: cd web && python3 -m http.server 4180
-# open http://127.0.0.1:4180 and drop a base64 PSBT (try demo/S1.psbt)
+# open http://127.0.0.1:4180 and drop a base64 PSBT (try web/demo/S1.psbt)
 ```
 
 Or use the CLI directly: `./target/release/lscli g3/fixtures/S1.psbt`

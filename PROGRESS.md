@@ -251,3 +251,24 @@ C1（T0 进 CI）+ C2（签名三要件）→ Track 2 官方产物；G1（bdk-wa
 - **Track 2 未开**：C1（T0 进 CI）与 C2（签名三要件）仍 ⬜，在此之前一切产物不得称"官方"。
 - 对外公告草稿已入 [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) 队列（🟡 待发布，负责人手工发 X/TG）。
 - 文档同步：README / README_CN 可见性改"公开（2026-10-12 起）"；BETA-READINESS §8 记录 open 事件。
+
+---
+
+## 九、Track 2 启动：C1（T0 进 CI）已于 2026-10-12 绿灯
+
+**T0 = 跨构建产物行为一致性测试**，只证一致性、不证正确性（正确性证据是 T4/B5）。已进 CI：
+
+| 组件 | 内容 |
+|---|---|
+| `g3/tools/t0_dump.sh` | canonical 基准：stdout+stderr 合并、去 `\r`、**仅**剔除以 `lscli <版本号>` 开头的构建身份行；其余（五态、金额、字节偏移、错误文案）全部逐字比对。逐固件断言退出码（S1–S5 须 0，S6 须非 0） |
+| `.github/workflows/ci.yml` | `test` job（cargo test + 固件自校验）；`t0-dump` job × **ubuntu/windows/macos**；`t0-compare` job 三方 diff，任何差异即红 |
+| 绿灯 | run [38188600438](https://github.com/LotusWallet/LOTSigner/actions/runs/38188600438)（commit `7ec4038`），5/5 job success |
+
+**过程中修掉的两个真实缺陷：**
+1. **`Cargo.lock` 从未入库**（被 .gitignore 忽略）→ CI 上 `--locked` 直接失败。已强制入库并移出 .gitignore：应用必须锁依赖图，否则每个人的自建（G-I 路径 A）解析出的依赖可能不同，**"自建比对"本身失去可比性**。
+2. **首次 T0 比对假红**：INDEX.txt（`wc -c` 列表）的列对齐随 OS 工具链而异，被误纳入比对范围 → 已限定只比对 `S*.txt` 行为输出。**这正是预注册制度要防的"假失败→永久红灯→被修订掉"路径，本次当场拦下并写明了理由。**
+
+### C2 状态（签名密钥三要件）
+
+制度文档 [`SIGNING.md`](SIGNING.md) 已写成：① 离线保管与硬件 token 流程 ② 公钥指纹自第一天入 git 签名 tag ③ 泄露处置程序（撤回→如实披露→重新签发→追溯→复盘）。
+**密钥仪式本身（离线生成 + 首签名 tag）须项目负责人离线执行，尚未完成** → Track 2 仍未开，任何产物不得称官方。
