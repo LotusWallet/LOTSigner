@@ -28,7 +28,7 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 |---|---|
 | Current stage | **Beta-ready working draft** — Rust core + CLI + offline web page run end-to-end; BETA-READINESS Track-1 checklist items A/B/D are evidenced (see that file). G3 verdict: **conditional pass** — all five difference items are now measured: ①③⑤ disproven by live test, ②④ hold at evidence grade A |
 | Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
-| Execution | G3 complete → **conditional pass** (all five items measured; ③ closed 2026-10-12). The verdict's pre-registered follow-up was an ROI re-assessment (done — see the memo below); G1 is re-scoped to a half-day offline-capability probe; G2 awaits hardware |
+| Execution | G3 complete → **conditional pass** (all five items measured; ③ closed 2026-10-12). The verdict's pre-registered follow-up was an ROI re-assessment (done — see the memo below). G1 done: BDK-wasm **does** work offline, but adoption is a constitutional question (zero-dependency core vs BDK's tree), not a feasibility one. G2 awaits hardware |
 | Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
 | Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
 | Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
@@ -158,6 +158,7 @@ LICENSE-MIT/-APACHE dual-licensed MIT OR Apache-2.0
 | [`g3/G3-实测记录-阶段2.md`](g3/G3-实测记录-阶段2.md) | G3 phase-2 test log (difference item ③ re-test: export of a partially-signed PSBT) |
 | [`g3/G3-投入产出重新评估-备忘.md`](g3/G3-投入产出重新评估-备忘.md) | **ROI re-assessment triggered by the verdict** — what "conditional pass" means for scope and wording discipline |
 | [`g1/G1-预注册-BDK-WASM离线能力实测.md`](g1/G1-预注册-BDK-WASM离线能力实测.md) | G1 pre-registration (frozen): can BDK-wasm work **fully offline**? (gate de-scoped, no veto) |
+| [`g1/G1-判定记录-BDK-WASM离线能力实测.md`](g1/G1-判定记录-BDK-WASM离线能力实测.md) | G1 result: offline capability **established** (cross-checked to address level); adoption is a constitutional question |
 | [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT fixtures and dual-verification results |
 
 ## Process Rules

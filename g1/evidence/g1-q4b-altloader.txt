@@ -1,0 +1,15 @@
+G1 · Q4 补充实测 —— 无打包器 + 自定义加载器（~10 行）
+时间: 2026-10-12T14:10:56.493Z
+==========================================================================
+
+【Q4b-1】结果
+  ✅ 成功（无打包器）
+  testnet 地址: tb1qqp33kh5v4j7kjpstmtu5maz4qdeu6p095mzns3
+  mainnet 地址: bc1qqp33kh5v4j7kjpstmtu5maz4qdeu6p097aeqtz
+
+【Q4b-2】本地请求: / , /bitcoindevkit_bg.js , /bitcoindevkit_bg.wasm
+【Q4b-3】外部请求数: 0 → ✅ 无（且未尝试）
+【Q4b-4】控制台/错误: （无）
+
+对照：BDK 自己产出的同一地址应为 tb1qqp33kh5v4j7kjpstmtu5maz4qdeu6p095mzns3（见 g1-q3-offline.txt）
+→ 与 Q3 结果一致: ✅ 是

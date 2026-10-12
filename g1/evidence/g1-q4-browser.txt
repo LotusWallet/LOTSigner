@@ -1,0 +1,28 @@
+G1 · Q2/Q4 实测 —— 无打包器浏览器加载
+时间: 2026-10-12T14:10:16.273Z
+被检包: @bitcoindevkit/bdk-wallet-web@0.3.0（已发布预构建包，ESM + ESM-wasm-import 形态）
+静态服务: http://127.0.0.1:4390（.wasm → application/wasm）
+浏览器: C:/Program Files/Google/Chrome/Application/chrome.exe
+==========================================================================
+
+【Q4-1】裸 <script type="module"> 加载结果
+  ❌ 加载失败
+  name : TypeError
+  error: TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:4390/bitcoindevkit.js
+
+【Q4-2】本地请求清单（应当只有模块与 wasm 本身）
+  /
+  /bitcoindevkit.js
+  /bitcoindevkit_bg.wasm
+  /bitcoindevkit_bg.js
+  合计 4 个本地请求
+
+【Q2-3】外部请求（应全被拦截，且不应出现任何联网尝试）
+  外部请求数: 0  → ✅ 无
+
+【Q4-3】控制台 / 页面错误
+  [error] Failed to load module script: Expected a JavaScript-or-Wasm module script but the server responded with a MIME type of "application/wasm". Strict MIME type checking is enforced for module scripts per HTML spec.
+
+==========================================================================
+边界声明（原样）：用的是**已发布预构建 npm 包**（二进制含 esplora/reqwest 代码）；
+本测试只回答「该产物能否在无打包器下被浏览器加载」，不评价其内部实现。

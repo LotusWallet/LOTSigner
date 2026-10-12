@@ -1,0 +1,50 @@
+G1 · Q5 证据 —— 体积代价 + 已发布产物构成
+生成时间: 2026-10-12T22:09:54+08:00
+======================================================================
+
+── 已发布 npm 包（精确版本）──
+  @bitcoindevkit/bdk-wallet-web@0.3.0   （npm 上仅 0.2.0 / 0.3.0 两个版本；0.3.0 发布于 2026-03-16）
+  @bitcoindevkit/bdk-wallet-node@0.3.0
+
+── 文件清单与字节数（web 包）──
+         693  LICENSE
+        4812  README.md
+       39988  bitcoindevkit.d.ts
+         770  bitcoindevkit.js
+      164899  bitcoindevkit_bg.js
+     2140519  bitcoindevkit_bg.wasm
+         729  package.json
+  合计: 2352410 字节
+
+── 文件清单与字节数（node 包）──
+         693  LICENSE
+        4812  README.md
+       39988  bitcoindevkit.d.ts
+      169483  bitcoindevkit.js
+     2140535  bitcoindevkit_bg.wasm
+         614  package.json
+  合计: 2356125 字节
+
+── 本项目对照：lswasm.wasm ──
+  91013 字节  web/lswasm.wasm
+
+── 已发布 wasm 的二进制内容检查（注意：普通 strings|grep 会漏检，须用 LC_ALL=C grep -a）──
+  web wasm 含 'esplora': 3
+  web wasm 含 'reqwest': 4
+  web wasm 含 'fetch': 2
+  web wasm 含 'async_https': 0
+0
+  node wasm 含 'esplora': 3
+  本项目 lswasm.wasm 含 'esplora': 0
+0
+
+── 入口形态（决定 Q4）──
+  web 包入口 bitcoindevkit.js（770 字节）全文关键行：
+    3:import * as wasm from "./bitcoindevkit_bg.wasm";
+    4:import { __wbg_set_wasm } from "./bitcoindevkit_bg.js";
+
+── 结论要点 ──
+  1) 已发布 web 产物体积 ≈ 2.3 MB（wasm 2.04 MB + bg.js 161 KB），是本项目 lswasm.wasm(89 KB) 的约 23 倍。
+  2) 已发布 wasm 二进制**含 esplora/reqwest（联网代码）** → 它**不是**「默认特性（无联网）」的最小构建。
+     （源码默认特性的依赖树里没有这些 crate —— 见 g1-q1-offline-build.txt。两者是不同事实。）
+  3) 入口使用 `import * as wasm from "./bitcoindevkit_bg.wasm"`（ESM 原生 wasm 导入）→ 直接决定 Q4 的结果。

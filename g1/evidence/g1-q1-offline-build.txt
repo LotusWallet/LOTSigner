@@ -1,0 +1,38 @@
+G1 · Q1 证据 —— 「不启用 esplora 能否构建出 wasm 产物」
+生成时间: 2026-10-12T22:09:27+08:00
+仓库: bitcoindevkit/bdk-wasm
+锁定 commit: 73cb4df46f6f51ceea034e81b4f379cc83333435  (Tue May 12 20:09:07 2026 +0200)
+rustc: rustc 1.99.0 (b940084d7 2026-09-28)   cargo: cargo 1.99.0 (5f94df478 2026-08-27)
+target 已装: wasm32-unknown-unknown x86_64-pc-windows-msvc 
+wasm-pack: 未安装
+clang: 未安装（PATH 与常见安装路径均无）
+CARGO_HOME: /d/work/_g1-cargohome (说明：cargo 联网需把 CARGO_HOME 置于工作区内，沙箱会干扰 ~/.cargo)
+======================================================================
+
+── Q1a：默认特性（不启用 esplora）的依赖树中是否含联网相关 crate ──
+$ cargo tree --target wasm32-unknown-unknown -e normal | grep -iE 'esplora|reqwest|tokio|hyper'
+  → 无命中：联网模块未参与编译 ✅
+
+── Q1a 对照：显式启用 esplora 特性 ──
+$ cargo tree --target wasm32-unknown-unknown -e normal -F esplora | grep -iE 'esplora|reqwest|tokio|hyper'
+├── bdk_esplora v0.22.2
+│   ├── esplora-client v0.12.3
+│   │   ├── reqwest v0.12.22
+
+── Q1b：实际构建 wasm 产物 ──
+$ cargo build --release --target wasm32-unknown-unknown
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+warning: secp256k1-sys@0.10.1: Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+error: failed to run custom build command for `secp256k1-sys v0.10.1`
+  cargo:warning=Compiler family detection failed due to error: ToolNotFound: failed to find tool "clang": program not found (see https://docs.rs/cc/latest/cc/#compile-time-requirements for help)
+  → 退出码: 101
+
+── 归因（须写入报告）──
+  失败点：crates.io 依赖 secp256k1-sys 需要 C 编译器为 wasm32 编译 libsecp256k1；
+  本机无 clang、无 Visual Studio → **环境阻塞，非 bdk-wasm 的属性**。
+  按预注册 §1.3：该子项记为 ⚪ 环境阻塞（未取得观测），不得以推测填补。
+  若要闭合 Q1，需安装 LLVM/clang（系统级变更，留待项目负责人决定）。

@@ -1,0 +1,36 @@
+G1 · Q2/Q3 实测 —— BDK-wasm 离线能力
+时间: 2026-10-12T14:10:54.898Z
+包: @bitcoindevkit/bdk-wallet-node@0.3.0（已发布预构建包）
+文件: D:\work\_g1-npm\x-node\package\bitcoindevkit.js  (169483 字节)
+wasm: bitcoindevkit_bg.wasm  (2140535 字节)
+==========================================================================
+
+【Q2-1】模块加载（在 fetch 被打死的前提下）
+  加载成功 ✅   导出符号数: 45
+  含 EsploraClient 导出: 是（类存在）
+
+【Q3-1】seed_to_descriptor（离线构造描述符）
+  external: wpkh(tprv8ZgxMBicQKsPdyf4244FC9njK8Zb1x6ZDHSCkQRBfk11uvCN74qVF5rYUeG7cLT9vq3JnzSE64R89ozukcxLX7bVxhDC46jiVKi9CEsPCux/84'/1'/0'/0/*)#ykq3zhza
+  internal: wpkh(tprv8ZgxMBicQKsPdyf4244FC9njK8Zb1x6ZDHSCkQRBfk11uvCN74qVF5rYUeG7cLT9vq3JnzSE64R89ozukcxLX7bVxhDC46jiVKi9CEsPCux/84'/1'/0'/1/*)#4z9slzj9
+
+【Q3-2】xpub_to_descriptor（从 xpub 构造，离线）
+  输入 xpub (8236dc33): xpub6Cns4aAYhrJGMhdYDw8a…
+  → external: wpkh([8236dc33/84'/1'/0']xpub6Cns4aAYhrJGMhdYDw8aCZ7NjVtfpsdEaf36sqsddUY8r9YizQN4Wst79dkWn497482zbKzdT34HchWwVJF2m4DEG2X5mUsWkMv7pNYw9gd/0/*)#t22tdsdy
+
+【Q3-3】Wallet.create + reveal_next_address（离线派生地址）
+  external[0]: tb1qqp33kh5v4j7kjpstmtu5maz4qdeu6p095mzns3
+  external[1]: tb1q3dupn3ww7sq3nlw00945wf52wtu0ld002s923k
+
+【Q3-4】异源对照（bitcoinjs-lib + bip32 独立派生，与 BDK 无共享代码）
+  对照 external[0]: tb1qqp33kh5v4j7kjpstmtu5maz4qdeu6p095mzns3
+  对照 external[1]: tb1q3dupn3ww7sq3nlw00945wf52wtu0ld002s923k
+  → external[0] 一致: ✅ 是
+  → external[1] 一致: ✅ 是
+
+【Q2-2】网络调用尝试记录
+  fetch/XHR 被调用次数: 0  → ✅ 全程未尝试联网
+
+==========================================================================
+边界声明（原样）：用的是**已发布预构建 npm 包**（含 esplora/reqwest 代码，见二进制检查），
+故本测试证明的是「这些 API 本身不触网」，不是「该产物整体无联网代码」。
+用的是合成 testnet 种子，无真实资金、无链上数据。
