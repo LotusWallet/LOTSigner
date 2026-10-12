@@ -20,6 +20,12 @@ python verify_fixtures.py        # 自校验（退出码 0 才继续）
 | **S2a** | 408 | S1 移除 `witness_utxo` → 无法得知输入金额 | `missing` |
 | **S2b** | 472 | S1 追加 `PSBT_IN_PROPRIETARY(0x0f)` 未知字段 | `unsupported` |
 | **S3** | 561 | S1 追加 pk1 的一个 `partial_sig` → 已收集 1/2 签名 | 配合③导出部分签名 |
+| **S4** | 483 | P2SH 对照样本：同一 2-of-3 脚本作 `redeemScript`，输入带完整前序交易 | `verified`（金额读自前序交易） |
+| **S5** | 454 | 输入 500,000 sat 而输出合计 1,490,000 sat → 手续费无法成立 | `check_failed` |
+| **S6** | 442 | S1 截去尾部 12 字节（map 未以 `0x00` 终止） | 必须显式报错（B2） |
+| **S7** | 557 | **真实链上形态**：与 S4 同构，唯一区别是前序交易的输入**带非空 scriptSig** | `verified`（回归防护，见下） |
+| **S8** | 557 | 前序交易 txid 与输入 outpoint **故意不匹配**（破坏 BIP-174 硬要求） | 输入金额必须 `check_failed` 并点名两值 |
+| **S9** | 1020 | **第三方真实导出物**：Caravan coordinator 的 "Download Unsigned PSBT" 原始输出（含 `PSBT_GLOBAL_XPUB×3` + 3 条 `bip32_derivation`，**无专有字段**） | `verified`；标准字段**不得**被报成未知 |
 
 共同参数：2-of-3 P2WSH，input 1,500,000 sat，send 1,200,000 sat，change 290,000 sat，fee 10,000 sat，locktime 0，tx version 2。
 
@@ -40,7 +46,6 @@ python verify_fixtures.py        # 自校验（退出码 0 才继续）
 ---
 
 ## 实施中发现的两个缺陷（都已修复，留存为教训）
-
 ### 缺陷 1：txid 写成 33 字节（严重）
 
 构造 prev outpoint 时，第二段 hex 手写成 34 个字符，导致 `prev_txid` 为 33 字节，
@@ -93,3 +98,21 @@ S1  ✅  S2a ✅  S2b ✅  S3 ✅
 
 > 注：`bip174` 是纯 PSBT 容器库，不含交易反序列化器，须外部提供 `txGetter`。
 > 脚本内以独立方式实现了交易计数（不复用 Python 生成器逻辑），保持两方独立。
+
+---
+
+## 由第三方真实产物暴露的两个内核缺陷（2026-10-12，均已修复）
+
+**S7 / S8 / S9 不是构造出来的假想场景，而是被一个第三方工具的真实导出物逼出来的。**
+
+在做 G3 差异项③补测时，我们让 Caravan（本地构建 v1.19.2）通过其真实 UI 路径导出了一笔
+未签名 PSBT（`g3/evidence/g3c-E-dl-transaction.psbt`，现固化为 **S9**），再拿本工具去审阅它。
+结果两个缺陷当场暴露——**此前的全部固件都没能发现它们**：
+
+| # | 缺陷 | 后果 | 为什么旧固件发现不了 | 修复 |
+|---|---|---|---|---|
+| 1 | 内核把「未签名交易的 scriptSig 必须为空」严格规则**复用**到 `non_witness_utxo` 的前序交易上 | 真实链上交易**本来就带 scriptSig** → **任何来自真实协调器/钱包的 P2SH 多签 PSBT，输入金额都被误判 `check_failed`**（虚假告警，直接毁掉主要使用场景） | 旧固件（含 S4）的前序交易一律填**空 scriptSig**，恰好绕过了该分支 | 拆分为 `parse_unsigned_tx`（严格）与 `parse_prev_tx`（宽松），并补 BIP-174 要求的 **txid 一致性校验**（S8） |
+| 2 | 把 **BIP-174 标准字段** `PSBT_GLOBAL_XPUB(0x01)`、`PSBT_IN_BIP32_DERIVATION(0x06)` 判为"未知/专有"；且全局字段误用 `input_key_name()` 命名 | 几乎**每个真实 PSBT 都刷出 R001**（风险提示被噪声淹没，等于训练用户忽略告警）；且字段名显示为错误的 `PSBT_IN_WITNESS_UTXO` | 旧固件不含 `GLOBAL_XPUB`，且 S4 的 bip32_derivation 未被检查 | 新增 `global_key_name()` 与 `unknown_global_key_type()`；只有 `0x0f` proprietary 与表外类型才报 R001 |
+
+**教训（已写入 T4 报告）**：构造的固件只能验证"我们想到了的情形"。
+**必须拿真实第三方产物来打自己**——差异项③的补测顺带完成了这件事，收益超过补测本身。

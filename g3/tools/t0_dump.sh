@@ -25,7 +25,7 @@ FIXTURES_DIR="${1:-g3/fixtures}"
 OUT_DIR="${2:-/tmp/t0-dump}"
 LSCLI="${3:-target/release/lscli}"
 
-MUST_PASS="S1 S2a S2b S3 S4 S5"
+MUST_PASS="S1 S2a S2b S3 S4 S5 S7 S8 S9"
 MUST_FAIL="S6"
 
 mkdir -p "$OUT_DIR"

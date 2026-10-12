@@ -79,3 +79,13 @@ cargo test --offline                       # 22 tests incl. BIP-173 official vec
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
 ```
+
+## Fields we recognise but do not use (transparency)
+
+Standard BIP-174 fields such as `PSBT_GLOBAL_XPUB` and `PSBT_IN_BIP32_DERIVATION` are **recognised as
+standard** and are therefore **not** reported as unknown. They do not enter the review: knowing which
+master fingerprint a key belongs to changes nothing about what the transaction *says*, and we do not
+use it to decorate output. Only genuinely uninterpretable values — proprietary (BIP-174 `0x0f`) keys
+and key types outside the standard tables — raise the R001 "fields this tool cannot interpret" notice.
+(Until 2026-10-12 the standard fields above were wrongly counted as unknown, which produced a false
+R001 on almost every PSBT exported by a coordinator; see `g3/fixtures/README.md`.)

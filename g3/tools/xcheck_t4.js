@@ -28,7 +28,7 @@ function txidOfRawTx(raw) {
   return crypto.createHash("sha256").update(h).digest().reverse().toString("hex");
 }
 
-for (const name of ["S1", "S2a", "S2b", "S3", "S4", "S5", "S6"]) {
+for (const name of ["S1", "S2a", "S2b", "S3", "S4", "S5", "S6", "S7", "S8", "S9"]) {
   const b64 = fs.readFileSync(path.join(FX, `${name}.psbt`), "utf8").trim();
   const row = { fixture: name, bitcoinjs: {}, lscore: {} };
 
@@ -50,16 +50,39 @@ for (const name of ["S1", "S2a", "S2b", "S3", "S4", "S5", "S6"]) {
         const r = {};
         if (im.witnessUtxo) r.witness_utxo_value = im.witnessUtxo.value;
         if (im.nonWitnessUtxo) {
-          // 从完整前序交易中提取第 vout 个输出金额
+          // 从完整前序交易中提取第 vout 个输出金额。
+          //
+          // ⚠️ 2026-10-12 修正：这里曾按"scriptSig 长度恒为 0"跳过输入
+          // （p += vin * (36 + 1 + 4)），而链上真实交易的输入**带 scriptSig**
+          // ——与内核同期犯的是同一类错误。一旦前序交易的 scriptSig 非空，
+          // 偏移即错位（S7/S8/S9 触发 ERR_OUT_OF_RANGE）。
+          // 现按 BIP-144 规范逐字段读取（varint 长度）。
           const ptx = im.nonWitnessUtxo;
+          const readVarint = (buf, off) => {
+            const first = buf[off];
+            if (first < 0xfd) return [first, 1];
+            if (first === 0xfd) return [buf.readUInt16LE(off + 1), 3];
+            if (first === 0xfe) return [buf.readUInt32LE(off + 1), 5];
+            return [Number(buf.readBigUInt64LE(off + 1)), 9];
+          };
           let p = 4;
-          const vin = ptx[p]; p += 1;
-          p += vin * (36 + 1 + 4);
+          let [vin, adv] = readVarint(ptx, p);
+          p += adv;
+          for (let i = 0; i < vin; i++) {
+            p += 36; // prevout txid(32) + vout(4)
+            let slen;
+            [slen, adv] = readVarint(ptx, p);
+            p += adv + slen + 4; // scriptSig + sequence
+          }
           const vout = tx.ins[0].index;
-          const nout = ptx[p]; p += 1;
+          let nout;
+          [nout, adv] = readVarint(ptx, p);
+          p += adv;
           for (let i = 0; i < nout; i++) {
             const val = ptx.readBigUInt64LE(p); p += 8;
-            const sl = ptx[p]; p += 1;
+            let sl;
+            [sl, adv] = readVarint(ptx, p);
+            p += adv;
             if (i === vout) r.non_witness_value = Number(val);
             p += sl;
           }
@@ -80,7 +103,7 @@ for (const name of ["S1", "S2a", "S2b", "S3", "S4", "S5", "S6"]) {
   catch (e) { cli = ""; }
   const txidM = cli.match(/txid\s+([0-9a-f]{64})/);
   const feeM = cli.match(/Fee\s+(unknown|\d[\d,]*) sat \[(\w+)\]/);
-  const amtM = cli.match(/Amount\s+(unknown|(\d[\d,]*)) sat \[(\w+)\]/);
+  const amtM = cli.match(/Amount\s+(unknown|(\d[\d,]*))(?: sat)? \[(\w+)\]/);
   row.lscore = {
     parses: txidM !== null,
     txid: txidM ? txidM[1] : null,
@@ -97,6 +120,19 @@ for (const name of ["S1", "S2a", "S2b", "S3", "S4", "S5", "S6"]) {
     disputes.push({
       fixture: "S6", topic: "rejection",
       note: "双方都必须拒绝。bitcoinjs 抛异常；lscore 报错并点名 output[1] map 与字节偏移——我方满足 B2（报错点名位置），不构成语义分歧。",
+    });
+  } else if (name === "S8") {
+    // 刻意分歧（与 S5/D1 同类）：bitcoinjs 照读 non_witness_utxo 的金额；
+    // lscore 发现该前序交易的 txid 与输入 outpoint 不一致（BIP-174 硬要求），
+    // 因此**拒绝采用**该金额并判 check_failed。
+    // 属于"我方比参考实现更严"的分歧，方向正确，不构成我方失败。
+    row.agreement =
+      row.bitcoinjs.parses && row.lscore.input_amount_state === "check_failed";
+    disputes.push({
+      fixture: "S8", topic: "txid mismatch handling",
+      note:
+        "附带的前序交易 txid ≠ 输入 outpoint txid（BIP-174 要求两者一致）。bitcoinjs 仍按该交易读出金额；" +
+        "lscore 判 check_failed 并点名两个 txid，拒绝采用不可信金额。**我方可核验性更强**，属刻意分歧而非缺陷。",
     });
   } else if (row.bitcoinjs.parses && row.lscore.parses) {
     const agree = [];

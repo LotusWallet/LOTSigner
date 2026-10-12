@@ -1,0 +1,6 @@
+{
+  "url": "http://localhost:4174/#/hermit-psbt",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Import PSBT Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "buttons": [],
+  "alerts": []
+}

@@ -15,7 +15,7 @@ use crate::i18n::{t, Lang};
 use crate::psbt::*;
 use crate::script::{classify, script_to_address, script_summary, ScriptType};
 use crate::state::*;
-use crate::tx::{hex, parse_unsigned_tx, txid_hex, UnsignedTx};
+use crate::tx::{hex, parse_prev_tx, parse_unsigned_tx, txid_hex, UnsignedTx};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReviewError {
@@ -102,7 +102,7 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx, lang: Lang) -> Review {
                         Field::check_failed(t(lang, "check_witness_len", &[]))
                     }
                 } else if let Some(nw) = p.get(IN_NON_WITNESS_UTXO) {
-                    match parse_prev_output_value(&nw.value, txin.prev_vout, lang) {
+                    match parse_prev_output_value(&nw.value, txin.prev_vout, &txin.prev_txid, lang) {
                         Ok(v) => Field::with_state(v, FieldState::Verified, t(lang, "note_amount_nw", &[])),
                         Err(e) => Field::check_failed(e),
                     }
@@ -130,9 +130,15 @@ fn build_review(psbt: &Psbt, utx: &UnsignedTx, lang: Lang) -> Review {
     }
 
     // ---------- 未知键 ----------
+    // 注意：这里必须用 global_key_name —— 早期误用 input_key_name，
+    // 把 PSBT_GLOBAL_XPUB(0x01) 显示成 "PSBT_IN_WITNESS_UTXO"，属**错误命名**
+    // （用户据此无法核实到底是什么字段）。
     for p in psbt.global_pairs.iter() {
-        if p.key_type == GLOBAL_XPUB || p.key_type == GLOBAL_PROPRIETARY {
-            unsupported_keys.push(format!("global/{}", crate::psbt::input_key_name(p.key_type)));
+        if crate::psbt::unknown_global_key_type(p.key_type) {
+            unsupported_keys.push(format!(
+                "global/{}",
+                crate::psbt::global_key_name(p.key_type)
+            ));
         }
     }
     for (i, p) in psbt.inputs.iter().enumerate() {
@@ -313,9 +319,25 @@ fn reverse_hex(b: &[u8; 32]) -> String {
 }
 
 /// 从前序交易报文中取出第 vout 个输出的金额
-fn parse_prev_output_value(prev_tx: &[u8], vout: u32, lang: Lang) -> Result<u64, String> {
-    let prev = parse_unsigned_tx(prev_tx)
-        .map_err(|e| t(lang, "err_prev_parse", &[&e.message(lang)]))?;
+///
+/// BIP-174 要求：non_witness_utxo 的 txid **必须**等于该输入 outpoint 的 txid；
+/// 不一致意味着附带的不是这笔输入真正花费的交易，金额不可信 → check_failed（点名两值）。
+fn parse_prev_output_value(
+    prev_tx: &[u8],
+    vout: u32,
+    expected_txid: &[u8; 32],
+    lang: Lang,
+) -> Result<u64, String> {
+    let prev = parse_prev_tx(prev_tx).map_err(|e| t(lang, "err_prev_parse", &[&e.message(lang)]))?;
+    let actual = txid_hex(&prev);
+    let expected = reverse_hex(expected_txid);
+    if actual != expected {
+        return Err(t(
+            lang,
+            "err_prev_txid_mismatch",
+            &[&actual, &expected],
+        ));
+    }
     if vout as usize >= prev.outputs.len() {
         return Err(t(lang, "err_prev_out_range", &[&vout.to_string()]));
     }

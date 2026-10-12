@@ -1,0 +1,191 @@
+{
+  "config": {
+    "name": "G3C-P2SH-2of3",
+    "addressType": "P2SH",
+    "network": "mainnet",
+    "client": {
+      "type": "public"
+    },
+    "quorum": {
+      "requiredSigners": 2,
+      "totalSigners": 3
+    },
+    "extendedPublicKeys": [
+      {
+        "name": "signer1",
+        "bip32Path": "m/45'/0'/100'",
+        "xpub": "xpub6CEqA8Qw2dEL2p9RMmZVUfX71r2StpeqVFtHEACTXNeKXySUpa1uLtaVqtg6ajJnK7w79QoGQYoRZ1eiX3hK5eHzqaWE5vu99CWLHL8wm34",
+        "xfp": "8236dc33"
+      },
+      {
+        "name": "signer2",
+        "bip32Path": "m/45'/0'/100'",
+        "xpub": "xpub6Bg95dFmQfBQ4ZcXBwJxR929MKWAbtazCx4bJF2JGfPp4xVssohuUVnzks71y4GgZNzspGWAVPpCfXhs978DJD7XAJkEdvtCVTRjzv6wx2c",
+        "xfp": "4d0d906a"
+      },
+      {
+        "name": "signer3",
+        "bip32Path": "m/45'/0'/100'",
+        "xpub": "xpub6CsRhTepvADYjCbi3sYCVkz9r7jGgEvuMumW4QoLiFcBhRwaC8gdsa49VPC3yhJhDQreXBu8E2HTJBvD6bWWQqbzzqF6dgQcc3ETNrEk8cy",
+        "xfp": "0c3f5f17"
+      }
+    ],
+    "startingAddressIndex": 0
+  },
+  "mock": {
+    "targetAddress": "3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx",
+    "utxos": [
+      {
+        "txid": "ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090",
+        "vout": 0,
+        "value": 200000,
+        "status": {
+          "confirmed": true,
+          "block_height": 899000,
+          "block_hash": "2222222222222222222222222222222222222222222222222222222222222222",
+          "block_time": 1700000000
+        }
+      }
+    ],
+    "fundingHex": "02000000013333333333333333333333333333333333333333333333333333333333333333000000000403cafe01ffffffff01400d03000000000017a9148ccd6040c946677e897c792df4c1e0c3823f10928700000000",
+    "fundingTxid": "ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090",
+    "hits": 170,
+    "unhandled": [
+      "/icon",
+      "/api/v1/fees/recommended",
+      "/api/v1/fees/recommended"
+    ]
+  },
+  "downloads": [
+    {
+      "filename": "transaction.psbt",
+      "saved": "D:\\work\\LOTSigner\\g3\\evidence\\g3c-E-dl-transaction.psbt",
+      "size": 1020
+    }
+  ],
+  "steps": {
+    "receive": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Scan QR code or click to copy address to clipboard. Amount BTC Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Address chevron_right */0/0 0 0 3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx Next Address Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "chevron_right",
+        "Next Address"
+      ],
+      "alerts": []
+    },
+    "afterRefresh": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Last Used arrow_downward Address chevron_right */0/0 1 0.002 2023/11/15 3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx Rows per page: 10 rows 1-1 of 1 first_page chevron_left 1-1 of 1 chevron_right last_page Show Additional Spent Addresses Zero Balance Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit: Deposit received. A new address should now be available for deposit.",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "chevron_right",
+        "first_page",
+        "chevron_left",
+        "chevron_right",
+        "last_page"
+      ],
+      "alerts": [
+        "Deposit received. A new address should now be available for deposit."
+      ]
+    },
+    "send": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Manual Replace-by-Fee (RBF) To Amount ​ MAX BTC Add output Fee Rate Sats/byte Refer to mempool monitoring websites to ensure your selected fee rate is appropriate. Output Total BTC Preview Transaction Import PSBT Import a Partially Signed Bitcoin Transaction (PSBT) from a file or QR code. Import Method ​ Import Method Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Add output",
+        "Preview Transaction"
+      ],
+      "alerts": []
+    },
+    "sendFilled": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Manual Replace-by-Fee (RBF) To Amount ​ MAX BTC Add output Fee Rate Sats/byte Refer to mempool monitoring websites to ensure your selected fee rate is appropriate. Output Total BTC Preview Transaction Import PSBT Import a Partially Signed Bitcoin Transaction (PSBT) from a file or QR code. Import Method ​ Import Method Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Add output",
+        "Preview Transaction"
+      ],
+      "alerts": []
+    },
+    "preview": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Transaction Analysis Wallet Fingerprinting P2SH Input Dust No dust inputs detected. Transaction Preview Show Unsigned Transaction Inputs Available Inputs (1) The following UTXOs will be spent as inputs in a new transaction. Number TXID Index Amount (BTC) View Dust Status 1 ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090 0 0.002 Economical TOTAL: 0.002 Outputs Address Amount (BTC) Script Type 33SbRCQjxnXirba8skZ3fpcEcLenJpExrb 0.001 P2SH Fee NaN BTC Fee Rate sats/byte Total 0.002 BTC Transaction Analysis Optimize your Bitcoin spending efficiency Edit Transaction Sign Transaction Download Unsigned PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Edit Transaction",
+        "Sign Transaction",
+        "Download Unsigned PSBT"
+      ],
+      "alerts": []
+    },
+    "afterDownload": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Transaction Analysis Wallet Fingerprinting P2SH Input Dust No dust inputs detected. Transaction Preview Show Unsigned Transaction Inputs Available Inputs (1) The following UTXOs will be spent as inputs in a new transaction. Number TXID Index Amount (BTC) View Dust Status 1 ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090 0 0.002 Economical TOTAL: 0.002 Outputs Address Amount (BTC) Script Type 33SbRCQjxnXirba8skZ3fpcEcLenJpExrb 0.001 P2SH Fee NaN BTC Fee Rate sats/byte Total 0.002 BTC Transaction Analysis Optimize your Bitcoin spending efficiency Edit Transaction Sign Transaction Download Unsigned PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Edit Transaction",
+        "Sign Transaction",
+        "Download Unsigned PSBT"
+      ],
+      "alerts": []
+    }
+  }
+}

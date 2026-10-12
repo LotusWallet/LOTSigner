@@ -1,0 +1,122 @@
+{
+  "mock": {
+    "address": null,
+    "utxos": [],
+    "fundingTxHex": null,
+    "fundingTxid": null,
+    "hits": [
+      "https://fonts.googleapis.com/icon?family=Material+Icons",
+      "https://unchained.mempool.space/api/address/3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx/utxo",
+      "https://unchained.mempool.space/api/address/34EKEsS7KZkbe1t19z2Cz3LE9kedkphS4h/utxo",
+      "https://unchained.mempool.space/api/address/34nyDvZi7gK3313ziTsVspKZm1H2Mc8NVC/utxo",
+      "https://unchained.mempool.space/api/address/3P9ZG1mUuBZEA3ckqjQYxddwRw8t1CPMfQ/utxo",
+      "https://unchained.mempool.space/api/address/33SbRCQjxnXirba8skZ3fpcEcLenJpExrb/utxo",
+      "https://unchained.mempool.space/api/address/3Kj26oB1Mxb5tcyq2yvQocjHXWb6v2qQCu/utxo",
+      "https://unchained.mempool.space/api/address/3E3BSf31wvqw5GgomAeJ2fyjaHHgcnCygi/utxo",
+      "https://unchained.mempool.space/api/address/3F2GTvchCezBknWLvPH7WPKwifZu9hz7Dz/utxo",
+      "https://unchained.mempool.space/api/address/3Kn1RPB6BngVenDPNmzpM1PcNMzaYbiYJy/utxo",
+      "https://unchained.mempool.space/api/address/3AzbCTafHNQU8yJiiWbCWoyz96apoEHvtq/utxo",
+      "https://unchained.mempool.space/api/v1/fees/recommended",
+      "https://unchained.mempool.space/api/address/3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx/utxo"
+    ]
+  },
+  "steps": {
+    "afterConfig": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 Your 2-of-3 P2SH Multisig Wallet Extended Public Keys: 3/3 Edit Details Name Key Origin signer1 [8236dc33/45'/0'/100']xpub6CEqA8Qw2dEL2p9RMmZVUfX71r2StpeqVFtHEACTXNeKXySUpa1uLtaVqtg6ajJnK7w79QoGQYoRZ1eiX3hK5eHzqaWE5vu99CWLHL8wm34 signer2 [4d0d906a/45'/0'/100']xpub6Bg95dFmQfBQ4ZcXBwJxR929MKWAbtazCx4bJF2JGfPp4xVssohuUVnzks71y4GgZNzspGWAVPpCfXhs978DJD7XAJkEdvtCVTRjzv6wx2c signer3 [0c3f5f17/45'/0'/100']xpub6CsRhTepvADYjCbi3sYCVkz9r7jGgEvuMumW4QoLiFcBhRwaC8gdsa49VPC3yhJhDQreXBu8E2HTJBvD6bWWQqbzzqF6dgQcc3ETNrEk8cy Wallet Registration Wallet Policy Details Policy template: sh(sortedmulti(2,@0/**,@1/**,@2/**)) Wallet Uuid: undefined Some devices allow a multisig wallet to be registered in order to verify addresses and transactions You have imported all 3 extended public keys. You will need to save this information. Download Wallet Details Clear Wallet Download Descriptors Please confirm that the above information is correct and you wish to generate your wallet. Confirm Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Download Wallet Details",
+        "Clear Wallet",
+        "Download Descriptors",
+        "Confirm"
+      ],
+      "inputs": [],
+      "alerts": [
+        "Wallet Policy Details Policy template: sh(sortedmulti(2,@0/**,@1/**,@2/**)) Wallet Uuid: undefined",
+        "Wallet Policy Details Policy template: sh(sortedmulti(2,@0/**,@1/**,@2/**)) Wallet Uuid: undefined",
+        "Wallet Policy Details"
+      ]
+    },
+    "afterConfirm": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0 BTC Wallet Actions Refresh Download Configuration Clear Wallet Wallet loaded, but with errors... Addresses Receive Send Transactions Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Last Used arrow_downward Address No records to display Rows per page: 10 rows 0-0 of 0 first_page chevron_left 0-0 of 0 chevron_right last_page Show Additional Spent Addresses Zero Balance Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "first_page",
+        "chevron_left",
+        "chevron_right",
+        "last_page"
+      ],
+      "inputs": [
+        "INPUT:text:",
+        "INPUT:checkbox:",
+        "INPUT:checkbox:"
+      ],
+      "alerts": []
+    },
+    "after-Send": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0 BTC Wallet Actions Refresh Download Configuration Clear Wallet Wallet loaded, but with errors... Addresses Receive Send Transactions Manual Replace-by-Fee (RBF) To Amount ​ MAX BTC Add output Fee Rate Sats/byte Refer to mempool monitoring websites to ensure your selected fee rate is appropriate. Output Total BTC Preview Transaction Import PSBT Import a Partially Signed Bitcoin Transaction (PSBT) from a file or QR code. Import Method ​ Import Method Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Add output",
+        "Preview Transaction"
+      ],
+      "inputs": [
+        "INPUT:checkbox:",
+        "INPUT:checkbox:",
+        "INPUT:text:",
+        "INPUT:text:destination",
+        "INPUT:text:amount",
+        "INPUT:number:fee_rate",
+        "INPUT:text:mui-39",
+        "INPUT:text:mui-40",
+        "INPUT:text:"
+      ],
+      "alerts": []
+    },
+    "after-Receive": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0 BTC Wallet Actions Refresh Download Configuration Clear Wallet Wallet loaded, but with errors... Addresses Receive Send Transactions Scan QR code or click to copy address to clipboard. Amount BTC Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Address chevron_right */0/0 0 0 3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx Next Address Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "chevron_right",
+        "Next Address"
+      ],
+      "inputs": [
+        "INPUT:text:depositAmount"
+      ],
+      "alerts": []
+    }
+  }
+}

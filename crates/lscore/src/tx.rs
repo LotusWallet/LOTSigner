@@ -110,7 +110,31 @@ pub fn write_varint(v: u64) -> Vec<u8> {
     }
 }
 
+/// 解析 **PSBT 全局未签名交易**。
+///
+/// BIP-174 硬要求：PSBT_GLOBAL_UNSIGNED_TX 中的交易**必须**所有 scriptSig 为空
+/// （因为签名正是要收集的东西）。因此这里用严格模式。
 pub fn parse_unsigned_tx(b: &[u8]) -> Result<UnsignedTx, TxError> {
+    parse_tx(b, true)
+}
+
+/// 解析 **PSBT_IN_NON_WITNESS_UTXO 里的前序交易**。
+///
+/// ⚠️ 这里是宽松模式，**不得要求 scriptSig 为空**：该字段携带的是
+/// "完整的前序交易"，即链上真实交易——真实交易的输入本来就带 scriptSig
+/// （非 coinbase 的 scriptSig 是花费者的签名/脚本数据）。
+///
+/// 历史缺陷（2026-10-12 发现）：本函数曾复用严格解析，导致任何
+/// non_witness_utxo 来自真实链上交易的 PSBT 都在输入金额上被判
+/// `check_failed`——这是**虚假告警**，会让工具在最主要的使用场景
+/// （来自协调器/钱包的 P2SH 多签 PSBT）上直接失效。
+/// 该缺陷由 Caravan 真实导出物（g3/evidence/g3c-E-dl-transaction.psbt）
+/// 暴露，固件 S7 固化此场景防回归。
+pub fn parse_prev_tx(b: &[u8]) -> Result<UnsignedTx, TxError> {
+    parse_tx(b, false)
+}
+
+fn parse_tx(b: &[u8], require_empty_scriptsig: bool) -> Result<UnsignedTx, TxError> {
     let mut i = 0usize;
     if b.len() < 4 {
         return Err(TxError::Truncated);
@@ -141,7 +165,7 @@ pub fn parse_unsigned_tx(b: &[u8]) -> Result<UnsignedTx, TxError> {
         }
         let script_sig = b[i..i + slen as usize].to_vec();
         i += slen as usize;
-        if !script_sig.is_empty() {
+        if require_empty_scriptsig && !script_sig.is_empty() {
             return Err(TxError::ScriptSigNotEmpty { index: idx });
         }
         if i + 4 > b.len() {

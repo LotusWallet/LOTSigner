@@ -1,0 +1,37 @@
+{
+  "url": "http://localhost:4174/#/script",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Enter Redeem Script Redeem Script Redeem Script Import PSBT Enter a valid redeem script to generate an address to spend funds from. Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "buttons": [],
+  "inputs": [
+    "textarea:mui-4",
+    "textarea:",
+    "file:import-psbt",
+    "radio:type",
+    "radio:type",
+    "radio:type",
+    "radio:network",
+    "radio:network",
+    "radio:network",
+    "radio:clientType",
+    "radio:clientType",
+    "radio:clientType"
+  ],
+  "links": [
+    "Overview",
+    "Setup",
+    "Wallet",
+    "Create Address",
+    "Script Explorer",
+    "Hermit PSBT Interface",
+    "Test Suite",
+    "Help",
+    "Overview",
+    "Setup",
+    "Wallet",
+    "Create Address",
+    "Script Explorer",
+    "Hermit PSBT Interface",
+    "Test Suite",
+    "Help"
+  ]
+}

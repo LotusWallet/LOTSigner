@@ -1,0 +1,59 @@
+{
+  "base": "http://localhost:4174",
+  "injectedConfigOk": true,
+  "requests": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons",
+    "https://fonts.googleapis.com/icon?family=Material+Icons"
+  ],
+  "steps": [
+    {
+      "tag": "landing",
+      "url": "http://localhost:4174/#/",
+      "body": "About Features Resources Test suite Get started Secure your bitcoin with Caravan, a fully open-source stateless multisig coordinator Caravan simplifies multisig custody by coordinating your transactions without storing your keys. Self-custody your bitcoin with enhanced security, privacy, and protection against single points of failure. Get started Learn more Compatible with your favorite tools Caravan works seamlessly with industry-leading hardware wallets, browsers, and other bitcoin coordination tools. Hardware wallet support Browser compatibility Interoperable coordinators Stateless multisig coordinator Caravan makes bitcoin multisig custody easier and safer through transparency and standards. Create common setups like 2-of-3 or 3-of-5 multisig wallets for different security needs. Caravan supports both wallet coordination derived from xpubs and individual multisig addresses derived from pubkeys. Being fully open-source and stateless, Caravan stores no data outside your current browser session, giving you complete control over your funds while protecting your privacy. Keys & recovery All bitcoin is ultimately protected by private keys. Your private key may live on a piece of paper, a hardware wallet, some software on a laptop, or even just in your mind. Caravan, being stateless, does not store or ask for your private key but it can talk to hardware devices which do. With multisig, you're protected against the loss of any single key, creating a robust disaster recovery setup. Caravan supports P2SH, P2WSH, and P2TR address formats, and works with all major hardware wallets and key management systems. Privacy & consensus In order to look up wallet addresses and their balances, and broadcast transactions, Caravan requires knowledge of the constantly changing bitcoin network. Running a full bitcoin node is the most private way to determine the current state of the bitcoin network and prevents third-party services from tracking your wallet activity. Caravan can be easi",
+      "tabs": [],
+      "buttons": [
+        "About",
+        "Features",
+        "Resources",
+        "Test suite",
+        "Get started",
+        "Get started",
+        "Learn more",
+        "Get started"
+      ]
+    },
+    {
+      "tag": "after-getstarted",
+      "url": "http://localhost:4174/#/setup",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Welcome to Caravan! Let's get you started. To use Caravan's multisignature features, you'll need a compatible wallet. You can either create a new wallet directly in Caravan or import an existing one. Wallet Address Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "tabs": [],
+      "buttons": []
+    }
+  ],
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Welcome to Caravan! Let's get you started. To use Caravan's multisignature features, you'll need a compatible wallet. You can either create a new wallet directly in Caravan or import an existing one. Wallet Address Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "tabs": [],
+  "buttons": [],
+  "links": [
+    " -> #/",
+    "Overview -> #/overview",
+    "Setup -> #/setup",
+    "Wallet -> #/wallet",
+    "Create Address -> #/address",
+    "Script Explorer -> #/script",
+    "Hermit PSBT Interface -> #/hermit-psbt",
+    "Test Suite -> #/test",
+    "Help -> #/help",
+    "Wallet -> #/wallet",
+    "Address -> #/address",
+    " -> https://www.unchained.com",
+    " -> #/",
+    "Overview -> #/overview",
+    "Setup -> #/setup",
+    "Wallet -> #/wallet",
+    "Create Address -> #/address",
+    "Script Explorer -> #/script",
+    "Hermit PSBT Interface -> #/hermit-psbt",
+    "Test Suite -> #/test"
+  ],
+  "configError": false
+}

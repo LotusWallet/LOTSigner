@@ -1,0 +1,146 @@
+{
+  "external": [
+    "https://fonts.googleapis.com/icon?family=Material+Icons"
+  ],
+  "steps": {
+    "hermit-psbt": {
+      "url": "http://localhost:4174/#/hermit-psbt",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Import PSBT Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [],
+      "inputs": [
+        "file:import-psbt",
+        "radio:type",
+        "radio:type",
+        "radio:type",
+        "radio:network",
+        "radio:network",
+        "radio:network",
+        "radio:clientType",
+        "radio:clientType",
+        "radio:clientType"
+      ],
+      "links": [
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help"
+      ]
+    },
+    "script": {
+      "url": "http://localhost:4174/#/script",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Enter Redeem Script Redeem Script Redeem Script Import PSBT Enter a valid redeem script to generate an address to spend funds from. Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [],
+      "inputs": [
+        "textarea:mui-4",
+        "textarea:",
+        "file:import-psbt",
+        "radio:type",
+        "radio:type",
+        "radio:type",
+        "radio:network",
+        "radio:network",
+        "radio:network",
+        "radio:clientType",
+        "radio:clientType",
+        "radio:clientType"
+      ],
+      "links": [
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help"
+      ]
+    },
+    "wallet": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help My Multisig Wallet Import Wallet Configuration Configure with descriptor Extended Public Key 1 Select Method ​ Extended Public Key 2 Select Method ​ Extended Public Key 3 Select Method ​ Once you have imported all 3 extended public keys, your wallet will be generated here. Quorum 2 Required of 3 Total Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Starting Address Index Default (0) Custom Use the default value if you do not understand how to use starting address index. Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [],
+      "inputs": [
+        "file:upload-config",
+        "checkbox:",
+        "text:",
+        "text:",
+        "text:",
+        "radio:type",
+        "radio:type",
+        "radio:type",
+        "radio:network",
+        "radio:network",
+        "radio:network",
+        "radio:clientType",
+        "radio:clientType",
+        "radio:clientType",
+        "radio:customIndex",
+        "radio:customIndex"
+      ],
+      "links": [
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help"
+      ]
+    },
+    "setup": {
+      "url": "http://localhost:4174/#/setup",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help Welcome to Caravan! Let's get you started. To use Caravan's multisignature features, you'll need a compatible wallet. You can either create a new wallet directly in Caravan or import an existing one. Wallet Address Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [],
+      "inputs": [],
+      "links": [
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help",
+        "Wallet",
+        "Address",
+        "Overview",
+        "Setup",
+        "Wallet",
+        "Create Address",
+        "Script Explorer",
+        "Hermit PSBT Interface",
+        "Test Suite",
+        "Help"
+      ]
+    }
+  }
+}

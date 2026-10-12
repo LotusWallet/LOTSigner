@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-11T22:27:10.391Z",
+  "generated": "2026-10-12T13:23:59.571Z",
   "rows": [
     {
       "fixture": "S1",
@@ -61,7 +61,7 @@
       "lscore": {
         "parses": true,
         "txid": "100df7d5af345144fdf8f76b4884faea1bc4fd012ea8431c11afcc96fffc7bdc",
-        "input_amount_state": null,
+        "input_amount_state": "missing",
         "input_amount": null,
         "fee_state": null,
         "fee": null,
@@ -241,6 +241,107 @@
         "error": "Review failed: PSBT parse failed: the message ends abruptly inside the output[1] map: a byte was expected at offset 348 — the PSBT is truncated or corrupt"
       },
       "agreement": true
+    },
+    {
+      "fixture": "S7",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "82a0fe461c30bcc181a56623b382d15bd94199c3755b4ae93935eb4cb4bd92e1",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "a9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987"
+        ],
+        "input_0": {
+          "non_witness_value": 1500000,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "82a0fe461c30bcc181a56623b382d15bd94199c3755b4ae93935eb4cb4bd92e1",
+        "input_amount_state": "verified",
+        "input_amount": 1500000,
+        "fee_state": "parsed_unverified",
+        "fee": 10000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount(non_witness)": true,
+        "input_amount_state=verified": true,
+        "sighash=0x1": true
+      }
+    },
+    {
+      "fixture": "S8",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "f6f6b6a52e77b23f7ce89524d80761a4a109e0d860c404c769b5338f418b945e",
+        "inputs": 1,
+        "outputs": 2,
+        "output_values": [
+          1200000,
+          290000
+        ],
+        "output_scripts": [
+          "001409e0c2bacb7c0de1affec76f5ab632bf1fbb78c0",
+          "a9142475ffa90c61bdedab5f6b1079fe57a2fd2e79e987"
+        ],
+        "input_0": {
+          "non_witness_value": 1500000,
+          "sighash": 1
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "f6f6b6a52e77b23f7ce89524d80761a4a109e0d860c404c769b5338f418b945e",
+        "input_amount_state": "check_failed",
+        "input_amount": null,
+        "fee_state": null,
+        "fee": null,
+        "error": null
+      },
+      "agreement": true
+    },
+    {
+      "fixture": "S9",
+      "bitcoinjs": {
+        "parses": true,
+        "txid": "17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad",
+        "inputs": 1,
+        "outputs": 1,
+        "output_values": [
+          100000
+        ],
+        "output_scripts": [
+          "a9141335f8b776daf9e2b3cf86eef413c1cfebbe3d9c87"
+        ],
+        "input_0": {
+          "non_witness_value": 200000
+        }
+      },
+      "lscore": {
+        "parses": true,
+        "txid": "17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad",
+        "input_amount_state": "verified",
+        "input_amount": 200000,
+        "fee_state": "parsed_unverified",
+        "fee": 100000,
+        "error": null
+      },
+      "agreement": true,
+      "checks": {
+        "txid": true,
+        "input_amount(non_witness)": true,
+        "input_amount_state=verified": true
+      }
     }
   ],
   "disputes": [
@@ -248,6 +349,11 @@
       "fixture": "S6",
       "topic": "rejection",
       "note": "双方都必须拒绝。bitcoinjs 抛异常；lscore 报错并点名 output[1] map 与字节偏移——我方满足 B2（报错点名位置），不构成语义分歧。"
+    },
+    {
+      "fixture": "S8",
+      "topic": "txid mismatch handling",
+      "note": "附带的前序交易 txid ≠ 输入 outpoint txid（BIP-174 要求两者一致）。bitcoinjs 仍按该交易读出金额；lscore 判 check_failed 并点名两个 txid，拒绝采用不可信金额。**我方可核验性更强**，属刻意分歧而非缺陷。"
     }
   ]
 }

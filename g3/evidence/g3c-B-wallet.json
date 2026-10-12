@@ -1,0 +1,41 @@
+{
+  "url": "http://localhost:4174/#/wallet",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help My Multisig Wallet Import Wallet Configuration Configure with descriptor Extended Public Key 1 Select Method ​ Extended Public Key 2 Select Method ​ Extended Public Key 3 Select Method ​ Once you have imported all 3 extended public keys, your wallet will be generated here. Quorum 2 Required of 3 Total Address Type P2SH P2SH-P2WSH P2WSH Choose 'P2WSH' for best practices, 'P2SH' for greatest compatibility. Network Mainnet Testnet Regtest Choose 'Mainnet' for real Bitcoin, 'Testnet' for testing with test coins, or 'Regtest' for local development with a private bitcoind node. Bitcoin Client Mempool.space Blockstream.info Private Starting Address Index Default (0) Custom Use the default value if you do not understand how to use starting address index. Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "buttons": [],
+  "inputs": [
+    "file:upload-config",
+    "checkbox:",
+    "text:",
+    "text:",
+    "text:",
+    "radio:type",
+    "radio:type",
+    "radio:type",
+    "radio:network",
+    "radio:network",
+    "radio:network",
+    "radio:clientType",
+    "radio:clientType",
+    "radio:clientType",
+    "radio:customIndex",
+    "radio:customIndex"
+  ],
+  "links": [
+    "Overview",
+    "Setup",
+    "Wallet",
+    "Create Address",
+    "Script Explorer",
+    "Hermit PSBT Interface",
+    "Test Suite",
+    "Help",
+    "Overview",
+    "Setup",
+    "Wallet",
+    "Create Address",
+    "Script Explorer",
+    "Hermit PSBT Interface",
+    "Test Suite",
+    "Help"
+  ]
+}

@@ -198,14 +198,20 @@ def sha256d(b):
     return sha256(sha256(b))
 
 
-def build_prev_tx(value_sat, spk):
+def build_prev_tx(value_sat, spk, script_sig=b""):
     """
-    构造一笔完整的前序交易：1 输入（空 scriptSig）+ 1 输出（付给 spk）。
+    构造一笔完整的前序交易：1 输入（scriptSig 可指定）+ 1 输出（付给 spk）。
 
     为什么需要它：非 witness 输入（P2SH）按 BIP-174 必须提供
     PSBT_IN_NON_WITNESS_UTXO(0x00)，其内容是**完整的前序交易序列化**，
     且输入 outpoint 的 txid 必须等于该交易的 sha256d。
     这与 witness 输入只需 witness_utxo 不同，是 P2SH 对照样本的构造要点。
+
+    ⚠️ script_sig 参数（2026-10-12 新增，由真实缺陷暴露）：
+    "完整的前序交易"指**链上真实交易**，其非 coinbase 输入**本来就带 scriptSig**。
+    早期固件一律填空 scriptSig（S4），掩盖了内核复用"未签名交易严格解析"的缺陷——
+    结果是任何 non_witness_utxo 来自真实链上交易的 PSBT 都被误判 check_failed。
+    S7 用非空 scriptSig 固化真实形态，防回归。
 
     返回 (tx_bytes, txid_internal)。txid_internal 可直接用作 outpoint 的 txid 字段
     （交易序列化中的 txid 即 sha256d 的原始字节序，不需要反转）。
@@ -215,7 +221,7 @@ def build_prev_tx(value_sat, spk):
     b += ser_compact_size(1)                 # 输入数
     b += dummy_prevout
     b += struct.pack("<I", 0)                # vout
-    b += ser_compact_size(0)                 # scriptSig 必须为空
+    b += ser_compact_size(len(script_sig)) + script_sig
     b += struct.pack("<I", 0xFFFFFFFF)       # sequence
     b += ser_compact_size(1)                 # 输出数
     b += struct.pack("<Q", value_sat)
@@ -378,6 +384,54 @@ def main():
     s6_raw = s1[:-12]
     assert s6_raw[-1] != 0x00, "截断点不应恰好是 map 终止符"
 
+    # ---------------- S7：前序交易带非空 scriptSig（真实链上形态 / 回归防护） ----------------
+    # 目的：真实链上交易的输入**带 scriptSig**（非 coinbase）。早期固件一律填空，
+    # 使得内核"复用未签名交易严格解析来处理 non_witness_utxo"的缺陷长期不被发现——
+    # 结果是：任何来自真实协调器/钱包的 P2SH 多签 PSBT，其输入金额都会被误判
+    # check_failed（虚假告警，直接毁掉主要使用场景）。
+    # 该缺陷由 Caravan 真实导出物暴露（见 g3/evidence/g3c-E-dl-transaction.psbt），
+    # 本样本把该形态固化为回归测试。
+    real_scriptsig = bytes.fromhex(
+        "00483045022100ffd1c1e0b0a1c2d3e4f50617283940516273849506a7b8c9d0e1f2031425"
+        "3602200a1b2c3d4e5f60718293a4b5c6d7e8f9001122334455667788990011223344c5"
+        "011b"  # 形态上接近 P2SH 花费脚本（push 数据 + 序列），非真实签名
+    )
+    prev_tx_real, prev_txid_real = build_prev_tx(input_amount, p2sh_spk(rscript), real_scriptsig)
+    assert sha256d(prev_tx_real) == prev_txid_real
+    unsigned_tx_real = build_unsigned_tx(
+        n_inputs=1,
+        inputs=[(prev_txid_real, 0, 0xFFFFFFFE)],
+        outputs=[(send_amount, send_spk), (change_amount, p2sh_spk(rscript))],
+        n_outputs=2,
+    )
+    real_input = [
+        kv(IN_NON_WITNESS_UTXO, b"", prev_tx_real),
+        kv(IN_SIGHASH_TYPE, b"", struct.pack("<I", 1)),
+        kv(IN_REDEEM_SCRIPT, b"", rscript),
+        kv(IN_BIP32_DERIVATION, pk1,
+           b"\x00" * 4 + b"\x80\x00\x00\x00" + b"\x00\x00\x00\x00"),
+    ]
+    s7 = build_psbt(1, unsigned_tx_real, [real_input], p2sh_output_maps)
+
+    # ---------------- S8：前序交易 txid 与 outpoint 不匹配（必须 check_failed） ----------------
+    # 目的：BIP-174 要求 non_witness_utxo 的 txid == 输入 outpoint 的 txid。
+    # 不一致 = 附带的不是这笔输入真正花费的交易 → 金额不可信，必须显式点名两值，
+    # 不得静默采用该金额（宪法第 5/6 条）。
+    mismatched_input = [
+        kv(IN_NON_WITNESS_UTXO, b"", prev_tx_real),          # 该 tx 的 txid ≠ 下面的 outpoint
+        kv(IN_SIGHASH_TYPE, b"", struct.pack("<I", 1)),
+        kv(IN_REDEEM_SCRIPT, b"", rscript),
+        kv(IN_BIP32_DERIVATION, pk1,
+           b"\x00" * 4 + b"\x80\x00\x00\x00" + b"\x00\x00\x00\x00"),
+    ]
+    unsigned_tx_mismatch = build_unsigned_tx(
+        n_inputs=1,
+        inputs=[(bytes(range(32, 64)), 0, 0xFFFFFFFE)],  # 故意使用另一个 txid 作 outpoint
+        outputs=[(send_amount, send_spk), (change_amount, p2sh_spk(rscript))],
+        n_outputs=2,
+    )
+    s8 = build_psbt(1, unsigned_tx_mismatch, [mismatched_input], p2sh_output_maps)
+
     samples = {
         "S1": (s1, "受托场景 2-of-3 P2WSH 多签 PSBT，未签名。1 输入 2 输出（含找零），"
                    "含 witness_utxo / sighash / witnessScript / bip32 derivation"),
@@ -392,6 +446,13 @@ def main():
                    "内核 fee 字段应为 check_failed 并触发 R003。补齐五态最后一个触发样本"),
         "S6": (s6_raw, "**截断报文（malformed）**：S1 截去尾部 12 字节，输入 map 未以 0x00 终止。"
                    "任何标准解析器都必须显式报错（宪法第 5 条），用于 BETA-READINESS B2 验证"),
+        "S7": (s7, "**真实链上形态（前序交易带非空 scriptSig）**：P2SH，与 S4 同构，"
+                   "唯一区别是 non_witness_utxo 的输入带非空 scriptSig——这是链上真实交易的常态。"
+                   "输入金额必须为 verified。本样本固化一个真实缺陷的回归：内核曾复用"
+                   "「未签名交易严格解析」处理前序交易，导致真实 P2SH 多签 PSBT 被误判 check_failed"),
+        "S8": (s8, "**前序交易 txid 与 outpoint 不匹配**：附带的前序交易 txid ≠ 输入 outpoint 的 txid。"
+                   "BIP-174 要求两者一致，因此金额不可信 → 输入金额必须 check_failed 并点名两个 txid，"
+                   "不得静默采用（宪法第 5/6 条）"),
     }
 
     index = {}

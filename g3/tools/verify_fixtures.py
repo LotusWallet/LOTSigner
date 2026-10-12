@@ -203,6 +203,25 @@ def main():
         # S5 = 数额不成立：结构完全合法，但输出合计 > 输入合计（内核应判 check_failed）
         "S5": {"has_utxo": True, "has_sig": False, "has_prop": False,
                "has_redeem": False, "has_nonwitness": False},
+        # S7 = 真实链上形态：前序交易带**非空 scriptSig**（链上交易的常态）。
+        #      与 S4 同构，唯一区别在此。用于固化"内核不得对前序交易套用
+        #      「未签名交易 scriptSig 必须为空」严格规则"这一回归防护。
+        "S7": {"has_utxo": False, "has_sig": False, "has_prop": False,
+               "has_redeem": True, "has_nonwitness": True,
+               "prev_scriptsig_nonempty": True},
+        # S8 = 前序交易 txid 与 outpoint 不匹配（BIP-174 硬要求被故意破坏）。
+        #      内核必须 check_failed 并点名两个 txid，不得静默采用金额。
+        "S8": {"has_utxo": False, "has_sig": False, "has_prop": False,
+               "has_redeem": True, "has_nonwitness": True,
+               "prev_scriptsig_nonempty": True, "expect_txid_mismatch": True},
+        # S9 = 第三方工具真实导出物（Caravan coordinator 的 "Download Unsigned PSBT"）。
+        #      形态：PSBT_GLOBAL_XPUB ×3（每个签名者一条）+ 输入带 redeemScript /
+        #      non_witness_utxo / 三条 bip32_derivation。**不含任何专有字段**。
+        #      用于固化两条回归：① 前序交易带非空 scriptSig 必须照常解析；
+        #      ② BIP-174 标准字段（GLOBAL_XPUB / BIP32_DERIVATION）不得被报成"未知"。
+        "S9": {"has_utxo": False, "has_sig": False, "has_prop": False,
+               "has_redeem": True, "has_nonwitness": True,
+               "prev_scriptsig_nonempty": True, "n_in": 1, "n_out": 1},
     }
 
     for name, exp in expectations.items():
@@ -215,8 +234,10 @@ def main():
               f"字节完全消费（{parsed['consumed']}/{parsed['raw_len']}，无残余尾字节）")
         check(all(s == b"" for s in parsed["input_script_sigs"]),
               "unsigned tx 的 scriptSig 全部为空（BIP-174 要求）")
-        check(parsed["n_in"] == 1 and parsed["n_out"] == 2,
-              f"拓扑符合预期（in={parsed['n_in']}, out={parsed['n_out']}）")
+        exp_in = exp.get("n_in", 1)
+        exp_out = exp.get("n_out", 2)
+        check(parsed["n_in"] == exp_in and parsed["n_out"] == exp_out,
+              f"拓扑符合预期（in={parsed['n_in']}, out={parsed['n_out']}；期望 {exp_in}/{exp_out}）")
 
         im = parsed["inputs"][0]
         names = [n for n, _, _ in im]
@@ -238,7 +259,8 @@ def main():
         check(has_nonwitness == exp["has_nonwitness"],
               f"non_witness_utxo {'存在' if exp['has_nonwitness'] else '缺失'}（期望一致）")
 
-        # S4 专项自检：outpoint 的 txid 必须等于前序交易的 sha256d（BIP-174 硬要求）。
+        # S4/S7/S8 专项自检：outpoint 的 txid 与前序交易 sha256d 的关系。
+        # BIP-174 硬要求两者一致；S8 故意不一致（用于验证内核必须拒绝）。
         # 这条不成立的话，任何标准解析器都会拒绝该 PSBT，而失败会落在差异项①上，
         # 把固件缺陷误读成被测工具能力不足——与 33 字节 txid 是同一类陷阱。
         if has_nonwitness:
@@ -246,8 +268,24 @@ def main():
                 if n == "IN_NON_WITNESS_UTXO":
                     import hashlib as _hl
                     d = _hl.sha256(_hl.sha256(v).digest()).digest()
-                    check(d == parsed["input_outpoints"][0],
-                          "前序交易 txid 与 outpoint 一致（sha256d 校验通过）")
+                    if exp.get("expect_txid_mismatch"):
+                        check(d != parsed["input_outpoints"][0],
+                              "前序交易 txid 与 outpoint **故意**不一致（S8 场景成立）")
+                    else:
+                        check(d == parsed["input_outpoints"][0],
+                              "前序交易 txid 与 outpoint 一致（sha256d 校验通过）")
+                    if exp.get("prev_scriptsig_nonempty"):
+                        # 手工解析前序交易的第一个输入 scriptSig 长度
+                        import struct as _st
+                        i = 4  # version
+                        n_in, adv = read_varint(v, i)
+                        i += adv
+                        check(n_in >= 1, "前序交易至少 1 个输入")
+                        i += 36  # prevout txid(32) + vout(4)
+                        slen, adv = read_varint(v, i)
+                        i += adv
+                        check(slen > 0,
+                              f"前序交易的 scriptSig 非空（{slen} 字节）——链上真实形态")
                     break
 
         print(f"  输入字段: {', '.join(names)}")

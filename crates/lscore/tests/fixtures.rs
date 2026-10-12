@@ -315,3 +315,123 @@ fn i18n_structure_invariant() {
         assert_eq!(en.not_provided.len(), zh.not_provided.len(), "{}", name);
     }
 }
+
+// ---------------------------------------------------------------------------
+// S7 — 真实链上形态：前序交易带非空 scriptSig → 输入金额仍为 verified
+//
+// 回归防护（2026-10-12）：内核曾把「未签名交易 scriptSig 必须为空」的严格规则
+// 复用到 non_witness_utxo 里的前序交易上。链上真实交易的输入**本来就带 scriptSig**，
+// 因此该缺陷会让任何来自真实协调器/钱包的 P2SH 多签 PSBT 的输入金额被判
+// check_failed——虚假告警，直接毁掉主要使用场景。
+// 该样本由 Caravan 的真实导出物暴露（g3/evidence/g3c-E-dl-transaction.psbt）。
+// ---------------------------------------------------------------------------
+
+#[test]
+fn s7_real_world_prev_tx_amount_verified() {
+    let r = review("S7");
+    let amt = &r.facts.inputs[0].amount_sats;
+    assert_eq!(
+        amt.state,
+        FieldState::Verified,
+        "前序交易带非空 scriptSig 是链上常态，绝不能因此判 check_failed"
+    );
+    assert_eq!(amt.value, Some(1_500_000));
+    assert_eq!(r.facts.inputs[0].script_type.as_deref(), Some("P2SH"));
+    assert_eq!(r.facts.fee_sats.value, Some(10_000));
+}
+
+// ---------------------------------------------------------------------------
+// S8 — 前序交易 txid 与 outpoint 不匹配 → check_failed（BIP-174 硬要求）
+// ---------------------------------------------------------------------------
+
+#[test]
+fn s8_prev_txid_mismatch_check_failed() {
+    let r = review("S8");
+    let amt = &r.facts.inputs[0].amount_sats;
+    assert_eq!(
+        amt.state,
+        FieldState::CheckFailed,
+        "附带的前序交易不是该输入真正花费的交易 → 金额不可信"
+    );
+    assert!(amt.value.is_none(), "不得沿用不可信金额");
+    let note = amt.note.clone().unwrap_or_default();
+    assert!(
+        note.contains("does not match this input's outpoint"),
+        "必须点名不一致，实际：{note}"
+    );
+    // 两个 txid 都要出现在错误信息里（可核验性）
+    assert!(note.matches(|c: char| c.is_ascii_hexdigit()).count() >= 128);
+}
+
+// ---------------------------------------------------------------------------
+// 解析严格性的单元测试：严格模式只适用于 PSBT 全局未签名交易
+// ---------------------------------------------------------------------------
+
+#[test]
+fn parse_strictness_is_scoped_to_unsigned_tx() {
+    use lscore::tx::{parse_prev_tx, parse_unsigned_tx};
+    // 一笔 1 输入（scriptSig 非空）1 输出的最小交易
+    let mut tx = vec![0x02, 0x00, 0x00, 0x00]; // version=2
+    tx.push(0x01); // 1 input
+    tx.extend_from_slice(&[0xAB; 32]); // prevout txid
+    tx.extend_from_slice(&0u32.to_le_bytes()); // vout
+    tx.push(0x03); // scriptSig 长度 3
+    tx.extend_from_slice(&[0x51, 0x52, 0x53]);
+    tx.extend_from_slice(&0xFFFFFFFFu32.to_le_bytes()); // sequence
+    tx.push(0x01); // 1 output
+    tx.extend_from_slice(&1000u64.to_le_bytes()); // value
+    tx.push(0x00); // 空 scriptPubKey（长度 0）
+    tx.extend_from_slice(&0u32.to_le_bytes()); // locktime
+
+    assert!(
+        parse_unsigned_tx(&tx).is_err(),
+        "全局未签名交易带 scriptSig 必须报错（BIP-174）"
+    );
+    let prev = parse_prev_tx(&tx).expect("前序交易带 scriptSig 必须被接受（链上常态）");
+    assert_eq!(prev.inputs.len(), 1);
+    assert_eq!(prev.inputs[0].script_sig.len(), 3);
+    assert_eq!(prev.outputs[0].value_sats, 1000);
+}
+
+// ---------------------------------------------------------------------------
+// S9 — 第三方真实导出物（Caravan）：标准字段不得被报成"未知"
+//
+// 回归防护（2026-10-12）：Caravan 的每个签名者都会带一条 PSBT_GLOBAL_XPUB(0x01)
+// 与 PSBT_IN_BIP32_DERIVATION(0x06)。内核曾把它们算作"未知/专有"，于是**几乎每个
+// 真实 PSBT 都刷出 R001**——风险提示被噪声淹没，等于训练用户忽略告警。
+// 另一处伴随缺陷：全局字段误用 input_key_name 命名，把 0x01 显示成
+// "PSBT_IN_WITNESS_UTXO"（错误命名，用户无法据此核实字段）。
+// 只有真正无法解释的键（0x0f proprietary / 表外未知类型）才允许 R001。
+// ---------------------------------------------------------------------------
+
+#[test]
+fn s9_caravan_export_no_false_unsupported() {
+    let r = review("S9");
+
+    // 金额读自前序交易（该前序交易带非空 scriptSig，是链上真实形态）
+    assert_eq!(r.facts.inputs[0].amount_sats.state, FieldState::Verified);
+    assert_eq!(r.facts.inputs[0].amount_sats.value, Some(200_000));
+    assert_eq!(r.facts.fee_sats.value, Some(100_000));
+
+    // 标准字段（GLOBAL_XPUB / BIP32_DERIVATION）**不得**触发 R001
+    assert!(
+        r.risks.iter().all(|k| k.code != "R001"),
+        "标准字段被误报为未知：{:?}",
+        r.risks.iter().map(|k| &k.evidence).collect::<Vec<_>>()
+    );
+
+    // 该样本确实带 3 条 bip32_derivation 与 3 条 global xpub（供复核）
+    assert_eq!(r.facts.inputs.len(), 1);
+}
+
+#[test]
+fn proprietary_still_reported_after_s9_fix() {
+    // 反向约束：修完 S9 的误报后，真正的专有字段仍必须被点名（S2b）
+    let r = review("S2b");
+    let r001 = r
+        .risks
+        .iter()
+        .find(|k| k.code == "R001")
+        .expect("proprietary 字段仍须触发 R001");
+    assert!(r001.evidence.contains("PSBT_IN_PROPRIETARY"));
+}

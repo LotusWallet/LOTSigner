@@ -1,0 +1,33 @@
+{
+  "name": "G3C-P2SH-2of3",
+  "addressType": "P2SH",
+  "network": "mainnet",
+  "client": {
+    "type": "public"
+  },
+  "quorum": {
+    "requiredSigners": 2,
+    "totalSigners": 3
+  },
+  "extendedPublicKeys": [
+    {
+      "name": "signer1",
+      "bip32Path": "m/45'/0'/100'",
+      "xpub": "xpub6CEqA8Qw2dEL2p9RMmZVUfX71r2StpeqVFtHEACTXNeKXySUpa1uLtaVqtg6ajJnK7w79QoGQYoRZ1eiX3hK5eHzqaWE5vu99CWLHL8wm34",
+      "xfp": "8236dc33"
+    },
+    {
+      "name": "signer2",
+      "bip32Path": "m/45'/0'/100'",
+      "xpub": "xpub6Bg95dFmQfBQ4ZcXBwJxR929MKWAbtazCx4bJF2JGfPp4xVssohuUVnzks71y4GgZNzspGWAVPpCfXhs978DJD7XAJkEdvtCVTRjzv6wx2c",
+      "xfp": "4d0d906a"
+    },
+    {
+      "name": "signer3",
+      "bip32Path": "m/45'/0'/100'",
+      "xpub": "xpub6CsRhTepvADYjCbi3sYCVkz9r7jGgEvuMumW4QoLiFcBhRwaC8gdsa49VPC3yhJhDQreXBu8E2HTJBvD6bWWQqbzzqF6dgQcc3ETNrEk8cy",
+      "xfp": "0c3f5f17"
+    }
+  ],
+  "startingAddressIndex": 0
+}

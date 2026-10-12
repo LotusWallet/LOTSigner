@@ -245,6 +245,17 @@ pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
 }
 
 /// 把「未知键类型」识别出来 —— 上层据此给出 `Unsupported` 五态
+///
+/// 判定原则（2026-10-12 修正）：**BIP-174 / BIP-371 定义的标准字段一律算"已知"**，
+/// 即便本工具并不消费它（如 bip32_derivation、global_xpub）。只有**真正无法解释**
+/// 的键类型才报 R001：
+///   - `0x0f` proprietary：含义由第三方自定义，任何工具都无法凭空解释；
+///   - 表外的数值类型：标准未定义。
+///
+/// 为什么必须这样修：真实协调器（Caravan）导出的 PSBT 里，每个签名者都会带一条
+/// `GLOBAL_XPUB(0x01)` 与 `IN_BIP32_DERIVATION(0x06)`。若把它们算作"未知"，
+/// **几乎每个真实 PSBT 都会刷出 R001**——风险提示被噪声淹没，恰好训练用户忽略告警，
+/// 与"诚实有壁垒"的定位相反。此缺陷由 Caravan 真实导出物暴露。
 pub fn unknown_key_type(is_input: bool, kt: u64) -> bool {
     if kt == 0x0f {
         return true; // proprietary 一律视为不支持（本工具无法解释其含义）
@@ -261,12 +272,57 @@ pub fn unknown_key_type(is_input: bool, kt: u64) -> bool {
                 | IN_BIP32_DERIVATION
                 | IN_FINAL_SCRIPTSIG
                 | IN_FINAL_SCRIPTWITNESS
+                | 0x09 // PSBT_IN_POR_COMMITMENT
+                | 0x0a // PSBT_IN_RIPEMD160
+                | 0x0b // PSBT_IN_SHA256
+                | 0x0c // PSBT_IN_HASH160
+                | 0x13 // PSBT_IN_TAP_KEY_SIG (BIP-371)
+                | 0x14 // PSBT_IN_TAP_SCRIPT_SIG
+                | 0x15 // PSBT_IN_TAP_LEAF_SCRIPT
+                | 0x16 // PSBT_IN_TAP_BIP32_DERIVATION
+                | 0x17 // PSBT_IN_TAP_INTERNAL_KEY
+                | 0x18 // PSBT_IN_TAP_MERKLE_ROOT
         )
     } else {
         !matches!(
             kt,
-            OUT_REDEEM_SCRIPT | OUT_WITNESS_SCRIPT | OUT_BIP32_DERIVATION
+            OUT_REDEEM_SCRIPT
+                | OUT_WITNESS_SCRIPT
+                | OUT_BIP32_DERIVATION
+                | 0x05 // PSBT_OUT_TAP_INTERNAL_KEY (BIP-371)
+                | 0x06 // PSBT_OUT_TAP_TREE
+                | 0x07 // PSBT_OUT_TAP_BIP32_DERIVATION
         )
+    }
+}
+
+/// 全局 map 的未知键判定（与输入/输出分开，避免把标准全局字段误判为不支持）
+pub fn unknown_global_key_type(kt: u64) -> bool {
+    !matches!(
+        kt,
+        GLOBAL_UNSIGNED_TX      // 0x00
+            | GLOBAL_XPUB       // 0x01（BIP-174 标准：标记主密钥指纹，本工具不消费但**认得**）
+            | 0x02              // PSBT_GLOBAL_TX_VERSION (v2)
+            | 0x03              // PSBT_GLOBAL_FALLBACK_LOCKTIME (v2)
+            | 0x04              // PSBT_GLOBAL_INPUT_COUNT (v2)
+            | 0x05              // PSBT_GLOBAL_OUTPUT_COUNT (v2)
+            | 0x06              // PSBT_GLOBAL_TX_MODIFIABLE (v2)
+            | 0xfb // PSBT_GLOBAL_VERSION
+    )
+}
+
+pub fn global_key_name(kt: u64) -> &'static str {
+    match kt {
+        GLOBAL_UNSIGNED_TX => "PSBT_GLOBAL_UNSIGNED_TX",
+        GLOBAL_XPUB => "PSBT_GLOBAL_XPUB",
+        0x02 => "PSBT_GLOBAL_TX_VERSION(v2)",
+        0x03 => "PSBT_GLOBAL_FALLBACK_LOCKTIME(v2)",
+        0x04 => "PSBT_GLOBAL_INPUT_COUNT(v2)",
+        0x05 => "PSBT_GLOBAL_OUTPUT_COUNT(v2)",
+        0x06 => "PSBT_GLOBAL_TX_MODIFIABLE(v2)",
+        0xfb => "PSBT_GLOBAL_VERSION",
+        GLOBAL_PROPRIETARY => "PSBT_GLOBAL_PROPRIETARY",
+        _ => "PSBT_GLOBAL_UNKNOWN",
     }
 }
 
@@ -281,8 +337,18 @@ pub fn input_key_name(kt: u64) -> &'static str {
         IN_BIP32_DERIVATION => "PSBT_IN_BIP32_DERIVATION",
         IN_FINAL_SCRIPTSIG => "PSBT_IN_FINAL_SCRIPTSIG",
         IN_FINAL_SCRIPTWITNESS => "PSBT_IN_FINAL_SCRIPTWITNESS",
+        0x09 => "PSBT_IN_POR_COMMITMENT",
+        0x0a => "PSBT_IN_RIPEMD160",
+        0x0b => "PSBT_IN_SHA256",
+        0x0c => "PSBT_IN_HASH160",
         IN_PREVIOUS_TXID => "PSBT_IN_PREVIOUS_TXID(v2)",
         IN_OUTPUT_INDEX => "PSBT_IN_OUTPUT_INDEX(v2)",
+        0x13 => "PSBT_IN_TAP_KEY_SIG",
+        0x14 => "PSBT_IN_TAP_SCRIPT_SIG",
+        0x15 => "PSBT_IN_TAP_LEAF_SCRIPT",
+        0x16 => "PSBT_IN_TAP_BIP32_DERIVATION",
+        0x17 => "PSBT_IN_TAP_INTERNAL_KEY",
+        0x18 => "PSBT_IN_TAP_MERKLE_ROOT",
         IN_PROPRIETARY => "PSBT_IN_PROPRIETARY",
         _ => "PSBT_IN_UNKNOWN",
     }
@@ -295,6 +361,9 @@ pub fn output_key_name(kt: u64) -> &'static str {
         OUT_BIP32_DERIVATION => "PSBT_OUT_BIP32_DERIVATION",
         OUT_AMOUNT => "PSBT_OUT_AMOUNT(v2)",
         OUT_SCRIPT => "PSBT_OUT_SCRIPT(v2)",
+        0x05 => "PSBT_OUT_TAP_INTERNAL_KEY",
+        0x06 => "PSBT_OUT_TAP_TREE",
+        0x07 => "PSBT_OUT_TAP_BIP32_DERIVATION",
         OUT_PROPRIETARY => "PSBT_OUT_PROPRIETARY",
         _ => "PSBT_OUT_UNKNOWN",
     }

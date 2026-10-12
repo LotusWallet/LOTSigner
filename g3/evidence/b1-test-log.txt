@@ -1,45 +1,56 @@
+    Finished `release` profile [optimized] target(s) in 0.07s
+     Running unittests src\main.rs (target\release\deps\lscli-ec3553685edfd067.exe)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
+     Running unittests src\lib.rs (target\release\deps\lscore-886e6eca5a6dd530.exe)
 
 running 8 tests
 test base64::tests::rejects_bad_input ... ok
 test base64::tests::round_trip_known_vector ... ok
 test base64::tests::tolerates_whitespace ... ok
+test script::tests::base58_p2sh_vector ... ok
+test script::tests::p2wsh_address_is_stable ... ok
+test tx::tests::varint_round_trip ... ok
 test script::tests::bech32_p2wpkh_vector ... ok
 test tx::tests::sha256_known_vector ... ok
-test script::tests::base58_p2sh_vector ... ok
-test tx::tests::varint_round_trip ... ok
-test script::tests::p2wsh_address_is_stable ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
+     Running tests\fixtures.rs (target\release\deps\fixtures-ac000ee55d912dd2.exe)
 
-running 14 tests
+running 19 tests
+test parse_strictness_is_scoped_to_unsigned_tx ... ok
 test empty_input_rejected ... ok
 test non_base64_rejected ... ok
-test psbt_v2_rejected_without_guessing ... ok
-test s1_normal_review ... ok
-test s2a_missing_states ... ok
-test bad_magic_rejected ... ok
+test proprietary_still_reported_after_s9_fix ... ok
 test s2b_unsupported_recorded ... ok
-test s4_p2sh_verified_amount ... ok
+test s1_normal_review ... ok
+test psbt_v2_rejected_without_guessing ... ok
+test bad_magic_rejected ... ok
 test s3_partial_signature ... ok
+test s2a_missing_states ... ok
 test s5_check_failed_fee ... ok
-test a3_every_field_carries_a_state ... ok
+test s4_p2sh_verified_amount ... ok
 test s6_malformed_named_error ... ok
-test all_states_exercised_across_suite ... ok
 test i18n_structure_invariant ... ok
+test s7_real_world_prev_tx_amount_verified ... ok
+test a3_every_field_carries_a_state ... ok
+test all_states_exercised_across_suite ... ok
+test s8_prev_txid_mismatch_check_failed ... ok
+test s9_caravan_export_no_false_unsupported ... ok
 
-test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
 
+     Running unittests src\lib.rs (target\release\deps\lswasm-02f91f9e9f2b4971.exe)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
+   Doc-tests lscore
 
 running 0 tests
 
