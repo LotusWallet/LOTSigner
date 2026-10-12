@@ -13,8 +13,9 @@ coverage/
 .workbuddy/
 
 # Rust
+# Cargo.lock IS committed on purpose: an application must pin its dependency
+# graph so that every self-build (G-I path A) resolves identically.
 target/
-Cargo.lock
 
 # wasm 构建产物（由 build.sh 生成，不入库）
 web/lswasm.wasm
