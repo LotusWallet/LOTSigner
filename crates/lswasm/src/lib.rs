@@ -128,3 +128,171 @@ fn pack(s: &str) -> *mut u8 {
     }
     out
 }
+
+// ---------------------------------------------------------------------------
+// FFI 层测试（2026-10-12 补）
+//
+// 为什么要有这一层：网页端的**错误路径**此前没有任何自动化测试。`serialize.rs` 的测试
+// 覆盖的是成功路径的 JSON 结构；而"浏览器里那句错误提示是不是中文"完全没人守——
+// 实测发现它曾经既漏了语言（中文界面显示 `PSBT parse failed: …`），又漏了前缀次数
+// （`input decode failed: input decode failed: …`）。用 node 直接实例化 `.wasm` 能手工验，
+// 但那是手工的；这组测试通过**与浏览器完全相同的调用序列**（`ls_alloc` 写内存 →
+// `ls_review` → 读 4 字节长度前缀）把这条路径钉在 `cargo test` 里，不需要 Node、不需要 CI 新 job。
+// ---------------------------------------------------------------------------
+#[cfg(test)]
+mod ffi_tests {
+    use super::*;
+
+    fn has_cjk(s: &str) -> bool {
+        s.chars().any(|c| ('\u{4e00}'..='\u{9fff}').contains(&c))
+    }
+
+    /// 英文模板中**独有**的片段（与 `crates/lscore/tests/errors.rs` 的清单同源）。
+    /// 中文句子允许出现 `PSBT` / `map` 这类术语拉丁字母，但不允许出现英文措辞。
+    const EN_ONLY: &[&str] = &[
+        "Review failed",
+        "input decode failed",
+        "PSBT parse failed",
+        "not a PSBT",
+        "the message ends abruptly",
+        "truncated or corrupt",
+        "does not contain",
+        "will not guess",
+        "key type",
+    ];
+
+    /// 走一遍浏览器实际走的调用序列，返回解包后的 JSON 文本。
+    fn call_review(input: &str, lang: &str) -> String {
+        let ib = input.as_bytes();
+        let lb = lang.as_bytes();
+        unsafe {
+            let ip = ls_alloc(ib.len());
+            assert!(!ip.is_null(), "ls_alloc failed for input");
+            std::ptr::copy_nonoverlapping(ib.as_ptr(), ip, ib.len());
+
+            let lp = ls_alloc(lb.len());
+            assert!(!lp.is_null(), "ls_alloc failed for lang");
+            std::ptr::copy_nonoverlapping(lb.as_ptr(), lp, lb.len());
+
+            let out = ls_review(ip, ib.len(), lp, lb.len());
+            assert!(!out.is_null(), "ls_review returned null");
+
+            let mut len_le = [0u8; 4];
+            std::ptr::copy_nonoverlapping(out, len_le.as_mut_ptr(), 4);
+            let n = u32::from_le_bytes(len_le) as usize;
+            let body = std::slice::from_raw_parts(out.add(4), n);
+            let s = std::str::from_utf8(body)
+                .expect("ls_review output must be valid UTF-8")
+                .to_string();
+
+            ls_dealloc(ip, ib.len());
+            ls_dealloc(lp, lb.len());
+            ls_dealloc(out, n + 4);
+            s
+        }
+    }
+
+    fn fixture(name: &str) -> String {
+        let mut p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        p.pop(); // crates/
+        p.pop(); // repo root
+        p.push("g3");
+        p.push("fixtures");
+        p.push(format!("{name}.psbt"));
+        std::fs::read_to_string(&p)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", p.display()))
+            .trim()
+            .to_string()
+    }
+
+    /// 四条错误路径 × 两种语言。样本是硬编码的 base64，不依赖固件文件
+    /// （除 S6——真实截断需要有 348 偏移的真实报文）。
+    fn error_inputs() -> Vec<(&'static str, String)> {
+        vec![
+            ("base64 decode failure", "!!!not-base64!!!".to_string()),
+            // 00 01 02 03 04 05 —— 魔数不对
+            ("bad magic", "AAECAwQF".to_string()),
+            // 70 73 62 74 ff 00 —— "psbt\xff" + 空的全局 map，合法但缺 key 0x00
+            ("missing unsigned tx", "cHNidP8A".to_string()),
+            ("genuine truncation", fixture("S6")),
+        ]
+    }
+
+    /// 浏览器里读到的那句话，语言必须跟随 `lang` 参数。
+    #[test]
+    fn review_error_language_follows_the_lang_argument() {
+        for (name, input) in error_inputs() {
+            let en = call_review(&input, "en");
+            assert!(
+                en.contains("\"ok\":false"),
+                "[{name}] must be reported as a failure: {en}"
+            );
+            assert!(
+                !has_cjk(&en),
+                "[{name}] the en payload must contain no CJK characters: {en}"
+            );
+
+            let zh = call_review(&input, "zh-CN");
+            assert!(
+                has_cjk(&zh),
+                "[{name}] the zh payload must actually be in Chinese: {zh}"
+            );
+            for frag in EN_ONLY {
+                assert!(
+                    !zh.contains(frag),
+                    "[{name}] zh payload leaked the English template fragment {frag:?}: {zh}"
+                );
+            }
+        }
+    }
+
+    /// 前綴只允许出现一次（曾经是 `input decode failed: input decode failed: …`）。
+    #[test]
+    fn review_decode_error_is_not_double_prefixed() {
+        let en = call_review("!!!not-base64!!!", "en");
+        assert_eq!(
+            en.matches("input decode failed:").count(),
+            1,
+            "the decode prefix must appear exactly once: {en}"
+        );
+        let zh = call_review("!!!not-base64!!!", "zh-CN");
+        assert_eq!(
+            zh.matches("输入解码失败：").count(),
+            1,
+            "the zh decode prefix must appear exactly once: {zh}"
+        );
+    }
+
+    /// 缺必需键不得被描述成"报文被截断"（与内核 `crates/lscore/tests/errors.rs` 同一断言，
+    /// 此处是网页端的那一份）。
+    #[test]
+    fn review_missing_unsigned_tx_is_not_reported_as_truncation() {
+        let en = call_review("cHNidP8A", "en");
+        assert!(
+            !en.contains("truncated or corrupt") && !en.contains("ends abruptly"),
+            "a complete message missing a required key is not truncated: {en}"
+        );
+        assert!(
+            en.contains("PSBT_GLOBAL_UNSIGNED_TX"),
+            "the error must name the key it did not find: {en}"
+        );
+        let zh = call_review("cHNidP8A", "zh-CN");
+        assert!(
+            !zh.contains("被截断或损坏") && !zh.contains("意外终止"),
+            "zh payload must not claim a truncation that did not happen: {zh}"
+        );
+    }
+
+    /// 修错误通道不能碰坏成功通道：正常报文经 FFI 仍返回 `ok:true`。
+    #[test]
+    fn review_success_path_still_works_through_ffi() {
+        for lang in ["en", "zh-CN"] {
+            let out = call_review(&fixture("S1"), lang);
+            assert!(
+                out.contains("\"ok\":true"),
+                "[{lang}] a valid PSBT must review cleanly: {}",
+                &out[..out.len().min(120)]
+            );
+        }
+    }
+}

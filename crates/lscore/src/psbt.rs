@@ -50,6 +50,14 @@ pub enum PsbtError {
     UnsupportedVersion { key_type: u64 },
     /// 最后一个期望的 map 读完仍有残余字节
     TrailingBytes { total: usize },
+    /// 全局 map 结构完整、正常终止，但**缺少** v0 必需的 `GLOBAL_UNSIGNED_TX` 键。
+    ///
+    /// 与 `Truncated` 严格区分（2026-10-12 修复）：`Truncated` 表示报文确实在 map 中途断掉；
+    /// 这里报文是完整的、map 也正常终止了，缺的是一个必需键。此前复用 `Truncated` 会渲染出
+    /// 「报文在 global map 内部意外终止：偏移 N 处应有字节——PSBT 被截断或损坏」——
+    /// 一句与实际读到的内容不符的描述（偏移 N 处并无异常，map 就在那里结束）。
+    /// 对一个主张"只说读到的内容"的工具，这属于同等级的正确性问题，见 PROGRESS 第十五节。
+    MissingUnsignedTx,
 }
 
 impl PsbtError {
@@ -68,6 +76,7 @@ impl PsbtError {
             PsbtError::TrailingBytes { total } => {
                 t(lang, "err_keycount", &[&total.to_string()])
             }
+            PsbtError::MissingUnsignedTx => t(lang, "err_missing_unsigned_tx", &[]),
         }
     }
 }
@@ -195,10 +204,7 @@ pub fn parse_psbt(b: &[u8]) -> Result<Psbt, PsbtError> {
                 key_type: p.key_type,
             });
         }
-        return Err(PsbtError::Truncated {
-            map: "global".to_string(),
-            offset: i,
-        });
+        return Err(PsbtError::MissingUnsignedTx);
     }
 
     let unsigned_tx = unsigned_tx_raw.clone().expect("checked above");

@@ -17,17 +17,31 @@ use crate::script::{classify, script_to_address, script_summary, ScriptType};
 use crate::state::*;
 use crate::tx::{hex, parse_prev_tx, parse_unsigned_tx, txid_hex, UnsignedTx};
 
+/// 审阅失败的**原因** + 渲染它所需的语言。
+///
+/// 为什么要把 `Lang` 装进错误里（2026-10-12 修复）：此前 `Display` 里硬编码 `Lang::En`，
+/// 于是中文界面下错误行永远是英文，或中英混排（`审阅失败：PSBT parse failed: 报文在…`）。
+/// 错误句子同样是"面向用户的句子"，必须遵循请求的语言。
+///
+/// 同时修掉了 `Decode` 的**双重前缀**：构造处曾先用 `err_decode` 包一层、`Display` 再包一层，
+/// 输出 `input decode failed: input decode failed: InvalidChar(33)`。
+/// 现在约定：变体只携带**原因**（`Parse` 的原因已按 lang 本地化，`Decode` 的原因是解码器的
+/// `Debug` 表示），前缀模板**只在 `Display` 里补一次**。
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ReviewError {
-    Decode(String),
-    Parse(String),
+    Decode(String, Lang),
+    Parse(String, Lang),
 }
 
 impl core::fmt::Display for ReviewError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
-            ReviewError::Decode(e) => write!(f, "{}", t(Lang::En, "err_decode", &[e])),
-            ReviewError::Parse(e) => write!(f, "{}", t(Lang::En, "err_parse", &[e])),
+            ReviewError::Decode(reason, lang) => {
+                write!(f, "{}", t(*lang, "err_decode", &[reason.as_str()]))
+            }
+            ReviewError::Parse(reason, lang) => {
+                write!(f, "{}", t(*lang, "err_parse", &[reason.as_str()]))
+            }
         }
     }
 }
@@ -39,7 +53,7 @@ pub fn review_psbt_base64(input: &str) -> Result<Review, ReviewError> {
 
 pub fn review_psbt_base64_lang(input: &str, lang: Lang) -> Result<Review, ReviewError> {
     let raw = crate::base64::decode(input)
-        .map_err(|e| ReviewError::Decode(t(lang, "err_decode", &[&format!("{:?}", e)])))?;
+        .map_err(|e| ReviewError::Decode(format!("{:?}", e), lang))?;
     review_psbt_bytes_lang(&raw, lang)
 }
 
@@ -49,12 +63,17 @@ pub fn review_psbt_bytes(raw: &[u8]) -> Result<Review, ReviewError> {
 
 pub fn review_psbt_bytes_lang(raw: &[u8], lang: Lang) -> Result<Review, ReviewError> {
     let psbt = psbt::parse_psbt(raw)
-        .map_err(|e| ReviewError::Parse(e.message(lang)))?;
+        .map_err(|e| ReviewError::Parse(e.message(lang), lang))?;
+    // 防御性兜底，**正常路径不可达**：`parse_psbt` 已经把"缺 GLOBAL_UNSIGNED_TX"当作
+    // 硬错误拒绝（`PsbtError::MissingUnsignedTx`，psbt.rs:189 起），因此走到这里的 `Psbt`
+    // 一定带着 unsigned tx。保留这个分支是因为 `unsigned_tx_raw` 类型上是 `Option`，
+    // 宁可优雅报错也不要对恶意输入 panic——但**不要**以为这句子会出现在输出里。
+    // （2026-10-12 核实：此为死分支，见 P1-SPEC-AUDIT.md F7。）
     let raw_tx = psbt.unsigned_tx_raw.as_ref().ok_or_else(|| {
-        ReviewError::Parse(t(lang, "err_no_global_tx", &[]))
+        ReviewError::Parse(t(lang, "err_missing_unsigned_tx", &[]), lang)
     })?;
     let utx = parse_unsigned_tx(raw_tx)
-        .map_err(|e| ReviewError::Parse(e.message(lang)))?;
+        .map_err(|e| ReviewError::Parse(e.message(lang), lang))?;
     Ok(build_review(&psbt, &utx, lang))
 }
 

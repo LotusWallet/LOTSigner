@@ -11,7 +11,7 @@
 | Rust (stable, rustup) | **1.99.0** (any recent stable ≥ 1.85 should work) | MSVC toolchain on Windows; default on Linux/macOS |
 | `wasm32-unknown-unknown` target | installed automatically by `build.sh` | — |
 | Python 3 | any 3.9+ | **optional** — only to re-generate fixtures |
-| Node.js | **not required** | the web page uses the raw `.wasm` directly, no bundler |
+| Node.js | **not required** | the web page uses the raw `.wasm` directly, no bundler; the test suite needs no Node either |
 
 **No third-party crates.** The workspace has zero dependencies; the build never touches
 crates.io. `Cargo.lock` exists but pins nothing external.
@@ -69,12 +69,30 @@ target/release/lscli --export out.psbt g3/fixtures/S1.psbt   # export unmodified
 cargo test --offline
 ```
 
-39 tests: kernel unit tests (incl. BIP-173 official vectors); the fixture-suite integration
-tests (`crates/lscore/tests/fixtures.rs`) — which include the P1 meta-rule invariant (a
-non-`verified` field must state its uncertainty source), the layer/risk contracts and an
-explicit inventory of which fields are state-bearing; and the front-end **JSON contract**
-tests (`crates/lswasm/src/serialize.rs`), which check that the emitted JSON is well-formed
-for every fixture in both languages. Full log: `g3/evidence/b1-test-log.txt`.
+49 tests, in four groups:
+
+- **Kernel unit tests** (incl. BIP-173 official vectors) — `crates/lscore/src/`
+- **Fixture-suite integration tests** — `crates/lscore/tests/fixtures.rs`: the P1 meta-rule
+  invariant (a non-`verified` field must state its uncertainty source), the layer/risk
+  contracts and an explicit inventory of which fields are state-bearing
+- **Error-channel invariants** — `crates/lscore/tests/errors.rs`: the error sentence must be
+  in the requested language (no English template fragment surviving in a Chinese error), the
+  prefix must be applied exactly once (no `input decode failed: input decode failed: …`), a
+  message that merely *lacks a required key* must not be described as *truncated*, and a
+  genuinely truncated message must still be described as truncated
+- **Front-end contract** — `crates/lswasm/src/serialize.rs` checks that the emitted JSON is
+  well-formed for every fixture in both languages; `crates/lswasm/src/lib.rs` calls
+  `ls_review` through the same FFI sequence the browser uses (`ls_alloc` → `ls_review` →
+  read the 4-byte length prefix), so the **web** error path is covered too — no Node needed
+
+Full log: `g3/evidence/b1-test-log.txt`.
+
+Optional, and only after `build.sh` has produced a wasm binary — check the **artifact** the browser
+actually loads, not just the source:
+
+```bash
+node g3/tools/check_wasm_error_lang.js     # defaults to web/lswasm.wasm
+```
 
 ## Fixture suite
 

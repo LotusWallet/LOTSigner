@@ -95,7 +95,7 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
         // ---------------- 内核：错误 ----------------
         (Lang::En, "err_decode") => "input decode failed: {0}",
         (Lang::En, "err_parse") => "PSBT parse failed: {0}",
-        (Lang::En, "err_no_global_tx") => "PSBT_GLOBAL_UNSIGNED_TX missing; PSBTv2 is not supported in this version",
+        (Lang::En, "err_missing_unsigned_tx") => "the global map does not contain PSBT_GLOBAL_UNSIGNED_TX (key type 0x00), which PSBT v0 requires — this tool will not guess at missing keys or v2 semantics",
         (Lang::En, "err_prev_parse") => "previous transaction parse failed: {0}",
         (Lang::En, "err_prev_out_range") => "output #{0} does not exist in the previous transaction",
         (Lang::En, "err_prev_txid_mismatch") => "the attached previous transaction does not match this input's outpoint (attached txid {0}, outpoint txid {1}); BIP-174 requires them to be identical, so the amount cannot be trusted",
@@ -232,7 +232,7 @@ pub fn t(lang: Lang, key: &str, args: &[&str]) -> String {
 
         (Lang::ZhCn, "err_decode") => "输入解码失败：{0}",
         (Lang::ZhCn, "err_parse") => "PSBT 解析失败：{0}",
-        (Lang::ZhCn, "err_no_global_tx") => "缺少 PSBT_GLOBAL_UNSIGNED_TX，本版本暂不支持 PSBTv2",
+        (Lang::ZhCn, "err_missing_unsigned_tx") => "全局 map 中不含 PSBT_GLOBAL_UNSIGNED_TX（键类型 0x00），而 PSBT v0 要求它存在——本工具不对缺失的键或 v2 语义作推测",
         (Lang::ZhCn, "err_prev_parse") => "前序交易解析失败：{0}",
         (Lang::ZhCn, "err_prev_out_range") => "前序交易的第 {0} 个输出不存在",
         (Lang::ZhCn, "err_prev_txid_mismatch") => "附带的前序交易与该输入的 outpoint 不匹配（附带 txid {0}，outpoint txid {1}）；BIP-174 要求两者一致，因此该金额不可信",

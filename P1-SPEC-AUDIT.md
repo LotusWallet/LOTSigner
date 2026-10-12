@@ -172,3 +172,46 @@ actually verified — consistent with the project's refusal to add a dependency 
 state precisely itself.
 
 **Suite effect:** 33 → **39** tests. This is recorded as a new P1-SPEC §7 criterion **A10**.
+
+---
+
+## Addendum (same day) — F5·F6·F7: the error channel says things that are not true
+
+This round of self-checking was triggered by a different question than the one above: not *"is this
+spec's claim tested?"* but **"is each claim in `BETA-READINESS.md` actually true?"** — verifying the
+evidence files and re-running the quoted outputs by hand. That check passed for every claim it covered
+(B2's `output[1]` map and byte offset 348 reproduce exactly), but it surfaced a family of defects one
+layer down, in the **error channel**. They are recorded here because they are the same species of
+problem the meta-rule M1 exists to prevent, and because the specification is what made them visible.
+
+| # | Finding | Evidence | Disposition |
+|---|---|---|---|
+| **F5** | An error sentence did not follow the requested language: `Display for ReviewError` hard-coded `Lang::En`, so `--lang zh` produced `审阅失败：PSBT parse failed: 报文在…` (English prefix glued onto a Chinese sentence). The same construction also applied the decode prefix **twice**: `Review failed: input decode failed: input decode failed: InvalidChar(33)`. | reproduced on the CLI (four paths × both languages) and independently through the real `.wasm` by instantiating `web/lswasm.wasm` in Node and calling `ls_review` | **Fixed.** `ReviewError` now carries the `Lang` it was built with; `Display` applies the template exactly once. Guarded by `crates/lscore/tests/errors.rs` (6 tests) and 4 FFI-level tests in `crates/lswasm/src/lib.rs`. |
+| **F6** | The parser reported "the message ends abruptly inside the global map: a byte was expected at offset N — the PSBT is truncated or corrupt" for a global map that had **terminated normally** and merely omitted the mandatory `PSBT_GLOBAL_UNSIGNED_TX` key. The `Truncated` error was being reused for "a required key is absent". That is a statement about an event that did not happen — an M1 violation in the error channel. | `psbt.rs` `parse_psbt` returned `Truncated { map: "global", offset: i }` where `i` was simply the offset *after* the map's terminating `0x00` | **Fixed.** New `PsbtError::MissingUnsignedTx` with its own string table entry; the `Truncated` variant is now used only where a message really is cut short. A reverse guard test asserts that genuine truncation (S6) is *still* reported as truncation. |
+| **F7** | `lib.rs`'s `err_no_global_tx` branch is **unreachable**: `parse_psbt` rejects the condition itself before ever returning `Ok`, so the guard can never fire — and the sentence it would print was never seen by anyone. | reading `parse_psbt` end to end; the branch's condition cannot hold for any returned `Psbt` | **Registered, not deleted.** The guard is retained deliberately: `unsigned_tx_raw` is an `Option`, and a review tool must not `panic` on hostile input. It is now documented as a defensive post-condition re-assertion that the normal path cannot reach, so a future reader is not misled into thinking this string appears in output. The string itself is now reachable — via the parser path that F6 fixed. |
+
+**On scope.** F5 and F6 were fixed rather than merely registered because both are cases where the tool
+*says something false*: one sentence in the wrong language, one sentence describing a truncation that
+did not occur. For a tool whose entire value proposition is "I read this, I could not read that, I
+refuse to conclude the other", an inaccurate error sentence is not a cosmetic defect — it is the same
+class of failure as an inaccurate `verified` badge. F7 is a code-hygiene finding with no user-visible
+effect, so it is registered with a comment rather than acted on.
+
+**What was *not* changed.** The English wording of every error path that was already correct (bad magic,
+genuine truncation, PSBTv2 field, trailing bytes) is byte-identical after the fix — `Truncated`,
+`UnsupportedVersion` and `TrailingBytes` still render exactly as before, which is what keeps T0's
+canonical baseline untouched (S6 is the only failing fixture and it is a genuine truncation).
+
+### Q-D2 (registered, not adjudicated): how complete is the PSBTv2 detection?
+
+`parse_psbt` recognises a PSBTv2 message by the presence of `GLOBAL_TX_VERSION` (`0x02`) and only that
+key. A v2 message that carries `GLOBAL_FALLBACK_LOCKTIME` (`0x03`), `GLOBAL_INPUT_COUNT` (`0x04`) or
+`GLOBAL_OUTPUT_COUNT` (`0x05`) but no `0x02` will now be reported as *"the global map does not contain
+PSBT_GLOBAL_UNSIGNED_TX"* rather than as *"a PSBTv2 field is present"*. The F6 fix made this message
+**accurate** (it does describe what was read), but it is arguably less *diagnostic* than it could be.
+
+Registering rather than deciding, for the same reason as before: the honest choice depends on how much
+we want to infer from key-type membership, and "infer the format from a set of related keys" is exactly
+the kind of guess this project's constitution tells it not to make silently. Extending the v2 key table
+would need its own decision about how many keys must be present before the tool is allowed to *name* a
+version.

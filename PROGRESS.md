@@ -576,3 +576,67 @@ ROI §6.2 结尾即写「建议加入固件套件作为未来回归点」，本�
 - `BUILD.md` / `KNOWN-LIMITATIONS.md` / `BETA-READINESS.md` 计数同步（22 → 39，本次共 +12）。
 - **CI 覆盖面顺带扩大**：`ci.yml` 的 `test` job 跑的就是 `cargo test --release --locked`，
   故这 6 项契约测试**自动进入 CI**，无需改 workflow。
+
+---
+
+## 十五、错误通道修复（2026-10-12）：工具说的每一句话都得是真的
+
+### 起因：换个方向自检
+
+第十四节问的是"规格的声明有没有测试守"。这一节换了个问题：**`BETA-READINESS.md` 里的每条声明是不是真的？**
+逐条核实证据文件、手工重跑引用的输出。**该核实通过了**——B2 声称的 `output[1]` map 与字节偏移 348 逐字复现一致，
+8 个证据文件全部存在。但核实过程在**下一层**撞见一族缺陷，就在**错误通道**里。
+
+### 发现（三条，见 `P1-SPEC-AUDIT.md` F5–F7）
+
+| # | 缺陷 | 现象 | 处置 |
+|---|---|---|---|
+| **F5** | 错误句子不跟随语言 + 前缀重复 | `--lang zh` 输出 `审阅失败：PSBT parse failed: 报文在…`（英文前缀粘在中文句子上）；解码路径更糟：`Review failed: input decode failed: input decode failed: InvalidChar(33)` | **已修** |
+| **F6** | 把"缺一个必需键"说成"报文被截断" | 全局 map **正常终止**、只是不含 `PSBT_GLOBAL_UNSIGNED_TX`，却报"报文在 global map 内部意外终止：偏移 N 处应有字节——PSBT 被截断或损坏"。偏移 N 处根本没有异常 | **已修** |
+| **F7** | `lib.rs` 的 `err_no_global_tx` 分支不可达 | `parse_psbt` 自己就把这个条件拒了，守卫永远不会触发；那句话从没人见过 | **登记，不删** |
+
+### 为什么 F5/F6 是"修"而不是"登记"
+
+修 F6 时核对了每类错误的英文原文：bad magic / 真截断 / PSBTv2 字段 / 残余字节**一字未动**——
+`Truncated`、`UnsupportedVersion`、`TrailingBytes` 渲染结果与修复前完全相同。这正是 T0 canonical 基准
+不受影响的原因（S6 是唯一必须失败的固件，而它是**真**截断）。
+
+### 为什么 F7 保留死代码而不删
+
+`unsigned_tx_raw` 类型上是 `Option`。审阅工具**不能对恶意输入 panic**。守卫留着，但加注释写明
+"正常路径不可达、这是防御性后置断言"，免得后来者以为这句话会出现在输出里。它对应的文案现在**是可达的**——
+走 F6 修好的那条解析路径。
+
+### 网页端：手工复现 → 自动化补位
+
+F5 在 CLI 上复现后，直接实例化 `web/lswasm.wasm`（node 24）调 `ls_review`，确认**网页端有一模一样的两个缺陷**。
+`verify_web.js` / `verify_web2.js` 覆盖的是**成功路径**（双语 UI、零外部请求、断网全链路），没人断言过错误句子的语言。
+
+**顺手核实并撤回一个我自己的误判**：我一度以为 `web/lswasm.wasm` 是"入库的过期产物"，准备报告一个仓库级缺陷。
+查 `.gitignore` 后发现它**本来就排除入库**（"wasm 构建产物（由 build.sh 生成，不入库）"，`git ls-files web/` 可证）。
+**该判断撤回**——仓库内不存在过期产物问题；本地那份是我自己 22:43 前构建的，已按 `build.sh` 重建（91013 → 91090 B）。
+
+补位方式选择：**不引入 Node 依赖、不加 CI job**，而是直接在 host 下通过 FFI 调 `ls_review`
+（`crates/lswasm/src/lib.rs` 新增 4 项测试，走的就是浏览器那条 `ls_alloc` → `ls_review` → 读长度前缀的序列）。
+理由是 `cargo test` 里就能跑，`ci.yml` 的 `test` job 自动覆盖。
+
+### 测试与证据
+
+- 测试总数 **39 → 49**：+6 错误通道不变量（`crates/lscore/tests/errors.rs`）、+4 FFI 层（`crates/lswasm/src/lib.rs`）。
+- `g3/evidence/b1-test-log.txt` 已重跑（头部标记 parent commit `d278d19`）。
+- 固件自检 `verify_fixtures.py`：9 样本全过（不受影响）。
+- 本地 T0 演练：11 个 dump、S6 退出码非零、canonical 文本与改前一致。
+
+### 一个写测试时当场抓到的自己的错
+
+`missing_unsigned_tx_is_not_reported_as_truncation` 第一次**失败**，因为它揭穿了我构造的样本字节排错了
+（`key_len = 1 + len(key_data)`，我把 value 长度当成了 key 长度），于是那个样本实际上是个**真**截断。
+测试做了它该做的事。样本已修正，并把编码含义写进注释防止复发。
+
+### 附带登记
+
+- **Q-D2**：`parse_psbt` 只认 `GLOBAL_TX_VERSION(0x02)` 作为 v2 标志。只带 `0x03/0x04/0x05` 的 v2 报文
+  现在会报"不含 PSBT_GLOBAL_UNSIGNED_TX"——**准确**但没有以前那么"诊断性"。是否扩展 v2 键表属设计取舍，登记不裁决。
+- **已知现象（写入 `KNOWN-LIMITATIONS.md`）**：读文件失败时 CLI 会原样附带操作系统的错误文本
+  （`Cannot read file: … — 系统找不到指定的文件。 (os error 2)`）。那不是我们的文案表，**故意不翻译**——
+  改写 OS 的报错等于替我们没观察到的失败编一句描述（M1）。我们自己写的错误句子全部跟随 `--lang`，这一点由测试守着。

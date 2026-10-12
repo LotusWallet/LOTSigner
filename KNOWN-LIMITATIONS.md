@@ -105,14 +105,30 @@ These four are enforced as tests over the whole fixture suite (see
 - Language coverage: **English (default) and 中文**. Further languages (ja/ko/fr/th) are
   architecturally ready but will not ship without native-speaker review — a wrong risk
   translation is misinformation.
+- When a file cannot be read, the CLI appends the operating system's own message verbatim
+  (`Cannot read file: … — 系统找不到指定的文件。 (os error 2)`). That fragment comes from the OS,
+  in the OS language, not from our string table — so on a Chinese-locale machine an English
+  sentence carries a Chinese tail. We deliberately do not translate it: rewriting an OS error
+  would mean inventing a description of a failure we did not observe ourselves (meta-rule M1).
+  All error sentences **we** author do follow `--lang`; that is asserted by
+  `crates/lscore/tests/errors.rs`.
 
 ## How to verify these claims yourself
 
 ```bash
-cargo test --offline                       # 39 tests incl. BIP-173 official vectors
+cargo test --offline                       # 49 tests incl. BIP-173 official vectors
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
+node g3/tools/check_wasm_error_lang.js     # error sentences in the real web artifact (needs a built web/lswasm.wasm)
 ```
+
+The suite includes two groups that exist specifically because a *claim* about behaviour is only
+as good as the test behind it: `crates/lscore/tests/errors.rs` (the error sentence follows the
+requested language; the prefix is applied exactly once, so no
+`input decode failed: input decode failed: …`; a message that merely lacks a required key is
+never described as "truncated") and the FFI-level tests in `crates/lswasm/src/lib.rs`, which call
+`ls_review` through the same `ls_alloc` → `ls_review` sequence the browser uses, so the **web**
+error path is covered without needing Node.
 
 ## Fields we recognise but do not use (transparency)
 

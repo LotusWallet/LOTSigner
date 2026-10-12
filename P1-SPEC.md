@@ -235,6 +235,14 @@ artifact is not met.
 | **A8** | The suite contains **at least one artifact exported by a third-party tool** and one real-world transaction shape | fixtures S7–S9 | G3 lesson (§9.3) |
 | **A9** | A stranger can build and run it from a clean clone by following one document | `BUILD.md`, standing A1 | BETA-READINESS A1 |
 | **A10** | The front-end contract of Appendix A is enforced by tests: the emitted JSON must be **well-formed** for every fixture in both languages, and must carry the documented keys plus the `state`/`value`/`note`/`state_explain` quadruple on every field object | `crates/lswasm/src/serialize.rs` (contract tests, zero-dependency JSON validator) | this spec, Appendix A |
+| **A11** | The **error channel** obeys the same rules as the fact channel: an error sentence is in the requested language (§6), its prefix is applied exactly once, and it describes only what was actually read — a message that merely lacks a required key must not be described as truncated, and a genuinely truncated message must still be described as such. The **web** error path is covered, not only the CLI's | `crates/lscore/tests/errors.rs`; FFI-level tests in `crates/lswasm/src/lib.rs` | this spec §2.4 / §6; P1-SPEC-AUDIT F5–F6 |
+
+> **A11 exists because the error channel is the part of the output a user reads most literally.**
+> "What I read / what I could not read / what I refuse to conclude" is the whole product; an error
+> sentence that states an event which did not occur — or speaks the wrong language — breaks the same
+> promise as a wrong `verified` badge, while being far easier to ship unnoticed. Until 2026-10-12
+> three such defects were live (P1-SPEC-AUDIT F5–F7) and none of the suite's tests would have
+> failed.
 
 > **A8 is a P1-level requirement on purpose.** It generalises the single most valuable thing G3
 > produced: *fixtures we construct can only test the situations we thought of.* Two real defects —
