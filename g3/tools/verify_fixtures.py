@@ -326,7 +326,8 @@ def main():
         for f in FAILURES:
             print(f"   - {f}")
         return 1
-    print("✅ 全部通过。四个固件均为结构合法的 BIP-174 报文，可用于 G3 实测。")
+    n = len(idx["samples"])
+    print(f"✅ 全部通过。{n} 个样本均为结构合法的 BIP-174 报文，可用于实测。")
     return 0
 
 

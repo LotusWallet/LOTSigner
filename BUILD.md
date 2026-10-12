@@ -69,15 +69,24 @@ target/release/lscli --export out.psbt g3/fixtures/S1.psbt   # export unmodified
 cargo test --offline
 ```
 
-22 tests: kernel unit tests (incl. BIP-173 official vectors) + the fixture-suite
-integration tests (`crates/lscore/tests/fixtures.rs`). Full log: `g3/evidence/b1-test-log.txt`.
+32 tests: kernel unit tests (incl. BIP-173 official vectors) + the fixture-suite
+integration tests (`crates/lscore/tests/fixtures.rs`), which include the P1 meta-rule
+invariant (a non-`verified` field must state its uncertainty source) and the layer/risk
+contracts. Full log: `g3/evidence/b1-test-log.txt`.
 
 ## Fixture suite
 
-`g3/fixtures/` contains seven synthetic PSBTs covering the five field states plus a
-malformed message: S1 normal · S2a `missing` · S2b `unsupported` · S3 partially signed ·
-S4 P2SH · S5 `check_failed` · S6 truncated (must be rejected). Regenerate with
-`python3 g3/tools/make_psbt_fixtures.py`, self-check with `g3/tools/verify_fixtures.py`.
+`g3/fixtures/` contains ten PSBTs covering the five field states, a malformed message,
+and two real-world shapes: S1 normal · S2a `missing` · S2b `unsupported` · S3 partially
+signed · S4 P2SH · S5 `check_failed` · S6 truncated (must be rejected) · S7 previous
+transaction with a non-empty scriptSig (the on-chain normal case) · S8 previous-transaction
+txid deliberately mismatched · S9 a **third-party tool's real export** (Caravan).
+Regenerate the synthetic ones with `python3 g3/tools/make_psbt_fixtures.py`, self-check with
+`g3/tools/verify_fixtures.py`.
+
+> S7–S9 exist because hand-built fixtures only test the cases we thought of: both were
+> exposed by feeding the tool a real export from another tool. See
+> [`g3/fixtures/README.md`](g3/fixtures/README.md).
 
 All fixtures are **synthetic**: no real funds, no real xpubs, no real keys. Public keys
 are multiples of the secp256k1 generator (mathematically valid, owned by nobody).

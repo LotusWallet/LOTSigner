@@ -38,6 +38,74 @@ fn collect_states(r: &lscore::state::Review) -> Vec<FieldState> {
     v
 }
 
+/// 可解析固件全集。S6 是 malformed（必须报错），故单独处理，不在此列。
+const PARSEABLE: [&str; 9] = ["S1", "S2a", "S2b", "S3", "S4", "S5", "S7", "S8", "S9"];
+
+/// 把 Review 里所有带五态的字段摊平成 `(标签, 状态, 是否带值, note)`。
+fn collect_field_traces(
+    r: &lscore::state::Review,
+) -> Vec<(String, FieldState, bool, Option<String>)> {
+    let mut v = Vec::new();
+    v.push((
+        "facts.fee_sats".to_string(),
+        r.facts.fee_sats.state,
+        r.facts.fee_sats.value.is_some(),
+        r.facts.fee_sats.note.clone(),
+    ));
+    v.push((
+        "facts.sighash_type".to_string(),
+        r.facts.sighash_type.state,
+        r.facts.sighash_type.value.is_some(),
+        r.facts.sighash_type.note.clone(),
+    ));
+    for (i, inp) in r.facts.inputs.iter().enumerate() {
+        v.push((
+            format!("inputs[{i}].amount"),
+            inp.amount_sats.state,
+            inp.amount_sats.value.is_some(),
+            inp.amount_sats.note.clone(),
+        ));
+    }
+    v
+}
+
+/// 元规则 M1 的可执行形式（P1-SPEC §2.4 / §7-A5）。
+///
+/// M1：输出中任一事实性陈述，必须能追溯到「我读到了什么」，或显式标注不确定性来源。
+/// 反例即违规：把「没查到」写成「没有」、把「未验证」写成「已确认」、
+/// 在报文没有提供值的地方渲染出一个数值。
+fn assert_meta_rule(r: &lscore::state::Review, name: &str) {
+    for (label, state, has_value, note) in collect_field_traces(r) {
+        let note_text = note.unwrap_or_default();
+        match state {
+            FieldState::Verified => {
+                // verified 可以没有 note（值本身即证据），但**必须带值**
+                assert!(has_value, "{name}: {label} 为 verified 却不带值——数据契约被破坏");
+            }
+            FieldState::ParsedUnverified => {
+                assert!(
+                    has_value,
+                    "{name}: {label} 为 parsed_unverified，必须带着它读到的值"
+                );
+                assert!(
+                    !note_text.trim().is_empty(),
+                    "{name}: {label} 为 parsed_unverified 却未说明「为何未验证」——M1 违规"
+                );
+            }
+            FieldState::Missing | FieldState::Unsupported | FieldState::CheckFailed => {
+                assert!(
+                    !has_value,
+                    "{name}: {label} 为 {state:?} 却带着值——等于把猜出来的数渲染成事实（M1 违规）"
+                );
+                assert!(
+                    !note_text.trim().is_empty(),
+                    "{name}: {label} 为 {state:?} 却未说明原因——M1 违规（不知道必须写出来）"
+                );
+            }
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
 // S1 — 正常受托样本
 // ---------------------------------------------------------------------------
@@ -250,7 +318,7 @@ fn empty_input_rejected() {
 
 #[test]
 fn a3_every_field_carries_a_state() {
-    for name in ["S1", "S2a", "S2b", "S3", "S4", "S5"] {
+    for name in PARSEABLE {
         let r = review(name);
         let states = collect_states(&r);
         assert!(!states.is_empty(), "{} must expose at least one field", name);
@@ -282,7 +350,7 @@ fn a3_every_field_carries_a_state() {
 #[test]
 fn all_states_exercised_across_suite() {
     let mut seen = std::collections::HashSet::new();
-    for name in ["S1", "S2a", "S2b", "S3", "S4", "S5"] {
+    for name in PARSEABLE {
         for s in collect_states(&review(name)) {
             seen.insert(s.as_str().to_string());
         }
@@ -298,7 +366,7 @@ fn all_states_exercised_across_suite() {
 
 #[test]
 fn i18n_structure_invariant() {
-    for name in ["S1", "S2a", "S2b", "S3", "S4", "S5"] {
+    for name in PARSEABLE {
         let en = review_psbt_base64_lang(&load(name), Lang::En).unwrap();
         let zh = review_psbt_base64_lang(&load(name), Lang::ZhCn).unwrap();
         assert_eq!(en.facts.txid, zh.facts.txid, "{}", name);
@@ -434,4 +502,97 @@ fn proprietary_still_reported_after_s9_fix() {
         .find(|k| k.code == "R001")
         .expect("proprietary 字段仍须触发 R001");
     assert!(r001.evidence.contains("PSBT_IN_PROPRIETARY"));
+}
+
+// ===========================================================================
+// 元规则 M1 回归（ROI §5.3 / §6.2 → P1-SPEC §2.4、§7-A5）
+//
+// 为什么这组测试必须存在：M1（「不知道必须写出来」）的合法性来自一次
+// **对手的真实失败**——G3 差异项② 直接观测到查询失败被陈述为
+// "This address has a zero balance."（把"我查不到"写成了"它没有"）。
+// 一条来自真实失败的规则，必须由机器守住；靠「我们要更严谨」的口号守不住。
+// ROI §6.2 已建议把它加入固件套件作为未来回归点，此处落地。
+// ===========================================================================
+
+/// M1：全固件跑下来，任一非 verified 字段都必须写明它的不确定性来源。
+#[test]
+fn a5_meta_rule_invariant_across_suite() {
+    for name in PARSEABLE {
+        assert_meta_rule(&review(name), name);
+    }
+}
+
+/// A2：第四层（本工具不提供的结论）恒非空——任何输入下都不得消失。
+#[test]
+fn a2_layer4_never_empty_and_meaningful() {
+    for name in PARSEABLE {
+        let r = review(name);
+        assert!(
+            r.not_provided.len() >= 5,
+            "{name}: 第四层必须恒非空（实际 {} 条）",
+            r.not_provided.len()
+        );
+        for s in &r.not_provided {
+            assert!(!s.trim().is_empty(), "{name}: 第四层条目不得为空串");
+        }
+    }
+}
+
+/// A3：每条风险提示必须带触发原因与依据——否则读者无法据此反驳它。
+#[test]
+fn a3_risk_notices_carry_trigger_and_evidence() {
+    for name in PARSEABLE {
+        let r = review(name);
+        for k in &r.risks {
+            assert!(!k.code.trim().is_empty(), "{name}: 风险提示缺 code");
+            assert!(!k.summary.trim().is_empty(), "{name}: {} 缺 summary", k.code);
+            assert!(
+                !k.trigger_reason.trim().is_empty(),
+                "{name}: {} 缺触发原因——读者将无法据此反驳它",
+                k.code
+            );
+            assert!(!k.evidence.trim().is_empty(), "{name}: {} 缺依据", k.code);
+        }
+    }
+}
+
+/// M1 的具体锁定：「查不到」绝不写成「没有」。
+///
+/// S2a 未随附任何 UTXO 数据 → 输入金额 missing；此时手续费**必须是 missing 且不带值**，
+/// 绝不允许退化为 0 —— 那正是 G3 差异项② 在对方产品里观测到的失败模式。
+#[test]
+fn m1_missing_amount_never_becomes_zero() {
+    let r = review("S2a");
+    assert_eq!(r.facts.inputs[0].amount_sats.state, FieldState::Missing);
+    assert!(
+        r.facts.inputs[0].amount_sats.value.is_none(),
+        "金额未知时不得填入任何数值（尤其不得填 0）"
+    );
+
+    assert_eq!(r.facts.fee_sats.state, FieldState::Missing);
+    assert!(
+        r.facts.fee_sats.value.is_none(),
+        "在输入金额未知的前提下，手续费必须是「不知道」，绝不退化为 0"
+    );
+    let fee_note = r.facts.fee_sats.note.clone().unwrap_or_default();
+    assert!(
+        fee_note.contains("does not go online"),
+        "手续费未知的原因必须写出来（不联网＝无法计算），实际：{fee_note}"
+    );
+
+    // 并且必须把「不知道」作为风险提示交到读者面前
+    assert!(r.risks.iter().any(|k| k.code == "R002"));
+}
+
+/// M1 的另一半：check_failed 同样不得带值（S8 的前序交易 txid 不匹配即此情形）。
+#[test]
+fn m1_check_failed_never_carries_a_value() {
+    let r = review("S8");
+    assert_eq!(r.facts.inputs[0].amount_sats.state, FieldState::CheckFailed);
+    assert!(
+        r.facts.inputs[0].amount_sats.value.is_none(),
+        "校验失败时不得沿用不可信的数值"
+    );
+    assert_eq!(r.facts.fee_sats.state, FieldState::Missing);
+    assert!(r.facts.fee_sats.value.is_none());
 }

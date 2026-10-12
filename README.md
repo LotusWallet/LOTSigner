@@ -27,8 +27,8 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 | Item | Value |
 |---|---|
 | Current stage | **Beta-ready working draft** — Rust core + CLI + offline web page run end-to-end; BETA-READINESS Track-1 checklist items A/B/D are evidenced (see that file). G3 verdict: **conditional pass** — all five difference items are now measured: ①③⑤ disproven by live test, ②④ hold at evidence grade A |
-| Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
-| Execution | G3 complete → **conditional pass** (all five items measured; ③ closed 2026-10-12). The verdict's pre-registered follow-up was an ROI re-assessment (done — see the memo below). G1 done: BDK-wasm **does** work offline, but adoption is a constitutional question (zero-dependency core vs BDK's tree), not a feasibility one. G2 awaits hardware |
+| Verdict so far | Direction holds. P1 scope was deliberately **not pre-locked**. With G1–G3 now concluded, the spec is drafted → [`P1-SPEC.md`](P1-SPEC.md): *the boundary model as a verifiable public good*, explicitly **not** a competitor-comparative product |
+| Execution | G3 complete → **conditional pass** (all five items measured; ③ closed 2026-10-12). The verdict's pre-registered follow-up was an ROI re-assessment (done — see the memo below). G1 done: BDK-wasm **does** work offline, but adoption is a constitutional question (zero-dependency core vs BDK's tree), not a feasibility one. **P1 spec drafted 2026-10-12**; its wording discipline and evidence boundaries are carried by executable tests, not by reviewer intent. G2 awaits hardware |
 | Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
 | Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
 | Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
@@ -121,7 +121,8 @@ crates/lscli/       CLI front end (no parsing logic)
 crates/lswasm/      wasm export layer (no parsing logic) → web/
 web/                offline single-page UI (zero external requests)
 g3/                 P1-0 gate G3: pre-registration, fixtures, tools, evidence, T4 report
-g1/                 P1-0 gate G1: pre-registration for the BDK-wasm offline-capability probe
+g1/                 P1-0 gate G1: pre-registration and verdict for the BDK-wasm offline-capability probe
+P1-SPEC.md          P1 specification (draft): the boundary model as a verifiable public good
 ANNOUNCEMENTS.md    outbound announcement queue (published manually)
 PROGRESS.md         progress board (single entry point)
 BETA-READINESS.md   the frozen checklist that decides when we may open the repo
@@ -143,6 +144,7 @@ LICENSE-MIT/-APACHE dual-licensed MIT OR Apache-2.0
 | Document | Description |
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | Progress board (single entry point) |
+| [`P1-SPEC.md`](P1-SPEC.md) | **P1 specification (draft): the boundary model as a verifiable public good** |
 | [`BETA-READINESS.md`](BETA-READINESS.md) | **Frozen checklist: when we are allowed to open the repo** |
 | [`BUILD.md`](BUILD.md) | One-command build from a clean clone (BETA-READINESS A1) |
 | [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **What this beta does NOT do — read before trusting output (A2)** |

@@ -56,9 +56,33 @@ Per Constitution §5–§7 there is **no silent degradation and no guessing**:
 
 ## Where the five states are exercised
 
-All five are exercised by the committed fixture suite (S1–S6) and asserted in
+All five are exercised by the committed fixture suite (S1–S9) and asserted in
 `crates/lscore/tests/fixtures.rs`. `unsupported` is carried by the named-keys list +
 R001 rather than a per-field badge in the current beta UI.
+
+## The one rule we hold ourselves to (M1)
+
+> **Every factual statement in the output must be traceable to something we actually read in
+> the message — or it must be labelled with the source of its uncertainty.**
+
+This is stated as a rule rather than a promise because it came from a **measured failure in
+another tool**: a review surface that reported `This address has a zero balance.` when the
+truth was *"the lookup failed"*. Writing "I could not find it" as "it does not exist" is
+precisely the failure this rule forbids.
+
+What you can check, rather than take on faith:
+
+- A field that is unknown is `missing` **with a stated reason** — never a value, never `0`.
+  In particular, if any input amount is unknown, the **fee is `missing`**, not `0`.
+- A field read out of the message but not checked against the chain is `parsed_unverified`,
+  with the note saying why it is unverified.
+- A field that failed a check is `check_failed` and **carries no value** — nothing is carried
+  over from a value we just said we cannot trust.
+- Layer 4 ("what this tool does NOT tell you") is present for **every** input — it is never
+  empty and never collapses into a normal-length document.
+
+These four are enforced as tests over the whole fixture suite (see
+[`P1-SPEC.md`](P1-SPEC.md) §7 A2/A3/A5), not left to reviewer discipline.
 
 ## Known cosmetic/behavioural notes
 
@@ -75,7 +99,7 @@ R001 rather than a per-field badge in the current beta UI.
 ## How to verify these claims yourself
 
 ```bash
-cargo test --offline                       # 22 tests incl. BIP-173 official vectors
+cargo test --offline                       # 32 tests incl. BIP-173 official vectors
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
 ```
