@@ -1,0 +1,55 @@
+{
+  "steps": {
+    "afterImport": {
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Edit Transaction",
+        "Sign Transaction",
+        "Download Unsigned PSBT"
+      ]
+    },
+    "signStep": {
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Remove Signature",
+        "Download Wallet Config",
+        "Download PSBT"
+      ]
+    }
+  },
+  "downloads": [
+    {
+      "label": "signed.psbt",
+      "saved": "D:\\work\\LOTSigner\\g3\\evidence\\g3c-G-dl-0-signed.psbt",
+      "file": "g3c-G-dl-0-signed.psbt",
+      "bytes": 1544,
+      "partialSigs": 1,
+      "nonWitnessUtxo": true,
+      "redeemScript": true,
+      "bip32Derivation": 3,
+      "finalScriptSig": false,
+      "txid": "17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad"
+    }
+  ],
+  "externalRequests": 214
+}

@@ -272,3 +272,53 @@ C1（T0 进 CI）+ C2（签名三要件）→ Track 2 官方产物；G1（bdk-wa
 
 制度文档 [`SIGNING.md`](SIGNING.md) 已写成：① 离线保管与硬件 token 流程 ② 公钥指纹自第一天入 git 签名 tag ③ 泄露处置程序（撤回→如实披露→重新签发→追溯→复盘）。
 **密钥仪式本身（离线生成 + 首签名 tag）须项目负责人离线执行，尚未完成** → Track 2 仍未开，任何产物不得称官方。
+
+---
+
+## 十、G3 差异项③ 收束（2026-10-12）：导出部分签名 —— **不成立（实测反证）**
+
+**③ 是 G3 预注册中唯一尚未观测的阻断项。** 补测路径：mock 链上数据（Playwright 请求拦截构造注资交易，
+绕开"合成密钥地址主网无 UTXO"的阻塞）+ 外部工具部分签名（bitcoinjs-lib + 三把确定性合成种子），
+自建 2-of-3 **P2SH** 钱包走完整流程。
+
+### 关键观测（三段，全部可复现）
+
+| # | 观测 | 证据 |
+|---|---|---|
+| 1 | Caravan **接受外部工具**产生的部分签名 PSBT，界面显示 `Signature Status 1 of 2 signatures / Partially signed` | `g3/evidence/g3c-F-afterImport.png` / `g3c-F-result.json` |
+| 2 | **Sign Transaction 步骤的 `Download PSBT`** 导出 1544B PSBT，`partialSig=1`，其**签名与公钥逐字节等于注入基线**，且 **ECDSA 验签通过**；保留 `nonWitnessUtxo`/`redeemScript`/输入 `bip32Derivation`，`finalScriptSig=false`（仍可继续收集） | `g3c-G-dl-0-signed.psbt`、`g3c-export-verify.txt`、`g3c-G-sign-step.png` |
+| 3 | 导出物**可被异源工具消费**：lscli（Rust 内核，与 Caravan/bitcoinjs-lib 无共享代码）正常读完并触发 R004；bitcoinjs-lib `validateSignaturesOfInput(0)=true` | `g3/evidence/g3c-export-verify.txt` |
+
+### 排除的路径陷阱（重要）
+
+预览页另有一个标签为 **`Download Unsigned PSBT`** 的按钮，产出 **1404B、`partialSigs=0`**（丢签名）。
+第一次只点到它时，表面上会得出"Caravan 导出丢签名"——**必须穷举同一流程的全部导出入口才能区分
+"能力缺失"与"语义不同的两个按钮"**。阶段 G 专为排除此疑点而设。
+该按钮自名为 Unsigned，产物不含签名符合其自身语义，**不构成导出能力缺陷**。
+
+### 判定影响：**维持「有条件通过」，不升级**
+
+预注册对 ③ 的前置声明是"若发现此处存在阻塞 → 合计差异项=3、阻断项=1 → 由'有条件通过'升为'通过'"。
+**实测与该升级条件相反**（未观测到阻塞）→ 按我们自己预注册的规则，**合计仍为 2（②④，均质量项）、
+阻断项仍为 0 → 判定维持"有条件通过"**。这条必须写进任何对外表述，不因"我们希望是通过"而松动措辞。
+
+### 诚实登记：三个预设差异点全部被实测反证
+
+| 预设 | 实测 |
+|---|---|
+| ① 必须配置钱包才能导入 | 反证 |
+| ⑤ 必须交出 xpub | 反证 |
+| ③ 无法导出部分签名 PSBT | **反证（本次）** |
+
+**G3 的价值不是"证明对方不行"，而是阻止我们把工作量堆在对方已经做对的位置上。**
+实际成立的只有 ②（信息完整度）与 ④（离线可用性），均可核验；对外只可陈述现象，
+不得称"Caravan 无法满足受托审阅"（E5 式外推）。
+
+### 产出文件
+
+- `g3/G3-实测记录-阶段2.md`（原始事实与边界声明）
+- `g3/G3-判定表-补测修订-③.md`（③ 四字段 + 修订后汇总 + 必拒错误自检）
+- `g3/G3-判定表-实跑结果.md`（**仅顶部加一行指针**，事实未动）
+- `g3/tools/g3c_verify_exports.js`（证据固化：字段构成 + 签名字节级比对 + 双方工具可消费 + ECDSA 验签）
+- `g3/evidence/g3c-export-verify.txt`（核验日志）
+- README / README_CN 状态行与文档索引同步

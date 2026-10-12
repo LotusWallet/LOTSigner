@@ -1,0 +1,237 @@
+G3 补测 · 差异项③ 导出物核验日志
+生成时间（本机）: 2026-10-12T13:34:23.512Z
+lscli: D:\work\LOTSigner\target\release\lscli.exe
+bitcoinjs-lib: 5.2.1   tiny-secp256k1: 1.1.6
+==============================================================================
+
+【E】未签名导出（Send 流程 · 下载未签名交易）
+------------------------------------------------------------------------------
+  文件          : g3c-E-dl-transaction.psbt  (1020 字节)
+  未签名交易 txid: 17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  输入/输出      : 1 in / 1 out
+  部分签名字数    : 0
+  输入字段       : nonWitnessUtxo=true redeemScript=true witnessScript=false in_bip32=3 finalScriptSig=false
+  输出字段       : out_bip32=0
+  密码学校验     : n/a (无签名)
+
+  ── lscli（本项目 Rust 内核，与 Caravan / bitcoinjs-lib 无共享代码）──
+  | ==================================================
+  |  Lotus Signer · entrusted-signature review
+  | ==================================================
+  | txid      17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  | version   1     nLockTime 0
+  |         0: no timelock; the transaction may be mined immediately
+  | 
+  | ── Transaction facts ─────────────────────────────
+  | Inputs
+  |   in[0] ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090:0   seq=0xfffffffd   Type P2SH
+  |         Amount 200000 sat [verified]
+  |               ↳ This amount was read out of the previous transaction attached to the PSBT (non_witness_utxo). Its structure checks out; existence on chain is not confirmed offline.
+  | Outputs
+  |   out[0]       100000 sat   33SbRCQjxnXirba8skZ3fpcEcLenJpExrb
+  |                                    ─────────────
+  |   Total output      100000 sat
+  |   Fee     100000 sat [parsed_unverified]
+  |               ↳ Fee = total inputs − total outputs. Input amounts come from fields attached to the PSBT and were not verified against the chain.
+  |   sighash   not specified [missing]
+  |               ↳ not specified
+  | 
+  | ── Context ───────────────────────────
+  |   · This is a PSBT awaiting signatures: 1 input(s), 1 output(s), 100000 sat in total outputs.
+  |   · nLockTime = 0 (0: no timelock; the transaction may be mined immediately)
+  |   · A PSBT is only a draft awaiting signatures: the values in it come from fields supplied by whoever handed it over. Without going online to check the previous transactions, this tool cannot guarantee they match the chain.
+  |   · No existing signature — you would probably be the first signer.
+  | 
+  | ── Risk notices ─────────────────────────────
+  |   No known rule triggered this time. This does NOT mean "safe" — it only means nothing known was triggered.
+  | 
+  | ── What this tool does NOT tell you ─────────────────
+  |   × This tool does not judge the transaction "safe" or "dangerous".
+  |   × This tool does not know who the counterparty is and cannot judge whether a recipient is trustworthy.
+  |   × This tool does not go online, so it cannot confirm that the previous transactions exist or remain unspent.
+  |   × This tool never touches private keys and cannot judge whether you are entitled to sign this transaction.
+  |   × This tool offers no price, tax, or compliance advice.
+  | 
+  | ==================================================
+  |  This is an evidence-based review. It is not a recommendation for anyone to sign or not to sign.
+  | ==================================================
+
+【F-unsigned】标签为 'Download Unsigned PSBT' 的按钮产出
+------------------------------------------------------------------------------
+  文件          : g3c-F-dl-transaction.psbt  (1404 字节)
+  未签名交易 txid: 17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  输入/输出      : 1 in / 1 out
+  部分签名字数    : 0
+  输入字段       : nonWitnessUtxo=true redeemScript=true witnessScript=false in_bip32=3 finalScriptSig=false
+  输出字段       : out_bip32=3
+  密码学校验     : n/a (无签名)
+
+  ── lscli（本项目 Rust 内核，与 Caravan / bitcoinjs-lib 无共享代码）──
+  | ==================================================
+  |  Lotus Signer · entrusted-signature review
+  | ==================================================
+  | txid      17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  | version   1     nLockTime 0
+  |         0: no timelock; the transaction may be mined immediately
+  | 
+  | ── Transaction facts ─────────────────────────────
+  | Inputs
+  |   in[0] ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090:0   seq=0xfffffffd   Type P2SH
+  |         Amount 200000 sat [verified]
+  |               ↳ This amount was read out of the previous transaction attached to the PSBT (non_witness_utxo). Its structure checks out; existence on chain is not confirmed offline.
+  | Outputs
+  |   out[0]       100000 sat   33SbRCQjxnXirba8skZ3fpcEcLenJpExrb
+  |                                    ─────────────
+  |   Total output      100000 sat
+  |   Fee     100000 sat [parsed_unverified]
+  |               ↳ Fee = total inputs − total outputs. Input amounts come from fields attached to the PSBT and were not verified against the chain.
+  |   sighash   not specified [missing]
+  |               ↳ not specified
+  | 
+  | ── Context ───────────────────────────
+  |   · This is a PSBT awaiting signatures: 1 input(s), 1 output(s), 100000 sat in total outputs.
+  |   · nLockTime = 0 (0: no timelock; the transaction may be mined immediately)
+  |   · A PSBT is only a draft awaiting signatures: the values in it come from fields supplied by whoever handed it over. Without going online to check the previous transactions, this tool cannot guarantee they match the chain.
+  |   · No existing signature — you would probably be the first signer.
+  | 
+  | ── Risk notices ─────────────────────────────
+  |   No known rule triggered this time. This does NOT mean "safe" — it only means nothing known was triggered.
+  | 
+  | ── What this tool does NOT tell you ─────────────────
+  |   × This tool does not judge the transaction "safe" or "dangerous".
+  |   × This tool does not know who the counterparty is and cannot judge whether a recipient is trustworthy.
+  |   × This tool does not go online, so it cannot confirm that the previous transactions exist or remain unspent.
+  |   × This tool never touches private keys and cannot judge whether you are entitled to sign this transaction.
+  |   × This tool offers no price, tax, or compliance advice.
+  | 
+  | ==================================================
+  |  This is an evidence-based review. It is not a recommendation for anyone to sign or not to sign.
+  | ==================================================
+
+【F-partial】外部工具部分签名后的输入文件（注入基线）
+------------------------------------------------------------------------------
+  文件          : g3c-F-partial-signed.psbt  (1160 字节)
+  未签名交易 txid: 17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  输入/输出      : 1 in / 1 out
+  部分签名字数    : 1
+    [0] pubkey=03868d605c93db3bddaaf119… sig=304402205ae2f66e720f9a9ded7af78f…(71B)
+  输入字段       : nonWitnessUtxo=true redeemScript=true witnessScript=false in_bip32=3 finalScriptSig=false
+  输出字段       : out_bip32=0
+  密码学校验     : ✅ 有效（ECDSA 验签通过）
+
+  ── lscli（本项目 Rust 内核，与 Caravan / bitcoinjs-lib 无共享代码）──
+  | ==================================================
+  |  Lotus Signer · entrusted-signature review
+  | ==================================================
+  | txid      17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  | version   1     nLockTime 0
+  |         0: no timelock; the transaction may be mined immediately
+  | 
+  | ── Transaction facts ─────────────────────────────
+  | Inputs
+  |   in[0] ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090:0   seq=0xfffffffd   Type P2SH
+  |         Amount 200000 sat [verified]
+  |               ↳ This amount was read out of the previous transaction attached to the PSBT (non_witness_utxo). Its structure checks out; existence on chain is not confirmed offline.
+  |         1 existing signature(s) (not cryptographically verified)
+  | Outputs
+  |   out[0]       100000 sat   33SbRCQjxnXirba8skZ3fpcEcLenJpExrb
+  |                                    ─────────────
+  |   Total output      100000 sat
+  |   Fee     100000 sat [parsed_unverified]
+  |               ↳ Fee = total inputs − total outputs. Input amounts come from fields attached to the PSBT and were not verified against the chain.
+  |   sighash   not specified [missing]
+  |               ↳ not specified
+  | 
+  | ── Context ───────────────────────────
+  |   · This is a PSBT awaiting signatures: 1 input(s), 1 output(s), 100000 sat in total outputs.
+  |   · nLockTime = 0 (0: no timelock; the transaction may be mined immediately)
+  |   · A PSBT is only a draft awaiting signatures: the values in it come from fields supplied by whoever handed it over. Without going online to check the previous transactions, this tool cannot guarantee they match the chain.
+  | 
+  | ── Risk notices ─────────────────────────────
+  |   [R004] This input already carries a signature
+  |         Trigger: input[0] contains 1 partial_sig(s)
+  |         Evidence: the signatures themselves are not cryptographically verified (this tool never touches or derives keys, and does not verify signatures)
+  | 
+  | ── What this tool does NOT tell you ─────────────────
+  |   × This tool does not judge the transaction "safe" or "dangerous".
+  |   × This tool does not know who the counterparty is and cannot judge whether a recipient is trustworthy.
+  |   × This tool does not go online, so it cannot confirm that the previous transactions exist or remain unspent.
+  |   × This tool never touches private keys and cannot judge whether you are entitled to sign this transaction.
+  |   × This tool offers no price, tax, or compliance advice.
+  | 
+  | ==================================================
+  |  This is an evidence-based review. It is not a recommendation for anyone to sign or not to sign.
+  | ==================================================
+
+【G-signed】签名步骤 'Download PSBT' 导出物
+------------------------------------------------------------------------------
+  文件          : g3c-G-dl-0-signed.psbt  (1544 字节)
+  未签名交易 txid: 17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  输入/输出      : 1 in / 1 out
+  部分签名字数    : 1
+    [0] pubkey=03868d605c93db3bddaaf119… sig=304402205ae2f66e720f9a9ded7af78f…(71B)
+  输入字段       : nonWitnessUtxo=true redeemScript=true witnessScript=false in_bip32=3 finalScriptSig=false
+  输出字段       : out_bip32=3
+  密码学校验     : ✅ 有效（ECDSA 验签通过）
+
+  ── lscli（本项目 Rust 内核，与 Caravan / bitcoinjs-lib 无共享代码）──
+  | ==================================================
+  |  Lotus Signer · entrusted-signature review
+  | ==================================================
+  | txid      17086f4c02ce313f0b6235b054e8b4fac27a2eb4e268ff9945f440f7b828d9ad
+  | version   1     nLockTime 0
+  |         0: no timelock; the transaction may be mined immediately
+  | 
+  | ── Transaction facts ─────────────────────────────
+  | Inputs
+  |   in[0] ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090:0   seq=0xfffffffd   Type P2SH
+  |         Amount 200000 sat [verified]
+  |               ↳ This amount was read out of the previous transaction attached to the PSBT (non_witness_utxo). Its structure checks out; existence on chain is not confirmed offline.
+  |         1 existing signature(s) (not cryptographically verified)
+  | Outputs
+  |   out[0]       100000 sat   33SbRCQjxnXirba8skZ3fpcEcLenJpExrb
+  |                                    ─────────────
+  |   Total output      100000 sat
+  |   Fee     100000 sat [parsed_unverified]
+  |               ↳ Fee = total inputs − total outputs. Input amounts come from fields attached to the PSBT and were not verified against the chain.
+  |   sighash   not specified [missing]
+  |               ↳ not specified
+  | 
+  | ── Context ───────────────────────────
+  |   · This is a PSBT awaiting signatures: 1 input(s), 1 output(s), 100000 sat in total outputs.
+  |   · nLockTime = 0 (0: no timelock; the transaction may be mined immediately)
+  |   · A PSBT is only a draft awaiting signatures: the values in it come from fields supplied by whoever handed it over. Without going online to check the previous transactions, this tool cannot guarantee they match the chain.
+  | 
+  | ── Risk notices ─────────────────────────────
+  |   [R004] This input already carries a signature
+  |         Trigger: input[0] contains 1 partial_sig(s)
+  |         Evidence: the signatures themselves are not cryptographically verified (this tool never touches or derives keys, and does not verify signatures)
+  | 
+  | ── What this tool does NOT tell you ─────────────────
+  |   × This tool does not judge the transaction "safe" or "dangerous".
+  |   × This tool does not know who the counterparty is and cannot judge whether a recipient is trustworthy.
+  |   × This tool does not go online, so it cannot confirm that the previous transactions exist or remain unspent.
+  |   × This tool never touches private keys and cannot judge whether you are entitled to sign this transaction.
+  |   × This tool offers no price, tax, or compliance advice.
+  | 
+  | ==================================================
+  |  This is an evidence-based review. It is not a recommendation for anyone to sign or not to sign.
+  | ==================================================
+
+==============================================================================
+关键比对：'导出物是否保留外部注入的那条签名'
+------------------------------------------------------------------------------
+  注入基线 (F-partial) 签名: pubkey=03868d605c93db3bddaaf119…
+                             sig   =304402205ae2f66e720f9a9ded7af78f50416d5e9b57cb81…
+  G 导出物    (G-signed) 签名: pubkey=03868d605c93db3bddaaf119…
+                             sig   =304402205ae2f66e720f9a9ded7af78f50416d5e9b57cb81…
+  → 逐字节完全一致 : ✅ 是（签名被原样保留）
+  → 未被篡改计数  : ✅ 恰好 1 条，非凭空计数
+
+  对照：标签为 "Download Unsigned PSBT" 的按钮产出 partialSigs=0（1404 字节）
+  → 该按钮语义即「未签名」，其产物不含签名符合其自身标签，不构成导出能力缺陷。
+
+边界声明（原样保留）：
+  · 链上 UTXO 数据为 mock（本地拦截并构造），非真实主网/测试网数据；
+  · 部分签名由外部工具（bitcoinjs-lib + 合成密钥）完成，非 Caravan 自身签名；
+  · 结论仅适用于该构建版本 (caravan-coordinator@1.19.2, commit b25532a3…) 的浏览器形态。

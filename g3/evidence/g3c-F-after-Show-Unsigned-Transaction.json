@@ -1,0 +1,21 @@
+{
+  "url": "http://localhost:4174/#/wallet",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Edit Transaction Hide Unsigned Transaction 01000000019020639afd151b6d495087e40ff7224d0c28a7d2e7fcf6cc120f04c6a81e07ec0000000000fdffffff01a08601000000000017a9141335f8b776daf9e2b3cf86eef413c1cfebbe3d9c8700000000 Unsigned PSBT Select Key ​ Signature 1 The following signature was imported: [\"304402205ae2f66e720f9a9ded7af78f50416d5e9b57cb81a3e986d327f95fd6d9f0973a0220129d65317d183fd3e0bc84377de94f35e28ac9310dc8a23698bb4707e74149e101\"] Remove Signature Select Key ​ Abandon Transaction Download Wallet Config Download PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "buttons": [
+    "Refresh",
+    "Download Configuration",
+    "Clear Wallet",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Addresses",
+    "Receive",
+    "Send",
+    "Transactions",
+    "Hide Unsigned Transaction",
+    "Remove Signature",
+    "Download Wallet Config",
+    "Download PSBT"
+  ],
+  "alerts": []
+}

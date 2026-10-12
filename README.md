@@ -26,9 +26,9 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 
 | Item | Value |
 |---|---|
-| Current stage | **Beta-ready working draft** — Rust core + CLI + offline web page run end-to-end; BETA-READINESS Track-1 checklist items A/B/D are evidenced (see that file). G3 verdict: conditional pass (①⑤ disproven by live test, ②④ hold at evidence grade A, ③ not yet tested) |
+| Current stage | **Beta-ready working draft** — Rust core + CLI + offline web page run end-to-end; BETA-READINESS Track-1 checklist items A/B/D are evidenced (see that file). G3 verdict: **conditional pass** — all five difference items are now measured: ①③⑤ disproven by live test, ②④ hold at evidence grade A |
 | Verdict so far | Direction holds. **P1 scope is not pre-locked**; the spec is written only after G1–G3 produce results |
-| Execution | G3 done except item ③ (export of a partially-signed PSBT from Caravan); G1 next; G2 awaits hardware |
+| Execution | G3 complete (all five difference items measured; ③ closed 2026-10-12); G1 next; G2 awaits hardware |
 | Primary scenario | BTC PSBT entrusted review + signature return + export (stateless, no wallet management) |
 | Target user | Technical users who are comfortable with self-custody and multisig, can judge whether a transaction matches their intent, **but will not sign on the strength of a raw PSBT or a single wallet's UI alone** (deliberately narrow) |
 | Effort | 1–2 core developers; the stop-loss line is **moved forward to P1-0** |
@@ -150,9 +150,11 @@ LICENSE-MIT/-APACHE dual-licensed MIT OR Apache-2.0
 | [`SECURITY.md`](SECURITY.md) | Private vulnerability reporting; what counts as a security bug here |
 | [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution rules — one authoritative implementation, no second parser |
 | [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 pre-registration (frozen; must not change after testing) |
-| [`g3/G3-判定表-实跑结果.md`](g3/G3-判定表-实跑结果.md) | G3 live-test verdict table |
+| [`g3/G3-判定表-实跑结果.md`](g3/G3-判定表-实跑结果.md) | G3 live-test verdict table (2026-10-11) |
+| [`g3/G3-判定表-补测修订-③.md`](g3/G3-判定表-补测修订-③.md) | G3 verdict revision: difference item ③ closed -> verdict unchanged |
 | [`g3/T4-异源对照报告.md`](g3/T4-异源对照报告.md) | Independent cross-check vs bitcoinjs-lib, disagreements adjudicated (B5) |
 | [`g3/G3-实测记录-阶段1.md`](g3/G3-实测记录-阶段1.md) | G3 phase-1 test log (including environment pitfalls) |
+| [`g3/G3-实测记录-阶段2.md`](g3/G3-实测记录-阶段2.md) | G3 phase-2 test log (difference item ③ re-test: export of a partially-signed PSBT) |
 | [`g3/fixtures/README.md`](g3/fixtures/README.md) | PSBT fixtures and dual-verification results |
 
 ## Process Rules

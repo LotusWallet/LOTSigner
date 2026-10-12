@@ -1,0 +1,158 @@
+{
+  "mock": {
+    "hits": 217,
+    "unhandled": [
+      "/icon"
+    ]
+  },
+  "downloads": [
+    {
+      "filename": "transaction.psbt",
+      "saved": "D:\\work\\LOTSigner\\g3\\evidence\\g3c-F-dl-transaction.psbt",
+      "size": 1404
+    }
+  ],
+  "steps": {
+    "afterRefresh": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Last Used arrow_downward Address chevron_right */0/0 1 0.002 2023/11/15 3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx Rows per page: 10 rows 1-1 of 1 first_page chevron_left 1-1 of 1 chevron_right last_page Show Additional Spent Addresses Zero Balance Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit: Deposit received. A new address should now be available for deposit.",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "chevron_right",
+        "first_page",
+        "chevron_left",
+        "chevron_right",
+        "last_page"
+      ],
+      "alerts": [
+        "Deposit received. A new address should now be available for deposit."
+      ]
+    },
+    "send": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Manual Replace-by-Fee (RBF) To Amount ​ MAX BTC Add output Fee Rate Sats/byte Refer to mempool monitoring websites to ensure your selected fee rate is appropriate. Output Total BTC Preview Transaction Import PSBT Import a Partially Signed Bitcoin Transaction (PSBT) from a file or QR code. Import Method ​ Import Method Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Add output",
+        "Preview Transaction"
+      ],
+      "alerts": []
+    },
+    "afterImport": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Transaction Analysis Wallet Fingerprinting P2SH Input Dust No dust inputs detected. Transaction Preview Signature Status 1 of 2 signatures Partially signed Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast. Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers. Show Unsigned Transaction Inputs Available Inputs (1) The following UTXOs will be spent as inputs in a new transaction. Number TXID Index Amount (BTC) View Dust Status 1 ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090 0 0.002 Economical TOTAL: 0.002 Outputs Address Amount (BTC) Script Type 33SbRCQjxnXirba8skZ3fpcEcLenJpExrb 0.001 P2SH Fee 0.00100000 BTC Fee Rate 294 sats/byte Total 0.002 BTC Transaction Analysis Optimize your Bitcoin spending efficiency Edit Transaction Sign Transaction Download Unsigned PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Edit Transaction",
+        "Sign Transaction",
+        "Download Unsigned PSBT"
+      ],
+      "alerts": [
+        "Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast.",
+        "Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast.",
+        "Partial signatures detected",
+        "Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers.",
+        "Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers.",
+        "Important: Editing will clear signatures"
+      ]
+    },
+    "after-Download-Unsigned-PSBT": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Transaction Analysis Wallet Fingerprinting P2SH Input Dust No dust inputs detected. Transaction Preview Signature Status 1 of 2 signatures Partially signed Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast. Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers. Show Unsigned Transaction Inputs Available Inputs (1) The following UTXOs will be spent as inputs in a new transaction. Number TXID Index Amount (BTC) View Dust Status 1 ec071ea8c6040f12ccf6fce7d2a7280c4d22f70fe48750496d1b15fd9a632090 0 0.002 Economical TOTAL: 0.002 Outputs Address Amount (BTC) Script Type 33SbRCQjxnXirba8skZ3fpcEcLenJpExrb 0.001 P2SH Fee 0.00100000 BTC Fee Rate 294 sats/byte Total 0.002 BTC Transaction Analysis Optimize your Bitcoin spending efficiency Edit Transaction Sign Transaction Download Unsigned PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Edit Transaction",
+        "Sign Transaction",
+        "Download Unsigned PSBT"
+      ],
+      "alerts": [
+        "Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast.",
+        "Partial signatures detected This transaction has 1 out of 2 required signatures. You need 1 more signature to broadcast.",
+        "Partial signatures detected",
+        "Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers.",
+        "Important: Editing will clear signatures If you edit this transaction (inputs, outputs, or fee), all existing signatures will be cleared and you'll need to collect signatures again from all signers.",
+        "Important: Editing will clear signatures"
+      ]
+    },
+    "after-Sign-Transaction": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Edit Transaction Show Unsigned Transaction Select Key ​ Signature 1 The following signature was imported: [\"304402205ae2f66e720f9a9ded7af78f50416d5e9b57cb81a3e986d327f95fd6d9f0973a0220129d65317d183fd3e0bc84377de94f35e28ac9310dc8a23698bb4707e74149e101\"] Remove Signature Select Key ​ Abandon Transaction Download Wallet Config Download PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Show Unsigned Transaction",
+        "Remove Signature",
+        "Download Wallet Config",
+        "Download PSBT"
+      ],
+      "alerts": []
+    },
+    "after-Show-Unsigned-Transaction": {
+      "url": "http://localhost:4174/#/wallet",
+      "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Edit Transaction Hide Unsigned Transaction 01000000019020639afd151b6d495087e40ff7224d0c28a7d2e7fcf6cc120f04c6a81e07ec0000000000fdffffff01a08601000000000017a9141335f8b776daf9e2b3cf86eef413c1cfebbe3d9c8700000000 Unsigned PSBT Select Key ​ Signature 1 The following signature was imported: [\"304402205ae2f66e720f9a9ded7af78f50416d5e9b57cb81a3e986d327f95fd6d9f0973a0220129d65317d183fd3e0bc84377de94f35e28ac9310dc8a23698bb4707e74149e101\"] Remove Signature Select Key ​ Abandon Transaction Download Wallet Config Download PSBT Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+      "buttons": [
+        "Refresh",
+        "Download Configuration",
+        "Clear Wallet",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Remove Extended Public Key",
+        "Addresses",
+        "Receive",
+        "Send",
+        "Transactions",
+        "Hide Unsigned Transaction",
+        "Remove Signature",
+        "Download Wallet Config",
+        "Download PSBT"
+      ],
+      "alerts": []
+    }
+  }
+}

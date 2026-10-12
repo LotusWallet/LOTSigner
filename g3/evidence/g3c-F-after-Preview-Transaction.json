@@ -1,0 +1,24 @@
+{
+  "url": "http://localhost:4174/#/wallet",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Manual Replace-by-Fee (RBF) To Amount ​ MAX BTC Add output Fee Rate Sats/byte Refer to mempool monitoring websites to ensure your selected fee rate is appropriate. Output Total BTC Preview Transaction Import PSBT Import a Partially Signed Bitcoin Transaction (PSBT) from a file or QR code. Import Method File Upload Import Method Import PSBT File This PSBT does not contain any UTXOs from this wallet. Please ensure you're using the correct wallet or PSBT file. Clear Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit:",
+  "buttons": [
+    "Refresh",
+    "Download Configuration",
+    "Clear Wallet",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Addresses",
+    "Receive",
+    "Send",
+    "Transactions",
+    "Add output",
+    "Preview Transaction",
+    "Clear"
+  ],
+  "alerts": [
+    "This PSBT does not contain any UTXOs from this wallet. Please ensure you're using the correct wallet or PSBT file. Clear",
+    "This PSBT does not contain any UTXOs from this wallet. Please ensure you're using the correct wallet or PSBT file.",
+    "Clear"
+  ]
+}

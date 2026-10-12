@@ -1,0 +1,24 @@
+{
+  "url": "http://localhost:4174/#/wallet",
+  "body": "Overview Setup Wallet Create Address Script Explorer Hermit PSBT Interface Test Suite Help G3C-P2SH-2of3 0.002 BTC Wallet Actions Refresh Download Configuration Clear Wallet Addresses Receive Send Transactions Path Suffix arrow_downward UTXOs arrow_downward Balance arrow_downward Last Used arrow_downward Address chevron_right */0/0 1 0.002 2023/11/15 3EXWZB38XuuGBuNCuBmt6cKp8J6KMFKPqx Rows per page: 10 rows 1-1 of 1 first_page chevron_left 1-1 of 1 chevron_right last_page Show Additional Spent Addresses Zero Balance Copyright 2026 by Unchained Capital and released under an MIT license. vundefined commit: Deposit received. A new address should now be available for deposit.",
+  "buttons": [
+    "Refresh",
+    "Download Configuration",
+    "Clear Wallet",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Remove Extended Public Key",
+    "Addresses",
+    "Receive",
+    "Send",
+    "Transactions",
+    "chevron_right",
+    "first_page",
+    "chevron_left",
+    "chevron_right",
+    "last_page"
+  ],
+  "alerts": [
+    "Deposit received. A new address should now be available for deposit."
+  ]
+}
