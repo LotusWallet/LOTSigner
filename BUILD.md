@@ -69,10 +69,11 @@ target/release/lscli --export out.psbt g3/fixtures/S1.psbt   # export unmodified
 cargo test --offline
 ```
 
-32 tests: kernel unit tests (incl. BIP-173 official vectors) + the fixture-suite
+33 tests: kernel unit tests (incl. BIP-173 official vectors) + the fixture-suite
 integration tests (`crates/lscore/tests/fixtures.rs`), which include the P1 meta-rule
-invariant (a non-`verified` field must state its uncertainty source) and the layer/risk
-contracts. Full log: `g3/evidence/b1-test-log.txt`.
+invariant (a non-`verified` field must state its uncertainty source), the layer/risk
+contracts, and an explicit inventory of which fields are state-bearing. Full log:
+`g3/evidence/b1-test-log.txt`.
 
 ## Fixture suite
 

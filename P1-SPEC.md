@@ -64,6 +64,31 @@ Five states, and only five. They live in the data model, not in the UI
 **Binding rule.** No displayed field may be blank and no field may carry a plausible-looking default.
 A field that is unknown is `missing` with a stated reason; it is never rendered as a value.
 
+**Which fields carry a state — stated, not implied.** A state expresses *epistemic status relative to
+a source outside the message*. Three fields qualify in the current model, and they are exactly the ones
+whose value depends on data the message only **claims**:
+
+| State-bearing field | Why it can be wrong |
+|---|---|
+| input amount (`amount_sats`) | the PSBT *asserts* it through `witness_utxo` / `non_witness_utxo`; only the chain can confirm |
+| fee (`fee_sats`) | derived from the above, so it inherits their uncertainty |
+| sighash type (`sighash_type`) | a **policy claim** made by whoever assembled the PSBT |
+
+Fields that are **constitutive of the message itself** — `txid`, `version`, `nLockTime`, output values,
+output scriptPubKeys — are **not** state-bearing: once the message parses, they *are* what was read,
+and there is no second source they could disagree with. Their check is the parser itself — a malformed
+message is a hard error, never a state.
+
+**Two honest limits of this property today** (self-audit in [`P1-SPEC-AUDIT.md`](P1-SPEC-AUDIT.md);
+neither is hidden):
+
+1. `unsupported` is defined and explained, but in the current beta it is reached **only** through the
+   named-keys list + R001 — `Field::unsupported()` has no callers. A field-level `unsupported` badge
+   does not exist yet. (Also stated in [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md).)
+2. "Every displayed field" is therefore true of every **state-bearing** field — and was previously
+   asserted by a test whose name did not say so. The boundary is now explicit in code
+   (`state_bearing_field_inventory_is_explicit`) instead of implied by wording.
+
 ### 2.2 Property 2 — output has four layers, and layer 4 is never empty
 
 `crates/lscore/src/state.rs` — `Review`.

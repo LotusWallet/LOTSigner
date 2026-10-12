@@ -123,6 +123,7 @@ web/                offline single-page UI (zero external requests)
 g3/                 P1-0 gate G3: pre-registration, fixtures, tools, evidence, T4 report
 g1/                 P1-0 gate G1: pre-registration and verdict for the BDK-wasm offline-capability probe
 P1-SPEC.md          P1 specification (draft): the boundary model as a verifiable public good
+P1-SPEC-AUDIT.md    self-audit of that specification against the code (findings + boundary)
 ANNOUNCEMENTS.md    outbound announcement queue (published manually)
 PROGRESS.md         progress board (single entry point)
 BETA-READINESS.md   the frozen checklist that decides when we may open the repo
@@ -145,6 +146,7 @@ LICENSE-MIT/-APACHE dual-licensed MIT OR Apache-2.0
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | Progress board (single entry point) |
 | [`P1-SPEC.md`](P1-SPEC.md) | **P1 specification (draft): the boundary model as a verifiable public good** |
+| [`P1-SPEC-AUDIT.md`](P1-SPEC-AUDIT.md) | **Self-audit of the spec against the code** — 2 findings (a defined-but-unused state; a coverage claim wider than its evidence), both resolved openly; establishes which fields are state-bearing |
 | [`BETA-READINESS.md`](BETA-READINESS.md) | **Frozen checklist: when we are allowed to open the repo** |
 | [`BUILD.md`](BUILD.md) | One-command build from a clean clone (BETA-READINESS A1) |
 | [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **What this beta does NOT do — read before trusting output (A2)** |

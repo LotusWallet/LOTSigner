@@ -316,6 +316,14 @@ fn empty_input_rejected() {
 // A3：全固件字段无空白 —— 每个展示字段必带五态之一
 // ---------------------------------------------------------------------------
 
+/// A3 —— 展示字段必带五态之一（BETA-READINESS A3 的证据）。
+///
+/// **范围声明（2026-10-12 补，见 `P1-SPEC-AUDIT.md` F2）**：本测试覆盖的是**状态承载字段**，
+/// 即"其正确性取决于报文之外的来源"的量：输入金额 / 手续费 / sighash 类型。
+/// 报文自身的构成性字段（txid / version / nLockTime / 输出金额 / scriptPubKey）**不是**
+/// 状态承载字段——报文一旦解析成功，它们就是读到的内容，不存在可与之一致的第二来源；
+/// 它们的校验由解析器本身承担（畸形报文是硬错误，不是状态）。
+/// 这条边界现由 `state_bearing_field_inventory_is_explicit` 显式断言，不再靠测试名暗示。
 #[test]
 fn a3_every_field_carries_a_state() {
     for name in PARSEABLE {
@@ -342,9 +350,54 @@ fn a3_every_field_carries_a_state() {
     }
 }
 
+/// 状态承载字段的**完整清单**（P1-SPEC §2.1）。
+///
+/// 为什么需要这个测试：`a3_every_field_carries_a_state` 的名字说得比它证的多——它只检查了
+/// 三个字段种类，而"每个展示字段"字面上包含 txid / version / nLockTime / 输出金额等。
+/// 本测试把"哪些字段算状态承载字段"从**措辞**变成**断言**：清单长度必须等于
+/// `2 + 输入个数`（交易级 fee/sighash + 每个输入一个金额），顺序也必须一致。
+/// 将来若为别的字段加上五态而未同步本清单，这里会红。
+///
+/// **本测试的能力边界（如实声明）**：Rust 无反射，它无法发现"给某个结构体加了 `Field<T>`
+/// 却没有加进 `collect_field_traces`"这种改法。那种情况仍属评审义务——不假装机器能守住。
+#[test]
+fn state_bearing_field_inventory_is_explicit() {
+    for name in PARSEABLE {
+        let r = review(name);
+        let traces = collect_field_traces(&r);
+
+        assert_eq!(
+            traces.len(),
+            2 + r.facts.inputs.len(),
+            "{name}: 状态承载字段清单与实现脱节——新增带五态的字段时必须同步更新本清单与 P1-SPEC §2.1"
+        );
+        assert_eq!(traces[0].0, "facts.fee_sats", "{name}");
+        assert_eq!(traces[1].0, "facts.sighash_type", "{name}");
+        for (i, t) in traces[2..].iter().enumerate() {
+            assert_eq!(t.0, format!("inputs[{i}].amount"), "{name}");
+        }
+
+        // 每个状态承载字段的状态都必须是五态之一（as_str 只认这五个字面量）
+        for (label, state, _, _) in &traces {
+            assert!(
+                [
+                    "verified",
+                    "parsed_unverified",
+                    "missing",
+                    "unsupported",
+                    "check_failed"
+                ]
+                .contains(&state.as_str()),
+                "{name}: {label} 的状态 {state:?} 不在五态之内"
+            );
+        }
+    }
+}
+
 // ---------------------------------------------------------------------------
-// 五态全集覆盖：六个固件跑下来，五种状态必须都被触发过
-// （Unsupported 态在字段级由 unsupported_keys + R001 承载，见 KNOWN-LIMITATIONS）
+// 五态全集覆盖：全部可解析固件跑下来，四种字段级状态必须都被触发过
+// （`unsupported` 在字段级由 unsupported_keys + R001 承载，见 KNOWN-LIMITATIONS
+//   与 P1-SPEC §2.1 的两处诚实限制）
 // ---------------------------------------------------------------------------
 
 #[test]

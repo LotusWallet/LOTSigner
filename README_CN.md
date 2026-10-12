@@ -99,6 +99,7 @@ web/                离线单页界面（零外部请求）
 g3/                 P1-0 闸门 G3：预注册、固件、工具、证据、T4 对照报告
 g1/                 P1-0 闸门 G1：BDK-wasm 离线能力实测的预注册与判定
 P1-SPEC.md          P1 规格（草稿）：把边界模型做成可核验的公共品
+P1-SPEC-AUDIT.md    该规格对代码的自检（发现项与字段边界）
 ANNOUNCEMENTS.md    对外发布内容队列（手工发布）
 PROGRESS.md         进展看板（唯一入口）
 BETA-READINESS.md   决定"何时可以 open"的冻结清单
@@ -116,6 +117,7 @@ KNOWN-LIMITATIONS.md 本内测版不做什么——信任输出前必读
 |---|---|
 | [`PROGRESS.md`](PROGRESS.md) | 进展看板（唯一入口） |
 | [`P1-SPEC.md`](P1-SPEC.md) | **P1 规格（草稿）：把边界模型做成可核验的公共品** |
+| [`P1-SPEC-AUDIT.md`](P1-SPEC-AUDIT.md) | **规格对代码的自检**——2 项发现（一个已定义但从未产生的状态；一个覆盖面大于其证据的声明），均已公开处理；确立"哪些字段带五态"的边界 |
 | [`BETA-READINESS.md`](BETA-READINESS.md) | **冻结清单：我们何时才被允许 open** |
 | [`BUILD.md`](BUILD.md) | 干净 clone 的一键构建说明（BETA-READINESS A1） |
 | [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **本内测版不做什么——信任输出前必读（A2）** |

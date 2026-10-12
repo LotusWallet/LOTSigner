@@ -56,9 +56,19 @@ Per Constitution §5–§7 there is **no silent degradation and no guessing**:
 
 ## Where the five states are exercised
 
-All five are exercised by the committed fixture suite (S1–S9) and asserted in
-`crates/lscore/tests/fixtures.rs`. `unsupported` is carried by the named-keys list +
-R001 rather than a per-field badge in the current beta UI.
+**Four of the five are exercised as field states** across the committed fixture suite (S1–S9), and
+asserted in `crates/lscore/tests/fixtures.rs`. **`unsupported` is not one of them**: it is defined and
+explained, but in the current beta it is reached only through the named-keys list + R001 —
+`Field::unsupported()` has no callers yet. (Recorded as finding F1 in [`P1-SPEC-AUDIT.md`](P1-SPEC-AUDIT.md).)
+
+**Which fields carry a state.** A state expresses *epistemic status relative to a source outside the
+message*, so it applies to the fields whose value depends on something the message merely **claims**:
+the **input amount** (asserted via `witness_utxo` / `non_witness_utxo`), the **fee** (derived from it)
+and the **sighash type** (a policy claim). The test `state_bearing_field_inventory_is_explicit` pins
+that list. Fields **constitutive of the message** — `txid`, `version`, `nLockTime`, output values,
+output scriptPubKeys — carry no badge: once the message parses they *are* what was read, and there is
+no second source for them to disagree with. Their check is the parser itself — a malformed message is
+a **hard error**, never a state.
 
 ## The one rule we hold ourselves to (M1)
 
@@ -99,7 +109,7 @@ These four are enforced as tests over the whole fixture suite (see
 ## How to verify these claims yourself
 
 ```bash
-cargo test --offline                       # 32 tests incl. BIP-173 official vectors
+cargo test --offline                       # 33 tests incl. BIP-173 official vectors
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
 ```
