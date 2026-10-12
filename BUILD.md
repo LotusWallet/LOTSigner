@@ -2,7 +2,7 @@
 
 > BETA-READINESS **A1**: a person who did not write the code follows this file on a clean
 > machine and succeeds. If any step fails for you, that is a bug in this file — please
-> [open an issue](../../issues) with the exact error output.
+> [open an issue](https://github.com/LotusWallet/LOTSigner/issues) with the exact error output.
 
 ## Toolchain (tested versions)
 
