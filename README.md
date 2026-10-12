@@ -126,6 +126,10 @@ PROGRESS.md         progress board (single entry point)
 BETA-READINESS.md   the frozen checklist that decides when we may open the repo
 BUILD.md            one-command build from a clean clone
 KNOWN-LIMITATIONS.md what this beta does NOT do — read before trusting output
+SIGNING.md          artifact-signing policy (key custody, day-one fingerprint, compromise procedure)
+SECURITY.md         how to report a flaw privately; what counts as a security bug here
+CONTRIBUTING.md     ground rules (one authoritative implementation; no second parser)
+LICENSE-MIT/-APACHE dual-licensed MIT OR Apache-2.0
 ```
 
 > **The deliberation documents are not in this repository.** Drafts and verdicts from the four review
@@ -142,6 +146,9 @@ KNOWN-LIMITATIONS.md what this beta does NOT do — read before trusting output
 | [`BUILD.md`](BUILD.md) | One-command build from a clean clone (BETA-READINESS A1) |
 | [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) | **What this beta does NOT do — read before trusting output (A2)** |
 | [`ANNOUNCEMENTS.md`](ANNOUNCEMENTS.md) | Outbound announcement queue |
+| [`SIGNING.md`](SIGNING.md) | Artifact-signing policy: key custody, day-one fingerprint commitment, compromise procedure (Track 2 / C2) |
+| [`SECURITY.md`](SECURITY.md) | Private vulnerability reporting; what counts as a security bug here |
+| [`CONTRIBUTING.md`](CONTRIBUTING.md) | Contribution rules — one authoritative implementation, no second parser |
 | [`g3/G3-预注册-Caravan重合度实测.md`](g3/G3-预注册-Caravan重合度实测.md) | G3 pre-registration (frozen; must not change after testing) |
 | [`g3/G3-判定表-实跑结果.md`](g3/G3-判定表-实跑结果.md) | G3 live-test verdict table |
 | [`g3/T4-异源对照报告.md`](g3/T4-异源对照报告.md) | Independent cross-check vs bitcoinjs-lib, disagreements adjudicated (B5) |
@@ -281,3 +288,13 @@ Two steps, both required:
 **Consequence**: the chain of reasoning is no longer visible externally. The conclusions are fixed in
 **Product Constitution** and **Explicitly Out of Scope** above; the reasoning stays in the team's
 internal archive. **This README is the single authoritative source for external reference.**
+
+## License
+
+Dual-licensed under **MIT OR Apache-2.0** — the same terms this project's own dependencies use
+(`LICENSE-MIT`, `LICENSE-APACHE`). You may use either at your option.
+
+**The license covers the code. It does not make any artifact official, and it does not come with any
+warranty that an output is correct.** Read [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md) before
+relying on an output, and note that no officially signed artifact exists yet
+(see [`SIGNING.md`](SIGNING.md)).

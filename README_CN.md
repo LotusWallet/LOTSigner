@@ -228,3 +228,12 @@ GitHub：`https://github.com/LotusWallet/LOTSigner`
 
 **遗留影响**：论证过程的推演链条不再对外可见。结论已固化在本文件「产品宪法」与「明确不做」两节；推演理由
 保留在团队内部归档。**对外引用的唯一权威来源是本 README。**
+
+## 许可证
+
+采用 **MIT OR Apache-2.0** 双许可（与本项目依赖所用的许可一致），见 `LICENSE-MIT`、`LICENSE-APACHE`，
+使用者可任选其一。
+
+**许可覆盖的是代码本身：它不使任何产物变成"官方产物"，也不附带"输出正确"的任何担保。**
+依赖任何输出之前请先读 [`KNOWN-LIMITATIONS.md`](KNOWN-LIMITATIONS.md)，
+并注意目前**尚不存在官方签名产物**（见 [`SIGNING.md`](SIGNING.md)）。
