@@ -37,7 +37,8 @@ hardware. It never custodies a key, and there is no Lotus-operated business serv
 > **⚠️ No officially signed artifact exists yet.** The beta is offered as **source + one-command
 > build** only (BETA-READINESS Track 1 / §5-C3). Anything you download outside a `git clone` +
 > `./build.sh` of this repository is not from this project. Official signed artifacts follow
-> Track 2 (T0 + signing-key three requirements) and do not exist today.
+> Track 2 (T0 + signing-key three requirements — policy in [`SIGNING.md`](SIGNING.md)) and do not
+> exist today.
 
 ## Quick start (working draft)
 

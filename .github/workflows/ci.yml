@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  # ---------------------------------------------------------------
+  # Regular regression suite: build + full cargo test
+  # ---------------------------------------------------------------
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build (locked)
+        run: cargo build --release --locked
+
+      - name: Run test suite
+        run: cargo test --release --locked
+
+      - name: Fixture self-check (python, independent of cargo)
+        run: python3 g3/tools/verify_fixtures.py
+
+  # ---------------------------------------------------------------
+  # T0 — cross-build artifact behaviour consistency test.
+  # Constitution G-III / item 8: the authoritative semantics live in the
+  # Rust core; every build of it must behave identically. T0 proves
+  # consistency, not correctness (correctness evidence is T4).
+  # Canonical basis is fixed in g3/tools/t0_dump.sh and BETA-READINESS.md.
+  # ---------------------------------------------------------------
+  t0-dump:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build (locked)
+        run: cargo build --release --locked
+
+      - name: Produce canonical behaviour dump
+        shell: bash
+        run: bash g3/tools/t0_dump.sh g3/fixtures t0-${{ matrix.os }} target/release/lscli
+
+      - name: Upload dump
+        uses: actions/upload-artifact@v4
+        with:
+          name: t0-${{ matrix.os }}
+          path: t0-${{ matrix.os }}/
+          retention-days: 7
+
+  t0-compare:
+    needs: t0-dump
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all dumps
+        uses: actions/download-artifact@v4
+        with:
+          pattern: t0-*
+          path: dumps/
+
+      - name: Compare canonical dumps across builds
+        shell: bash
+        run: |
+          set -e
+          cd dumps
+          OSES=$(ls -d t0-* | sed 's/^t0-//')
+          FIRST=$(echo "$OSES" | head -1)
+          rc=0
+          for f in t0-$FIRST/*.txt; do
+              name=$(basename "$f")
+              for os in $OSES; do
+                  [ "$os" = "$FIRST" ] && continue
+                  if ! diff -u "t0-$FIRST/$name" "t0-$os/$name" > "diff-$name.patch"; then
+                      echo "T0 FAILURE: $name differs between $FIRST and $os:"
+                      cat "diff-$name.patch"
+                      rc=1
+                  fi
+              done
+          done
+          if [ "$rc" -eq 0 ]; then
+              echo "T0 GREEN: all fixture dumps identical across builds: $OSES"
+          else
+              echo "T0 RED: cross-build behaviour inconsistency detected"
+          fi
+          exit $rc

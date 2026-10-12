@@ -30,7 +30,7 @@
 
 **平台**：X / Telegram / 两者（同稿）
 **关联**：commit `9381f7d`（Track-1 冲刺）· 仓库 https://github.com/LotusWallet/LOTSigner
-**状态**：🟡 待发布
+**状态**：✅ 已发布（2026-10-12，项目负责人手工发布于 X / Telegram，仓库同日转 public）
 
 **正文（中文）**
 > Lotus Signer 已公开（github.com/LotusWallet/LOTSigner）。
