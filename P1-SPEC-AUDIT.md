@@ -6,7 +6,7 @@
 | Trigger | A specification that overstates is committing the exact failure it forbids (P1-SPEC §6, §9-4) — so it gets audited like any other claim |
 | Method | Read the code; enumerate every `Field<T>` the model exposes; grep for constructors; run the suite |
 | Date | 2026-10-12 |
-| Result | **2 findings, both open** · 3 non-findings confirmed clean · 1 design question registered |
+| Result | **2 findings, both open** · 3 non-findings confirmed clean · 1 design question registered · **+1 gap found and closed the same day** (see the addendum) |
 
 > **This audit found a real instance of the failure mode P1-SPEC §9-4 predicts**: a coverage claim
 > whose *scope* was wider than its *evidence*. It was found by auditing our own spec one hour after
@@ -133,7 +133,8 @@ one place:
 | File | Change |
 |---|---|
 | `crates/lscore/tests/fixtures.rs` | +1 test (`state_bearing_field_inventory_is_explicit`); scope note on `a3_every_field_carries_a_state` |
-| `P1-SPEC.md` | §2.1 now states the state-bearing boundary and F1's limit explicitly |
+| `crates/lswasm/src/serialize.rs` | +6 JSON contract tests incl. a zero-dependency JSON validator (addendum F4) |
+| `P1-SPEC.md` | §2.1 states the state-bearing boundary and F1's limit; §7 gains A10; Appendix A notes the contract is enforced |
 | `g3/evidence/b1-test-log.txt` | regenerated (33 tests) |
 | `BUILD.md`, `KNOWN-LIMITATIONS.md`, `BETA-READINESS.md` | test-count and coverage wording kept in step |
 | `PROGRESS.md` | §13 records this audit |
@@ -141,3 +142,33 @@ one place:
 *This audit changes no measured fact in `g3/` or `g1/`, and does not amend the frozen checklist. It
 records what the specification claimed, what the evidence actually showed, and what was done about
 the difference.*
+
+---
+
+## Addendum (same day) — F4: Appendix A's contract was asserted by nothing
+
+Continuing the same question — *which of this spec's claims are backed by something a machine checks?* —
+one more gap surfaced, and this one was closed on the spot rather than registered.
+
+**F4 — the front-end JSON contract had no test.** P1-SPEC Appendix A states, as a contract, the exact
+JSON shape the web layer consumes. `lswasm` had **zero tests** (0 of the suite's 33 at the time), so
+any change to the serializer would have been caught only in a browser — the classic *"it builds,
+therefore it works"* gap that this project's own constitution rejects.
+
+**Closed.** Six contract tests now live in `crates/lswasm/src/serialize.rs`:
+
+| Test | What it holds |
+|---|---|
+| `emitted_json_is_well_formed_for_every_fixture` | every fixture × both languages emits **valid JSON** — checked by a small zero-dependency validator written for the test, not by substring matching |
+| `json_contract_matches_p1_spec_appendix_a` | the documented top-level / `facts` / input / output keys exist, and every field object carries the `state` / `value` / `note` / `state_explain` quadruple |
+| `risk_objects_carry_all_four_fields` | `code` / `summary` / `trigger_reason` / `evidence` all present |
+| `not_provided_and_lang_are_exposed` | layer 4 and the language code are passed through; the strings follow the language |
+| `ui_object_exposes_shell_labels` | the shell labels come from the kernel; UI object is itself well-formed JSON |
+| `escaping_keeps_json_well_formed` | quotes, backslashes and control characters are escaped (an unescaped quote would break the page) |
+
+**Why the validator matters.** Substring checks would have passed even on malformed output. Writing a
+~90-line zero-dependency JSON validator inside the test is what makes the claim *"this is valid JSON"*
+actually verified — consistent with the project's refusal to add a dependency for something it can
+state precisely itself.
+
+**Suite effect:** 33 → **39** tests. This is recorded as a new P1-SPEC §7 criterion **A10**.

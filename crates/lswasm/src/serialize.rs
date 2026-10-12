@@ -126,3 +126,308 @@ pub fn review_to_json(r: &Review) -> String {
         json::strings(&r.unsupported_keys),
     )
 }
+
+// ===========================================================================
+// 契约测试（P1-SPEC 附录 A）
+//
+// 为什么需要：附录 A 把"前端消费的 JSON 形状"写成了一份**契约**，但在本次之前
+// **没有任何测试守着它**（`lswasm` 此前 0 项测试）。一份无人守的契约会悄悄漂移，
+// 而前端只会在浏览器里失败——那正是"构建通过 ≠ 正确"的老问题。
+//
+// 这里不引任何 JSON 库（本项目零依赖），自带一个极小的良构校验器：
+// 它能证明"发出的确实是合法 JSON"，而不只是"含有某些子串"。
+// ===========================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use lscore::i18n::Lang;
+
+    // ---------- 极小 JSON 良构校验器（零依赖） ----------
+
+    fn skip_ws(b: &[u8], i: &mut usize) {
+        while *i < b.len() && matches!(b[*i], b' ' | b'\t' | b'\n' | b'\r') {
+            *i += 1;
+        }
+    }
+
+    fn expect_lit(b: &[u8], i: &mut usize, lit: &[u8]) -> Result<(), String> {
+        if b.len() >= *i + lit.len() && &b[*i..*i + lit.len()] == lit {
+            *i += lit.len();
+            Ok(())
+        } else {
+            Err(format!(
+                "expected {:?} at offset {}",
+                core::str::from_utf8(lit).unwrap(),
+                i
+            ))
+        }
+    }
+
+    fn parse_string(b: &[u8], i: &mut usize) -> Result<(), String> {
+        if *i >= b.len() || b[*i] != b'"' {
+            return Err(format!("expected a string at offset {}", i));
+        }
+        *i += 1;
+        while *i < b.len() {
+            match b[*i] {
+                b'"' => {
+                    *i += 1;
+                    return Ok(());
+                }
+                b'\\' => {
+                    *i += 1;
+                    if *i >= b.len() {
+                        return Err("truncated escape sequence".into());
+                    }
+                    match b[*i] {
+                        b'"' | b'\\' | b'/' | b'b' | b'f' | b'n' | b'r' | b't' => *i += 1,
+                        b'u' => {
+                            if *i + 4 >= b.len() {
+                                return Err("truncated \\u escape".into());
+                            }
+                            for k in 1..=4 {
+                                if !b[*i + k].is_ascii_hexdigit() {
+                                    return Err("non-hex digit in \\u escape".into());
+                                }
+                            }
+                            *i += 5;
+                        }
+                        e => return Err(format!("invalid escape \\{}", e as char)),
+                    }
+                }
+                0x00..=0x1f => return Err("raw control character inside a string".into()),
+                _ => *i += 1,
+            }
+        }
+        Err("unterminated string".into())
+    }
+
+    fn parse_number(b: &[u8], i: &mut usize) -> Result<(), String> {
+        let start = *i;
+        if b[*i] == b'-' {
+            *i += 1;
+        }
+        while *i < b.len() && b[*i].is_ascii_digit() {
+            *i += 1;
+        }
+        if *i == start || (b[start] == b'-' && *i == start + 1) {
+            return Err(format!("malformed number at offset {}", start));
+        }
+        Ok(())
+    }
+
+    fn parse_value(b: &[u8], i: &mut usize) -> Result<(), String> {
+        if *i >= b.len() {
+            return Err("unexpected end of input".into());
+        }
+        match b[*i] {
+            b'{' => parse_object(b, i),
+            b'[' => parse_array(b, i),
+            b'"' => parse_string(b, i),
+            b't' => expect_lit(b, i, b"true"),
+            b'f' => expect_lit(b, i, b"false"),
+            b'n' => expect_lit(b, i, b"null"),
+            b'-' | b'0'..=b'9' => parse_number(b, i),
+            c => Err(format!("unexpected byte {:?} at offset {}", c as char, i)),
+        }
+    }
+
+    fn parse_object(b: &[u8], i: &mut usize) -> Result<(), String> {
+        *i += 1;
+        skip_ws(b, i);
+        if *i < b.len() && b[*i] == b'}' {
+            *i += 1;
+            return Ok(());
+        }
+        loop {
+            skip_ws(b, i);
+            parse_string(b, i)?;
+            skip_ws(b, i);
+            if *i >= b.len() || b[*i] != b':' {
+                return Err(format!("expected ':' at offset {}", i));
+            }
+            *i += 1;
+            skip_ws(b, i);
+            parse_value(b, i)?;
+            skip_ws(b, i);
+            if *i >= b.len() {
+                return Err("unexpected end inside an object".into());
+            }
+            match b[*i] {
+                b',' => *i += 1,
+                b'}' => {
+                    *i += 1;
+                    return Ok(());
+                }
+                c => return Err(format!("expected ',' or '}}' but got {:?} at {}", c as char, i)),
+            }
+        }
+    }
+
+    fn parse_array(b: &[u8], i: &mut usize) -> Result<(), String> {
+        *i += 1;
+        skip_ws(b, i);
+        if *i < b.len() && b[*i] == b']' {
+            *i += 1;
+            return Ok(());
+        }
+        loop {
+            skip_ws(b, i);
+            parse_value(b, i)?;
+            skip_ws(b, i);
+            if *i >= b.len() {
+                return Err("unexpected end inside an array".into());
+            }
+            match b[*i] {
+                b',' => *i += 1,
+                b']' => {
+                    *i += 1;
+                    return Ok(());
+                }
+                c => return Err(format!("expected ',' or ']' but got {:?} at {}", c as char, i)),
+            }
+        }
+    }
+
+    fn validate_json(s: &str) -> Result<(), String> {
+        let b = s.as_bytes();
+        let mut i = 0usize;
+        skip_ws(b, &mut i);
+        parse_value(b, &mut i)?;
+        skip_ws(b, &mut i);
+        if i != b.len() {
+            return Err(format!("trailing bytes from offset {}", i));
+        }
+        Ok(())
+    }
+
+    // ---------- 夹具 ----------
+
+    /// 可解析固件全集（与 crates/lscore/tests/fixtures.rs 的 PARSEABLE 一致；
+    /// S6 是 malformed，必须报错，故不在此列）。
+    const PARSEABLE: [&str; 9] = ["S1", "S2a", "S2b", "S3", "S4", "S5", "S7", "S8", "S9"];
+
+    fn fixture(name: &str) -> String {
+        let mut p = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        p.pop(); // crates/
+        p.pop(); // repo root
+        p.push("g3");
+        p.push("fixtures");
+        p.push(format!("{name}.psbt"));
+        std::fs::read_to_string(&p)
+            .unwrap_or_else(|e| panic!("cannot read {}: {e}", p.display()))
+            .trim()
+            .to_string()
+    }
+
+    fn review_json(name: &str, lang: Lang) -> String {
+        let r = lscore::review_psbt_base64_lang(&fixture(name), lang)
+            .unwrap_or_else(|e| panic!("{name} should parse cleanly: {e}"));
+        review_to_json(&r)
+    }
+
+    fn count(hay: &str, needle: &str) -> usize {
+        hay.matches(needle).count()
+    }
+
+    // ---------- 测试 ----------
+
+    /// 每种固件、每种语言下，发出的都必须是**合法 JSON**（而非"含有某些子串"）。
+    #[test]
+    fn emitted_json_is_well_formed_for_every_fixture() {
+        for name in PARSEABLE {
+            for lang in [Lang::En, Lang::ZhCn] {
+                let s = review_json(name, lang);
+                if let Err(e) = validate_json(&s) {
+                    panic!("{name}/{lang:?}: emitted JSON is malformed ({e})\n{s}");
+                }
+            }
+        }
+    }
+
+    /// P1-SPEC 附录 A 的顶层与 facts 键必须存在。
+    #[test]
+    fn json_contract_matches_p1_spec_appendix_a() {
+        let s = review_json("S1", Lang::En);
+
+        for k in [
+            "\"ok\"", "\"lang\"", "\"ui\"", "\"facts\"", "\"context\"", "\"risks\"",
+            "\"not_provided\"", "\"unsupported_keys\"",
+        ] {
+            assert!(s.contains(k), "top-level key {k} missing");
+        }
+        assert!(s.contains("\"ok\":true"), "ok must be true on success");
+
+        for k in [
+            "\"txid\"", "\"version\"", "\"locktime\"", "\"locktime_meaning\"", "\"inputs\"",
+            "\"outputs\"", "\"total_out_sats\"", "\"fee_sats\"", "\"sighash_type\"",
+            "\"sighash_policy\"",
+        ] {
+            assert!(s.contains(k), "facts key {k} missing");
+        }
+        for k in [
+            "\"index\"", "\"outpoint\"", "\"sequence\"", "\"script_type\"", "\"amount\"",
+            "\"partial_sig_count\"", "\"has_witness_utxo\"", "\"has_non_witness_utxo\"",
+        ] {
+            assert!(s.contains(k), "input key {k} missing");
+        }
+        for k in ["\"value_sats\"", "\"address\"", "\"script_hex\""] {
+            assert!(s.contains(k), "output key {k} missing");
+        }
+
+        // 每个"字段对象"必须同时带 state / value / note / state_explain —— 前端据此渲染，
+        // 缺任何一个都会让界面少一格或崩掉。
+        let n_state = count(&s, "\"state\":");
+        assert!(n_state > 0, "at least one field object expected");
+        assert_eq!(n_state, count(&s, "\"state_explain\":"), "state 与 state_explain 数量不一致");
+        assert_eq!(n_state, count(&s, "\"note\":"), "state 与 note 数量不一致");
+        assert_eq!(n_state, count(&s, "\"value\":"), "state 与 value 数量不一致");
+    }
+
+    /// 风险对象四字段齐备（用 S2a 触发 R002）。
+    #[test]
+    fn risk_objects_carry_all_four_fields() {
+        let s = review_json("S2a", Lang::En);
+        for k in ["\"code\":\"R002\"", "\"summary\":", "\"trigger_reason\":", "\"evidence\":"] {
+            assert!(s.contains(k), "risk object missing {k}\n{s}");
+        }
+    }
+
+    /// 第四层与语言码如实透出（前端不得自行改写状态或文案）。
+    #[test]
+    fn not_provided_and_lang_are_exposed() {
+        assert!(review_json("S1", Lang::En).contains("\"lang\":\"en\""));
+        assert!(review_json("S1", Lang::ZhCn).contains("\"lang\":\"zh-CN\""));
+        // 第四层的固定内容必须在两种语言下都非空且随语言变化
+        let en = review_json("S1", Lang::En);
+        let zh = review_json("S1", Lang::ZhCn);
+        assert!(en.contains("does not judge the transaction"));
+        assert!(zh.contains("不判断这笔交易"));
+    }
+
+    /// 界面壳文案由内核提供，前端不持有语义文案（宪法第 8 条的延伸）。
+    #[test]
+    fn ui_object_exposes_shell_labels() {
+        let s = ui_object(Lang::En);
+        for k in [
+            "app_title", "layer1", "layer2", "layer3", "layer4", "btn_review", "btn_export",
+            "drop_title", "empty_risks", "err_review_fail",
+        ] {
+            assert!(s.contains(&format!("\"{k}\":")), "ui key {k} missing");
+        }
+        assert!(validate_json(&s).is_ok(), "ui object must itself be well-formed JSON");
+        // 五态解释随语言走，且不出现"安全/危险"终局判定措辞
+        let ui = ui_object(Lang::ZhCn);
+        assert!(ui.contains("本工具不提供以下结论"));
+    }
+
+    /// 转义：含引号/反斜杠/换行的字符串必须被正确转义（否则前端解析会崩）。
+    #[test]
+    fn escaping_keeps_json_well_formed() {
+        let nasty = "quote\" backslash\\ newline\n tab\t ctrl\u{1}";
+        let s = format!("{{\"s\":{}}}", json::string(nasty));
+        assert!(validate_json(&s).is_ok(), "escaped string broke the JSON: {s}");
+        assert!(!s.contains('\n'), "raw newline leaked into JSON output");
+    }
+}

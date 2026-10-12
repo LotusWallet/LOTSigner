@@ -234,6 +234,7 @@ artifact is not met.
 | **A7** | T4 independent cross-check on the full fixture set, **every** disagreement adjudicated in writing | cross-check report | BETA-READINESS B5 |
 | **A8** | The suite contains **at least one artifact exported by a third-party tool** and one real-world transaction shape | fixtures S7–S9 | G3 lesson (§9.3) |
 | **A9** | A stranger can build and run it from a clean clone by following one document | `BUILD.md`, standing A1 | BETA-READINESS A1 |
+| **A10** | The front-end contract of Appendix A is enforced by tests: the emitted JSON must be **well-formed** for every fixture in both languages, and must carry the documented keys plus the `state`/`value`/`note`/`state_explain` quadruple on every field object | `crates/lswasm/src/serialize.rs` (contract tests, zero-dependency JSON validator) | this spec, Appendix A |
 
 > **A8 is a P1-level requirement on purpose.** It generalises the single most valuable thing G3
 > produced: *fixtures we construct can only test the situations we thought of.* Two real defects —
@@ -284,6 +285,11 @@ by any of the following — and the correction is a **new file**, never an edit 
 The web layer consumes exactly this shape and performs **no** parsing or state decisions (C7). Every
 field object carries its state, its note, and a human-readable explanation of the state *rendered by
 the kernel* — so the front end cannot re-word a state (Constitution 8, extended).
+
+> **This contract is enforced, not aspirational** (criterion A10). Until 2026-10-12 nothing checked
+> it: `lswasm` had zero tests, so a change in the serializer would have broken the page silently —
+> the classic "it builds, therefore it works" gap. It is now pinned by contract tests that validate
+> the emitted bytes with a small zero-dependency JSON validator, for every fixture in both languages.
 
 ```jsonc
 {

@@ -537,3 +537,42 @@ ROI §6.2 结尾即写「建议加入固件套件作为未来回归点」，本�
   `KNOWN-LIMITATIONS.md` 「Where the five states are exercised」改写为**准确**表述（四态落到字段、`unsupported` 未落），并写明状态承载字段边界。
 - README / README_CN 文档索引与仓库结构接入 `P1-SPEC-AUDIT.md`。
 - **本次自检不改变 `g3/`、`g1/` 的任何实测事实，也不修订冻结清单。** 它只记录：规格声称了什么、证据实际显示了什么、以及两者之间的差做了什么。
+
+---
+
+## 十四、前端 JSON 契约补测试（2026-10-12）：附录 A 从「声明」变「被守」
+
+延续第十三节同一个问题——**这份规格里哪些声称是有东西在机器上守着的？** 又查出一处缺口，
+但这一处当场闭合，而不是登记。
+
+### 缺口 F4：附录 A 的契约此前**无任何测试**
+
+- P1-SPEC 附录 A 把"前端消费的 JSON 形状"当作**契约**写明；而 `lswasm` **此前 0 项测试**
+  （33 项套件里一项也没有它）。序列化器一旦改错，**只会在浏览器里炸**——
+  正是本项目宪法明确拒绝的"构建通过 ⇒ 就能用"。
+- 一个无人守的契约会悄悄漂移。
+
+### 闭合方式：`crates/lswasm/src/serialize.rs` +6 项契约测试
+
+| 测试 | 守住什么 |
+|---|---|
+| `emitted_json_is_well_formed_for_every_fixture` | 全固件 × 双语，发出的都是**合法 JSON**——由为测试自带的小型零依赖校验器判定，**不是**子串匹配 |
+| `json_contract_matches_p1_spec_appendix_a` | 附录 A 的顶层/`facts`/输入/输出键齐备；且每个字段对象都带 `state`/`value`/`note`/`state_explain` 四件套 |
+| `risk_objects_carry_all_four_fields` | 风险对象 `code`/`summary`/`trigger_reason`/`evidence` 全在 |
+| `not_provided_and_lang_are_exposed` | 第四层与语言码如实透出，文案随语言变化 |
+| `ui_object_exposes_shell_labels` | 界面壳文案来自内核，且 UI 对象本身也是合法 JSON |
+| `escaping_keeps_json_well_formed` | 引号/反斜杠/控制字符被正确转义（**漏转义一个引号就会让整个页面崩掉**） |
+
+### 为什么"自带一个 JSON 校验器"是必要的
+
+子串匹配**在畸形输出上也会通过**。只有真的写一个 ~90 行的零依赖 JSON 良构校验器放进测试里，
+"这是合法 JSON"这句话才是**被验证**的，而不是被断言的。这与本项目"能自己写清楚就不引依赖"的一贯做法一致。
+
+### 效果
+
+- 测试总数 **33 → 39**（8 单元 + 25 固件 + **6 wasm 契约**）；`g3/evidence/b1-test-log.txt` 已重跑。
+- P1-SPEC 新增验收标准 **A10**（附录 A 的契约须被测试守住），附录 A 正文补上"本契约是被强制执行的，不是愿景"。
+- `P1-SPEC-AUDIT.md` 追加同日 **Addendum（F4）**，并更新其"本次审计改了什么"表。
+- `BUILD.md` / `KNOWN-LIMITATIONS.md` / `BETA-READINESS.md` 计数同步（22 → 39，本次共 +12）。
+- **CI 覆盖面顺带扩大**：`ci.yml` 的 `test` job 跑的就是 `cargo test --release --locked`，
+  故这 6 项契约测试**自动进入 CI**，无需改 workflow。

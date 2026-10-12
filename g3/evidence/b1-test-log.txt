@@ -1,8 +1,8 @@
-== cargo test --release --offline @ working tree (parent commit 4008a8e) ==
-== regenerated 2026-10-12: +6 P1 regressions (meta-rule / layer / risk contract / state-bearing inventory) ==
+== cargo test --release --offline @ working tree (parent commit 9a8306b) ==
+== regenerated 2026-10-12: +12 tests (6 P1 model regressions + 6 front-end JSON contract tests) ==
 
-   Compiling lscore v0.1.0 (D:\work\LOTSigner\crates\lscore)
-    Finished `release` profile [optimized] target(s) in 13.98s
+   Compiling lswasm v0.1.0 (D:\work\LOTSigner\crates\lswasm)
+    Finished `release` profile [optimized] target(s) in 15.58s
      Running unittests src\main.rs (target\release\deps\lscli-ec3553685edfd067.exe)
 
 running 0 tests
@@ -13,12 +13,12 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 8 tests
 test base64::tests::rejects_bad_input ... ok
-test script::tests::p2wsh_address_is_stable ... ok
 test base64::tests::round_trip_known_vector ... ok
-test script::tests::bech32_p2wpkh_vector ... ok
-test tx::tests::sha256_known_vector ... ok
 test base64::tests::tolerates_whitespace ... ok
+test script::tests::p2wsh_address_is_stable ... ok
+test tx::tests::sha256_known_vector ... ok
 test tx::tests::varint_round_trip ... ok
+test script::tests::bech32_p2wpkh_vector ... ok
 test script::tests::base58_p2sh_vector ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
@@ -32,11 +32,11 @@ test parse_strictness_is_scoped_to_unsigned_tx ... ok
 test bad_magic_rejected ... ok
 test psbt_v2_rejected_without_guessing ... ok
 test s1_normal_review ... ok
-test m1_check_failed_never_carries_a_value ... ok
-test m1_missing_amount_never_becomes_zero ... ok
 test proprietary_still_reported_after_s9_fix ... ok
-test s2a_missing_states ... ok
 test s2b_unsupported_recorded ... ok
+test m1_missing_amount_never_becomes_zero ... ok
+test m1_check_failed_never_carries_a_value ... ok
+test s2a_missing_states ... ok
 test s8_prev_txid_mismatch_check_failed ... ok
 test s3_partial_signature ... ok
 test s4_p2sh_verified_amount ... ok
@@ -45,20 +45,26 @@ test s6_malformed_named_error ... ok
 test s7_real_world_prev_tx_amount_verified ... ok
 test s9_caravan_export_no_false_unsupported ... ok
 test a3_risk_notices_carry_trigger_and_evidence ... ok
-test i18n_structure_invariant ... ok
-test a5_meta_rule_invariant_across_suite ... ok
-test a3_every_field_carries_a_state ... ok
-test state_bearing_field_inventory_is_explicit ... ok
 test all_states_exercised_across_suite ... ok
+test state_bearing_field_inventory_is_explicit ... ok
 test a2_layer4_never_empty_and_meaningful ... ok
+test i18n_structure_invariant ... ok
+test a3_every_field_carries_a_state ... ok
+test a5_meta_rule_invariant_across_suite ... ok
 
-test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
      Running unittests src\lib.rs (target\release\deps\lswasm-02f91f9e9f2b4971.exe)
 
-running 0 tests
+running 6 tests
+test serialize::tests::escaping_keeps_json_well_formed ... ok
+test serialize::tests::ui_object_exposes_shell_labels ... ok
+test serialize::tests::json_contract_matches_p1_spec_appendix_a ... ok
+test serialize::tests::risk_objects_carry_all_four_fields ... ok
+test serialize::tests::not_provided_and_lang_are_exposed ... ok
+test serialize::tests::emitted_json_is_well_formed_for_every_fixture ... ok
 
-test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
    Doc-tests lscore
 

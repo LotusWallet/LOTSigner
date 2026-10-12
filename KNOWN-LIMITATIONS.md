@@ -109,7 +109,7 @@ These four are enforced as tests over the whole fixture suite (see
 ## How to verify these claims yourself
 
 ```bash
-cargo test --offline                       # 33 tests incl. BIP-173 official vectors
+cargo test --offline                       # 39 tests incl. BIP-173 official vectors
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
 ```
