@@ -77,7 +77,10 @@ jobs:
           OSES=$(ls -d t0-* | sed 's/^t0-//')
           FIRST=$(echo "$OSES" | head -1)
           rc=0
-          for f in t0-$FIRST/*.txt; do
+          # Compare fixture dumps only. INDEX.txt is a wc -c listing whose column
+          # alignment legitimately differs between OS toolchains — it is metadata,
+          # not behaviour (and its content showed identical byte sizes anyway).
+          for f in t0-$FIRST/S*.txt; do
               name=$(basename "$f")
               for os in $OSES; do
                   [ "$os" = "$FIRST" ] && continue
