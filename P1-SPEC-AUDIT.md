@@ -215,3 +215,34 @@ we want to infer from key-type membership, and "infer the format from a set of r
 the kind of guess this project's constitution tells it not to make silently. Extending the v2 key table
 would need its own decision about how many keys must be present before the tool is allowed to *name* a
 version.
+
+---
+
+## Addendum (same day) — F8·F9: a wrong sentence hiding in a branch that never runs
+
+After F5–F7 the obvious next question was: **is this class of defect a one-off, or does it recur
+wherever a sentence is assembled?** The way to answer that without reading every line was to write
+the invariant down and let the machine sweep. The result was `crates/lscore/tests/i18n_table.rs`,
+which deliberately **does not run any fixture**: it scans the string table's source *and every
+call site's source across all three crates*. The reason is F8 — a fixture-based test can only reach
+code that executes.
+
+| # | Finding | Evidence | Disposition |
+|---|---|---|---|
+| **F8** | `crates/lscli/src/main.rs`'s `--export` error branch called `t(lang, "err_review_fail", &[])` — **zero arguments** — while the template is `"Review failed: {0}"` / `"审阅失败：{0}"`. The interpolation loop only replaces placeholders it has arguments for, so the user would have been shown the literal string `审阅失败：{0}`. | found by the new call-site argument audit, not by running the CLI | **Fixed** (the cause is now passed through, in the same shape `ReviewError`'s `Display` uses). **The branch is also unreachable**, for the same structural reason as F7: `review_psbt_base64_lang` has already decoded the same text successfully just above, and `trim()` only strips `\r \n <space> \t` — exactly the four bytes `base64::decode` strips itself — so `decode(text.trim())` cannot fail after `decode(text)` succeeded. Recorded, commented, and now covered by the audit. |
+| **F9** | Two observations in the front end, registered rather than changed: (a) `hint_wasm_fail` is shipped in the UI object but **never used by `web/index.html`**, and is by construction unreachable — displaying it requires `UI`, which comes from `ls_ui` in the same wasm; if the wasm failed, there is no `ls_ui`; (b) the page hard-codes two English sentences for the case where the core could not be loaded at all (`"Core call failed: {0}"`, `"sample load failed"`). | reading `web/index.html`; rendering the UI object for both languages | **Registered.** (a) Removing a field from the UI object is a change to the front-end contract that P1-SPEC Appendix A now enforces (A10), so it is not a thing to do unilaterally. (b) Is unavoidable and honest: with no core there is no string table, so the fallback sentence cannot come from the kernel. Both are recorded in `KNOWN-LIMITATIONS.md`. |
+
+**What the new test group actually guarantees — and what it does not.** It holds that the two
+languages define the same keys, that `{n}` placeholders match across languages and are contiguous
+from `{0}`, that no key renders as itself, and that no `t(…)` call site uses an undefined key or
+passes fewer arguments than its template needs. It **cannot** see a call site whose key is a
+variable — currently exactly one, `ui_object`'s UI shell list, which is why that list was extracted
+into `UI_SHELL_KEYS` and given its own test. That boundary is written into the tests rather than
+left implied.
+
+**The tests guard themselves.** Both audits assert a **minimum number of call sites parsed** before
+asserting anything about them, because a scanner that silently finds nothing would make the whole
+group "pass" while checking nothing — the precise anti-pattern this project treats as a defect.
+That guard fired twice during development, both times correctly (first because the scanner did not
+match `, "` with a space, then because it counted a trailing comma as an extra argument), and it is
+also how F8 was found.

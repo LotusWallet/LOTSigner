@@ -69,7 +69,7 @@ target/release/lscli --export out.psbt g3/fixtures/S1.psbt   # export unmodified
 cargo test --offline
 ```
 
-49 tests, in four groups:
+57 tests, in five groups:
 
 - **Kernel unit tests** (incl. BIP-173 official vectors) — `crates/lscore/src/`
 - **Fixture-suite integration tests** — `crates/lscore/tests/fixtures.rs`: the P1 meta-rule
@@ -80,10 +80,18 @@ cargo test --offline
   prefix must be applied exactly once (no `input decode failed: input decode failed: …`), a
   message that merely *lacks a required key* must not be described as *truncated*, and a
   genuinely truncated message must still be described as truncated
+- **String-table invariants** — `crates/lscore/tests/i18n_table.rs`: it scans the table's source
+  and **every call site's source** (including the other crates') rather than running fixtures, so
+  it also catches mistakes in unreachable branches. It holds that the two languages define the
+  same keys, that `{n}` placeholders match across languages and are contiguous from `{0}`, that
+  every key renders as something other than itself, and that **no `t(…)` call site uses an
+  undefined key or passes fewer arguments than its template needs** — a short argument list
+  would print a literal `{0}` to the user
 - **Front-end contract** — `crates/lswasm/src/serialize.rs` checks that the emitted JSON is
-  well-formed for every fixture in both languages; `crates/lswasm/src/lib.rs` calls
-  `ls_review` through the same FFI sequence the browser uses (`ls_alloc` → `ls_review` →
-  read the 4-byte length prefix), so the **web** error path is covered too — no Node needed
+  well-formed for every fixture in both languages and that the UI shell key list is fully
+  defined; `crates/lswasm/src/lib.rs` calls `ls_review` through the same FFI sequence the
+  browser uses (`ls_alloc` → `ls_review` → read the 4-byte length prefix), so the **web** error
+  path is covered too — no Node needed
 
 Full log: `g3/evidence/b1-test-log.txt`.
 

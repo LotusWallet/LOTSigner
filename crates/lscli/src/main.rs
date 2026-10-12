@@ -79,10 +79,18 @@ fn main() -> ExitCode {
     // 宪法第 2 条：本工具不签名。导出的是**未经任何修改**的输入字节——
     // 审阅完成后原样交回，签名由用户自己的签名器完成。
     if let Some(out) = &export_path {
+        // 防御性兜底，**正常路径不可达**（2026-10-12 核实，见 P1-SPEC-AUDIT F8）：
+        // 上面 `review_psbt_base64_lang(&text, lang)` 已经用同一个 `base64::decode` 解过一遍
+        // 并成功；而 `trim()` 只会去掉 `\r \n 空格 \t`——正是 `decode` 自己也会剔除的那四个字符，
+        // 所以 `decode(text.trim())` 不可能在 `decode(text)` 成功之后失败。保留是为了不 panic。
+        //
+        // 这里原本写成 `t(lang, "err_review_fail", &[])`：模板是 "…：{0}"，**零参数**会让
+        // `{0}` 原样留在用户看到的句子里。现在把原因传进去，形状与 ReviewError 的 Display 一致。
         let raw = match lscore::base64::decode(text.trim()) {
             Ok(r) => r,
             Err(e) => {
-                eprintln!("{} {:?}", t(lang, "err_review_fail", &[]), e);
+                let reason = t(lang, "err_decode", &[&format!("{:?}", e)]);
+                eprintln!("{}", t(lang, "err_review_fail", &[&reason]));
                 return ExitCode::FAILURE;
             }
         };

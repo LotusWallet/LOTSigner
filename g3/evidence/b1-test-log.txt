@@ -1,7 +1,7 @@
-== cargo test --release --offline @ working tree (parent commit d278d19) ==
-== regenerated 2026-10-12: +10 tests (6 error-channel language/wording invariants + 4 FFI-level tests covering the web error path) ==
+== cargo test --release --offline @ working tree (parent commit c65dbec) ==
+== regenerated 2026-10-12: +8 tests (6 string-table source audits incl. call-site argument counts + 2 UI-shell key list) ==
 
-    Finished `release` profile [optimized] target(s) in 0.05s
+    Finished `release` profile [optimized] target(s) in 0.08s
      Running unittests src\main.rs (target\release\deps\lscli-ec3553685edfd067.exe)
 
 running 0 tests
@@ -12,74 +12,88 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 
 running 8 tests
 test base64::tests::rejects_bad_input ... ok
-test base64::tests::tolerates_whitespace ... ok
-test script::tests::base58_p2sh_vector ... ok
-test script::tests::p2wsh_address_is_stable ... ok
-test tx::tests::varint_round_trip ... ok
-test tx::tests::sha256_known_vector ... ok
 test script::tests::bech32_p2wpkh_vector ... ok
+test script::tests::base58_p2sh_vector ... ok
 test base64::tests::round_trip_known_vector ... ok
+test script::tests::p2wsh_address_is_stable ... ok
+test base64::tests::tolerates_whitespace ... ok
+test tx::tests::sha256_known_vector ... ok
+test tx::tests::varint_round_trip ... ok
 
 test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests\errors.rs (target\release\deps\errors-b928d3c3ff984603.exe)
 
 running 6 tests
-test cli_composed_error_line_is_single_language ... ok
 test decode_failure_states_the_cause_exactly_once ... ok
-test genuine_truncation_is_still_reported_as_truncation ... ok
+test cli_composed_error_line_is_single_language ... ok
 test error_sentences_follow_the_requested_language ... ok
-test psbtv2_field_still_reported_as_unsupported_version ... ok
 test missing_unsigned_tx_is_not_reported_as_truncation ... ok
+test psbtv2_field_still_reported_as_unsupported_version ... ok
+test genuine_truncation_is_still_reported_as_truncation ... ok
 
 test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running tests\fixtures.rs (target\release\deps\fixtures-ac000ee55d912dd2.exe)
 
 running 25 tests
-test non_base64_rejected ... ok
-test bad_magic_rejected ... ok
 test empty_input_rejected ... ok
+test non_base64_rejected ... ok
 test parse_strictness_is_scoped_to_unsigned_tx ... ok
-test m1_check_failed_never_carries_a_value ... ok
 test psbt_v2_rejected_without_guessing ... ok
+test m1_check_failed_never_carries_a_value ... ok
 test s1_normal_review ... ok
+test bad_magic_rejected ... ok
+test m1_missing_amount_never_becomes_zero ... ok
+test proprietary_still_reported_after_s9_fix ... ok
 test s2a_missing_states ... ok
 test s2b_unsupported_recorded ... ok
-test s5_check_failed_fee ... ok
-test proprietary_still_reported_after_s9_fix ... ok
 test s8_prev_txid_mismatch_check_failed ... ok
 test s3_partial_signature ... ok
 test s4_p2sh_verified_amount ... ok
-test m1_missing_amount_never_becomes_zero ... ok
+test s5_check_failed_fee ... ok
+test s6_malformed_named_error ... ok
 test s7_real_world_prev_tx_amount_verified ... ok
 test s9_caravan_export_no_false_unsupported ... ok
 test a5_meta_rule_invariant_across_suite ... ok
-test a3_every_field_carries_a_state ... ok
-test a2_layer4_never_empty_and_meaningful ... ok
-test state_bearing_field_inventory_is_explicit ... ok
-test i18n_structure_invariant ... ok
 test all_states_exercised_across_suite ... ok
+test state_bearing_field_inventory_is_explicit ... ok
+test a2_layer4_never_empty_and_meaningful ... ok
 test a3_risk_notices_carry_trigger_and_evidence ... ok
-test s6_malformed_named_error ... ok
+test a3_every_field_carries_a_state ... ok
+test i18n_structure_invariant ... ok
 
-test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+test result: ok. 25 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running tests\i18n_table.rs (target\release\deps\i18n_table-edc7e890ae4af976.exe)
+
+running 6 tests
+test key_sets_are_identical_across_languages ... ok
+test every_key_is_defined_not_merely_echoed ... ok
+test placeholders_are_contiguous_from_zero ... ok
+test placeholders_match_across_languages ... ok
+test every_call_site_uses_a_key_that_exists ... ok
+test every_call_site_passes_the_arguments_its_template_needs ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
      Running unittests src\lib.rs (target\release\deps\lswasm-02f91f9e9f2b4971.exe)
 
-running 10 tests
-test ffi_tests::review_decode_error_is_not_double_prefixed ... ok
+running 12 tests
 test serialize::tests::escaping_keeps_json_well_formed ... ok
+test ffi_tests::review_decode_error_is_not_double_prefixed ... ok
 test ffi_tests::review_missing_unsigned_tx_is_not_reported_as_truncation ... ok
-test serialize::tests::ui_object_exposes_shell_labels ... ok
-test serialize::tests::json_contract_matches_p1_spec_appendix_a ... ok
 test ffi_tests::review_error_language_follows_the_lang_argument ... ok
+test serialize::tests::ui_shell_keys_are_defined_in_the_table ... ok
+test serialize::tests::ui_shell_keys_with_placeholders_are_the_substituted_ones ... ok
+test serialize::tests::ui_object_exposes_shell_labels ... ok
 test serialize::tests::risk_objects_carry_all_four_fields ... ok
 test ffi_tests::review_success_path_still_works_through_ffi ... ok
+test serialize::tests::json_contract_matches_p1_spec_appendix_a ... ok
 test serialize::tests::not_provided_and_lang_are_exposed ... ok
 test serialize::tests::emitted_json_is_well_formed_for_every_fixture ... ok
 
-test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
 
    Doc-tests lscore
 

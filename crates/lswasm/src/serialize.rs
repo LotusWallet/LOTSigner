@@ -10,19 +10,30 @@ use lscore::state::{Field, Review};
 
 use crate::json;
 
+/// 界面壳标签清单。
+///
+/// **抽成常量是为了能被测试守**（2026-10-12）：这是一份声明式清单，而 `t()` 对未知 key
+/// 的行为是「原样返回 key」——清单里少写/拼错一个 key，前端拿到的标签就会是 `th_value`
+/// 这样的裸标识符，而且**安静地**显示出来。它也是本文件里唯一用**变量 key** 调用 `t()` 的地方，
+/// 因此 `crates/lscore/tests/i18n_table.rs` 的调用点审计**扫不到它**，必须单独守。
+pub(crate) const UI_SHELL_KEYS: [&str; 40] = [
+    "app_title", "tagline", "offline_badge", "drop_title", "drop_sub", "input_placeholder",
+    "btn_review", "btn_demo", "btn_export", "hint_export_done", "hint_ready",
+    "hint_wasm_fail", "hint_demo_fail",
+    "layer1", "layer2", "layer3", "layer4", "footer1", "footer2",
+    "th_index", "th_outpoint", "th_type", "th_amount", "th_sigs", "th_value", "th_script_addr",
+    "dt_txid", "dt_version", "dt_locktime", "dt_total_out", "dt_fee", "dt_sighash",
+    "unknown", "not_provided_label", "no_sigs", "sig_count", "cannot_show_addr",
+    "empty_risks", "err_review_fail", "err_core_fail",
+];
+
 /// 界面壳文案（纯标签，无语义判断）。前端拿它渲染，不得自行拼句子。
+///
+/// 注意：这里对**所有**标签统一传 `&[]`。带 `{0}` 的标签（见
+/// `ui_shell_keys_with_placeholders_are_the_substituted_ones`）**由前端做替换**——
+/// 内核给的是模板，填值是数据。这是有意的分工，不是漏了参数。
 pub fn ui_object(lang: Lang) -> String {
-    let keys = [
-        "app_title", "tagline", "offline_badge", "drop_title", "drop_sub", "input_placeholder",
-        "btn_review", "btn_demo", "btn_export", "hint_export_done", "hint_ready",
-        "hint_wasm_fail", "hint_demo_fail",
-        "layer1", "layer2", "layer3", "layer4", "footer1", "footer2",
-        "th_index", "th_outpoint", "th_type", "th_amount", "th_sigs", "th_value", "th_script_addr",
-        "dt_txid", "dt_version", "dt_locktime", "dt_total_out", "dt_fee", "dt_sighash",
-        "unknown", "not_provided_label", "no_sigs", "sig_count", "cannot_show_addr",
-        "empty_risks", "err_review_fail", "err_core_fail",
-    ];
-    let items: Vec<String> = keys
+    let items: Vec<String> = UI_SHELL_KEYS
         .iter()
         .map(|k| format!("{}:{}", json::string(k), json::string(&t(lang, k, &[]))))
         .collect();
@@ -429,5 +440,53 @@ mod tests {
         let s = format!("{{\"s\":{}}}", json::string(nasty));
         assert!(validate_json(&s).is_ok(), "escaped string broke the JSON: {s}");
         assert!(!s.contains('\n'), "raw newline leaked into JSON output");
+    }
+
+    /// 界面壳清单里的每个 key 都必须在表里有定义。
+    ///
+    /// 这是 `crates/lscore/tests/i18n_table.rs` 的**调用点审计扫不到的那一份**：
+    /// 那里只扫字面量 key，而 `ui_object` 是拿变量 key 去调 `t()` 的。
+    /// 一个拼错的 key 会让前端把裸标识符当标签显示，且悄无声息。
+    #[test]
+    fn ui_shell_keys_are_defined_in_the_table() {
+        for k in UI_SHELL_KEYS {
+            let en = t(Lang::En, k, &[]);
+            let zh = t(Lang::ZhCn, k, &[]);
+            assert!(
+                en != k || zh != k,
+                "ui shell key {k:?} is defined in neither language — the page would render the raw key"
+            );
+        }
+        // 自守：清单本身不能退化（少了 key 这个测试会"通过"却覆盖不到东西）
+        assert_eq!(UI_SHELL_KEYS.len(), 40, "ui shell key list changed size");
+        let uniq: std::collections::BTreeSet<_> = UI_SHELL_KEYS.iter().collect();
+        assert_eq!(uniq.len(), UI_SHELL_KEYS.len(), "ui shell key list has duplicates");
+    }
+
+    /// 带 `{0}` 的界面标签**必须**是前端会做替换的那几个。
+    ///
+    /// 为什么单列一条：`ui_object` 对每个标签统一传 `&[]`，所以任何带 `{0}` 的模板
+    /// 到了页面上都是字面量 `{0}`——**除非前端自己 `replace("{0}", …)`**。
+    /// 于是"往清单里加一个带占位符的标签"这个动作，必须同时改前端，否则页面显示 `{0}`。
+    /// 这条断言把那个跨层契约钉在明面上（前端替换点见 `web/index.html`）。
+    #[test]
+    fn ui_shell_keys_with_placeholders_are_the_substituted_ones() {
+        let mut with_ph: Vec<&str> = UI_SHELL_KEYS
+            .iter()
+            .copied()
+            .filter(|k| t(Lang::En, k, &[]).contains("{0}"))
+            .collect();
+        with_ph.sort_unstable();
+        assert_eq!(
+            with_ph,
+            ["cannot_show_addr", "err_core_fail", "err_review_fail", "hint_wasm_fail", "sig_count"],
+            "带占位符的界面标签集合变了。若你新加了一个带 {{0}} 的标签：前端必须自己替换它，\
+             否则页面上会显示字面量 {{0}} —— 请到 web/index.html 补 replace，并更新本断言与注释。"
+        );
+        // 现状说明（2026-10-12 核实，见 P1-SPEC-AUDIT F9）：
+        //   sig_count / cannot_show_addr / err_review_fail / err_core_fail  —— 前端已替换；
+        //   hint_wasm_fail —— **前端从未使用**，且按构造不可达：要显示它就需要 UI，
+        //   而 UI 由同一个 wasm 的 ls_ui 提供——wasm 挂了就没有 ls_ui。故它是死标签，
+        //   登记而不删除（它会出现在 UI 对象里，动它属于对外契约变更）。
     }
 }

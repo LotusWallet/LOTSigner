@@ -112,11 +112,17 @@ These four are enforced as tests over the whole fixture suite (see
   would mean inventing a description of a failure we did not observe ourselves (meta-rule M1).
   All error sentences **we** author do follow `--lang`; that is asserted by
   `crates/lscore/tests/errors.rs`.
+- Two sentences in the web page are **hard-coded English**, used only in the fallback path where
+  the core (wasm) could not be loaded at all: `"Core call failed: {0}"` and
+  `"sample load failed"`. They cannot come from the kernel — without the core there is no
+  `ls_ui` and therefore no string table. So if the core fails to load on a Chinese-locale
+  machine, that one message is English. Everything the *kernel* prints follows the requested
+  language.
 
 ## How to verify these claims yourself
 
 ```bash
-cargo test --offline                       # 49 tests incl. BIP-173 official vectors
+cargo test --offline                       # 57 tests incl. BIP-173 official vectors
 python3 g3/tools/verify_fixtures.py        # fixture self-check (independent Python parser)
 node g3/tools/xcheck_t4.js                 # cross-check vs bitcoinjs-lib (see g3/T4-异源对照报告.md)
 node g3/tools/check_wasm_error_lang.js     # error sentences in the real web artifact (needs a built web/lswasm.wasm)
@@ -128,7 +134,10 @@ requested language; the prefix is applied exactly once, so no
 `input decode failed: input decode failed: …`; a message that merely lacks a required key is
 never described as "truncated") and the FFI-level tests in `crates/lswasm/src/lib.rs`, which call
 `ls_review` through the same `ls_alloc` → `ls_review` sequence the browser uses, so the **web**
-error path is covered without needing Node.
+error path is covered without needing Node. `crates/lscore/tests/i18n_table.rs` reads the string
+table's source *and every call site's source* (across all three crates), so it holds that no
+label can reach a user as a raw key (`th_value`) or an unsubstituted placeholder (`{0}`) — even
+in a branch that never executes.
 
 ## Fields we recognise but do not use (transparency)
 
