@@ -58,6 +58,31 @@
 **附链接**：仓库主页 · KNOWN-LIMITATIONS.md · BETA-READINESS.md（判定依据）
 **自查**：[x] 无终局判定　[x] 无绝对离线表述（写"审阅全链路零外部请求"，属 L-B 场景描述，未称"完全不联网"）　[x] 无未核验事实　[x] 无"官方发布"措辞（明示无官方签名产物）　[x] 未暗示替代硬件钱包　[x] 无竞品比较暗示（未提及任何第三方项目）
 
+### ⬜ [2026-10-13] Lotus Signer 短推文（单条精简版）
+
+**平台**：X（单条，不串推）；Telegram 亦可同稿
+**关联**：上一条公告的**精简版**，无新增事实主张 · 仓库 https://github.com/LotusWallet/LOTSigner
+**状态**：⬜ 草稿（待项目负责人手工发布）
+
+**长度**：按 X 加权计数（CJK 字符计 2、链接计 23、上限 280）——中文 **270/280**、English **274/280**，均已留余量。
+
+**正文（中文，270/280）**
+> Lotus Signer 已公开：github.com/LotusWallet/LOTSigner
+>
+> 别人让你签的东西，先过一遍它。本地还原待签交易的事实，标出缺什么、不支持什么，再由你自己的钱包或硬件去签。不碰私钥、无我们的服务器、审阅全链路零外部请求。
+>
+> 内测：仅源码 + 一条命令自建，尚无官方签名产物。目前只处理 BTC PSBT。
+
+**正文（English，274/280）**
+> Lotus Signer is public: github.com/LotusWallet/LOTSigner
+>
+> Before signing what you're handed, run it through. It rebuilds the tx facts locally, marks what's missing or unsupported, then you sign with your own wallet or hardware.
+>
+> Beta: source only, no signed build yet. BTC PSBT only.
+
+**附链接**：仓库主页
+**自查**：[x] 无终局判定　[x] 无绝对离线表述（"审阅全链路零外部请求"＝ L-B 场景描述）　[x] 无未核验事实　[x] 无"官方发布"措辞（明示"尚无官方签名产物"）　[x] 未暗示替代硬件钱包（定位为签名**前**的自查，"再由你自己的钱包或硬件去签"）　[x] 无竞品比较暗示（未提及任何第三方项目）
+
 ### 模板（新增条目时照抄）
 
 ```markdown
